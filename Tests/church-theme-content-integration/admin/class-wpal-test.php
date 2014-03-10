@@ -6,7 +6,7 @@
  * Time: 3:24 PM
  */
 
-require_once dirname(__FILE__) . '/../CTCI_BaseDatabaseTestCase.php';
+require_once dirname(__FILE__) . '/../base-database-test-case.php';
 require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-wpal.php';
 require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-people-group.php';
 require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-ctc-group.php';

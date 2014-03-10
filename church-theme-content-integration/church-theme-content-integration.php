@@ -169,20 +169,29 @@ class Church_Theme_Content_Integration
 			// Admin only
 			'admin' => array(
 			
-				// Functions
-				CTCI_ADMIN_DIR . '/activation.php',
-				CTCI_ADMIN_DIR . '/admin-helpers.php',
-				CTCI_ADMIN_DIR . '/admin-menu.php',
-				CTCI_ADMIN_DIR . '/admin-posts.php',
-				CTCI_ADMIN_DIR . '/admin-support.php',
-				CTCI_ADMIN_DIR . '/event-fields.php',
-				CTCI_ADMIN_DIR . '/import.php',
-				CTCI_ADMIN_DIR . '/location-fields.php',
-				CTCI_ADMIN_DIR . '/person-fields.php',
-				CTCI_ADMIN_DIR . '/sermon-fields.php', 
-				
+				CTCI_ADMIN_DIR . '/class-ctc-group.php',
+				CTCI_ADMIN_DIR . '/class-people-group.php',
+				CTCI_ADMIN_DIR . '/class-person.php',
+				CTCI_ADMIN_DIR . '/class-settings-manager.php',
+				CTCI_ADMIN_DIR . '/class-wpal.php',
+				CTCI_ADMIN_DIR . '/interface-ctc-group.php',
+				CTCI_ADMIN_DIR . '/interface-f1-api-settings.php',
+				CTCI_ADMIN_DIR . '/interface-f1-people-sync-settings.php',
+				CTCI_ADMIN_DIR . '/interface-general-settings.php',
+				CTCI_ADMIN_DIR . '/interface-people-data-provider.php',
+                CTCI_ADMIN_DIR . '/interface-people-group.php',
+                CTCI_ADMIN_DIR . '/interface-person.php',
+                CTCI_ADMIN_DIR . '/interface-wpal.php',
+
+                // f1 - todo: make this pluggable for all providers
+                CTCI_ADMIN_DIR . '/class-f1-api-util.php',
+                CTCI_ADMIN_DIR . '/class-f1-app-config.php',
+                CTCI_ADMIN_DIR . '/class-f1-oauth-client.php',
+                CTCI_ADMIN_DIR . '/class-request-signer.php',
+                CTCI_ADMIN_DIR . '/interface-f1-oauth-client.php',
+
 				// Libraries
-				CTCI_LIB_DIR . '/ct-meta-box/ct-meta-box.php', // see CTMB_URL constant defined above
+				//CTCI_LIB_DIR . '/ct-meta-box/ct-meta-box.php', // see CTMB_URL constant defined above
 
 			),
 			
