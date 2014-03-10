@@ -53,7 +53,7 @@ class CTCI_WPALTest extends CTCI_BaseDatabaseTestCase
             CTCI_WPAL::$ctcGroupConnectTable, 'SELECT * FROM ' . CTCI_WPAL::$ctcGroupConnectTable
         );
         $expectedTable = $this->createMySQLXMLDataSet(
-            dirname(__FILE__) . '/CTCI_WPALTestData/testAttachCTCGroup_groupconnect.xml'
+            dirname(__FILE__) . '/class-wpal-test-data/testAttachCTCGroup_groupconnect.xml'
         )->getTable(CTCI_WPAL::$ctcGroupConnectTable);
 
         $this->assertDataSetsEqual($expectedTable, $queryTable);
