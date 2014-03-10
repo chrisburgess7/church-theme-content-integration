@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source source="LOCAL" name="MySQL - ctc_sandbox@localhost" uuid="eab55873-1be4-45e8-a4bc-ffec3b65c03f">
+    <database-info product="MySQL" version="5.5.16-log" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.26 ( Revision: ${bzr.revision-id} )">
+      <extra-name-characters>#@</extra-name-characters>
+      <identifier-quote-string>`</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="lower" quoted-identifiers="lower"/>
+    <schema name="" catalog="ctc_sandbox"/>
+    <table name="wp_commentmeta" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="meta_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="comment_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="meta_key" sqlType="VARCHAR" length="255" precision="0" nullable="true" jdbcType="12"/>
+      <column name="meta_value" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="true" jdbcType="-1"/>
+      <primary-key name="PRIMARY" columns="meta_id"/>
+      <index name="comment_id" unique="false" columns="comment_id"/>
+      <index name="meta_key" unique="false" columns="meta_key"/>
+    </table>
+    <table name="wp_comments" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="comment_ID" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="comment_post_ID" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="comment_author" sqlType="TINYTEXT" length="255" precision="0" nullable="false" jdbcType="12"/>
+      <column name="comment_author_email" sqlType="VARCHAR" length="100" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="comment_author_url" sqlType="VARCHAR" length="200" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="comment_author_IP" sqlType="VARCHAR" length="100" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="comment_date" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="comment_date_gmt" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="comment_content" sqlType="TEXT" length="65535" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="comment_karma" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="comment_approved" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="JzEn"/>
+      <column name="comment_agent" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="comment_type" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="comment_parent" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <primary-key name="PRIMARY" columns="comment_ID"/>
+      <index name="comment_approved_date_gmt" unique="false" columns="comment_approved,comment_date_gmt"/>
+      <index name="comment_date_gmt" unique="false" columns="comment_date_gmt"/>
+      <index name="comment_parent" unique="false" columns="comment_parent"/>
+      <index name="comment_post_ID" unique="false" columns="comment_post_ID"/>
+    </table>
+    <table name="wp_ctci_ctcgroup_connect" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="data_provider" sqlType="VARCHAR" length="16" precision="0" nullable="false" jdbcType="12"/>
+      <column name="term_id" sqlType="BIGINT" length="19" precision="0" nullable="false" jdbcType="-5"/>
+      <column name="provider_group_id" sqlType="VARCHAR" length="64" precision="0" nullable="false" jdbcType="12"/>
+    </table>
+    <table name="wp_links" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="link_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="link_url" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="link_name" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="link_image" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="link_target" sqlType="VARCHAR" length="25" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="link_description" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="link_visible" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="J1kn"/>
+      <column name="link_owner" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MQ=="/>
+      <column name="link_rating" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="link_updated" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="link_rel" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="link_notes" sqlType="MEDIUMTEXT" length="16777215" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="link_rss" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <primary-key name="PRIMARY" columns="link_id"/>
+      <index name="link_visible" unique="false" columns="link_visible"/>
+    </table>
+    <table name="wp_options" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="option_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="option_name" sqlType="VARCHAR" length="64" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="option_value" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="autoload" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="J3llcyc="/>
+      <primary-key name="PRIMARY" columns="option_id"/>
+      <index name="option_name" unique="true" columns="option_name"/>
+    </table>
+    <table name="wp_postmeta" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="meta_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="post_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="meta_key" sqlType="VARCHAR" length="255" precision="0" nullable="true" jdbcType="12"/>
+      <column name="meta_value" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="true" jdbcType="-1"/>
+      <primary-key name="PRIMARY" columns="meta_id"/>
+      <index name="meta_key" unique="false" columns="meta_key"/>
+      <index name="post_id" unique="false" columns="post_id"/>
+    </table>
+    <table name="wp_posts" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="ID" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="post_author" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="post_date" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="post_date_gmt" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="post_content" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="post_title" sqlType="TEXT" length="65535" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="post_excerpt" sqlType="TEXT" length="65535" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="post_status" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="J3B1Ymxpc2gn"/>
+      <column name="comment_status" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="J29wZW4n"/>
+      <column name="ping_status" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="J29wZW4n"/>
+      <column name="post_password" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="post_name" sqlType="VARCHAR" length="200" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="to_ping" sqlType="TEXT" length="65535" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="pinged" sqlType="TEXT" length="65535" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="post_modified" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="post_modified_gmt" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="post_content_filtered" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="post_parent" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="guid" sqlType="VARCHAR" length="255" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="menu_order" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="post_type" sqlType="VARCHAR" length="20" precision="0" nullable="false" jdbcType="12" def="J3Bvc3Qn"/>
+      <column name="post_mime_type" sqlType="VARCHAR" length="100" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="comment_count" sqlType="BIGINT" length="19" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <primary-key name="PRIMARY" columns="ID"/>
+      <index name="post_author" unique="false" columns="post_author"/>
+      <index name="post_name" unique="false" columns="post_name"/>
+      <index name="post_parent" unique="false" columns="post_parent"/>
+      <index name="type_status_date" unique="false" columns="post_type,post_status,post_date,ID"/>
+    </table>
+    <table name="wp_term_relationships" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="object_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="term_taxonomy_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="term_order" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <primary-key name="PRIMARY" columns="object_id,term_taxonomy_id"/>
+      <index name="term_taxonomy_id" unique="false" columns="term_taxonomy_id"/>
+    </table>
+    <table name="wp_term_taxonomy" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="term_taxonomy_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="term_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="taxonomy" sqlType="VARCHAR" length="32" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="description" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="false" jdbcType="-1"/>
+      <column name="parent" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="count" sqlType="BIGINT" length="19" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <primary-key name="PRIMARY" columns="term_taxonomy_id"/>
+      <index name="term_id_taxonomy" unique="true" columns="term_id,taxonomy"/>
+      <index name="taxonomy" unique="false" columns="taxonomy"/>
+    </table>
+    <table name="wp_terms" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="term_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="name" sqlType="VARCHAR" length="200" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="slug" sqlType="VARCHAR" length="200" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="term_group" sqlType="BIGINT" length="19" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <primary-key name="PRIMARY" columns="term_id"/>
+      <index name="slug" unique="true" columns="slug"/>
+      <index name="name" unique="false" columns="name"/>
+    </table>
+    <table name="wp_usermeta" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="umeta_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="user_id" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" def="MA=="/>
+      <column name="meta_key" sqlType="VARCHAR" length="255" precision="0" nullable="true" jdbcType="12"/>
+      <column name="meta_value" sqlType="LONGTEXT" length="2147483647" precision="0" nullable="true" jdbcType="-1"/>
+      <primary-key name="PRIMARY" columns="umeta_id"/>
+      <index name="meta_key" unique="false" columns="meta_key"/>
+      <index name="user_id" unique="false" columns="user_id"/>
+    </table>
+    <table name="wp_users" schema="" catalog="ctc_sandbox" type="TABLE">
+      <column name="ID" sqlType="BIGINT UNSIGNED" length="20" precision="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="user_login" sqlType="VARCHAR" length="60" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="user_pass" sqlType="VARCHAR" length="64" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="user_nicename" sqlType="VARCHAR" length="50" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="user_email" sqlType="VARCHAR" length="100" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="user_url" sqlType="VARCHAR" length="100" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="user_registered" sqlType="DATETIME" length="19" precision="0" nullable="false" jdbcType="93" def="JzAwMDAtMDAtMDAgMDA6MDA6MDAn"/>
+      <column name="user_activation_key" sqlType="VARCHAR" length="60" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <column name="user_status" sqlType="INT" length="10" precision="0" nullable="false" jdbcType="4" def="MA=="/>
+      <column name="display_name" sqlType="VARCHAR" length="250" precision="0" nullable="false" jdbcType="12" def="Jyc="/>
+      <primary-key name="PRIMARY" columns="ID"/>
+      <index name="user_login_key" unique="false" columns="user_login"/>
+      <index name="user_nicename" unique="false" columns="user_nicename"/>
+    </table>
+  </data-source>
+</component>
