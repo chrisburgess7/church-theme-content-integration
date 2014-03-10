@@ -6,9 +6,9 @@
  * Time: 12:29 PM
  */
 
-require_once 'CTCI_GeneralSettingsInterface.php';
-require_once 'CTCI_F1APISettingsInterface.php';
-require_once 'CTCI_F1PeopleSyncSettingsInterface.php';
+require_once 'interface-general-settings.php';
+require_once 'interface-f1-api-settings.php';
+require_once 'interface-f1-people-sync-settings.php';
 
 class CTCI_SettingsManager
     implements CTCI_GeneralSettingsInterface,

@@ -6,7 +6,7 @@
  * Time: 10:08 AM
  */
 
-require_once 'CTCI_PersonInterface.php';
+require_once 'interface-person.php';
 
 class CTCI_Person implements CTCI_PersonInterface
 {

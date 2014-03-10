@@ -22,7 +22,6 @@ class Church_Theme_Content_Integration
 	/**
 	 * Plugin data from get_plugins()
 	 *
-	 * @since 0.9
 	 * @var object
 	 */
 	public $plugin_data;
@@ -30,8 +29,7 @@ class Church_Theme_Content_Integration
 	/**
 	 * Includes to load
 	 *
-	 * @since 0.9
-	 * @var array
+     * @var array
 	 */
 	public $includes;
 
@@ -40,8 +38,6 @@ class Church_Theme_Content_Integration
 	 *
 	 * Add actions for methods that define constants and load includes.
 	 *
-	 * @since 0.9
-	 * @access public
 	 */
 	public function __construct() {
 
@@ -97,27 +93,27 @@ class Church_Theme_Content_Integration
 	public function define_constants() {
 
 		// Plugin details
-		define( 'CTC_VERSION', 		$this->plugin_data['Version'] );					// plugin version
-		define( 'CTC_NAME', 		$this->plugin_data['Name'] );						// plugin name
-		define( 'CTC_INFO_URL',		$this->plugin_data['PluginURI'] );					// plugin's info page URL
-		define( 'CTC_FILE', 		__FILE__ );											// plugin's main file path
-		define( 'CTC_DIR', 			dirname( plugin_basename( CTC_FILE ) ) );			// plugin's directory
-		define( 'CTC_PATH',			untrailingslashit( plugin_dir_path( CTC_FILE ) ) );	// plugin's directory
-		define( 'CTC_URL', 			untrailingslashit( plugin_dir_url( CTC_FILE ) ) );	// plugin's directory URL
+		define( 'CTCI_VERSION', 		$this->plugin_data['Version'] );					// plugin version
+		define( 'CTCI_NAME', 		$this->plugin_data['Name'] );						// plugin name
+		define( 'CTCI_INFO_URL',		$this->plugin_data['PluginURI'] );					// plugin's info page URL
+		define( 'CTCI_FILE', 		__FILE__ );											// plugin's main file path
+		define( 'CTCI_DIR', 			dirname( plugin_basename( CTCI_FILE ) ) );			// plugin's directory
+		define( 'CTCI_PATH',			untrailingslashit( plugin_dir_path( CTCI_FILE ) ) );	// plugin's directory
+		define( 'CTCI_URL', 			untrailingslashit( plugin_dir_url( CTCI_FILE ) ) );	// plugin's directory URL
 
 		// Directories
-		define( 'CTC_INC_DIR',		'includes' );					// includes directory
-		define( 'CTC_ADMIN_DIR',	CTC_INC_DIR . '/admin' );		// admin directory
-		define( 'CTC_CLASS_DIR', 	CTC_INC_DIR . '/classes' );		// classes directory
-		define( 'CTC_LIB_DIR', 		CTC_INC_DIR . '/libraries' );	// libraries directory
-		define( 'CTC_CSS_DIR', 		'css' );						// stylesheets directory
-		define( 'CTC_JS_DIR', 		'js' );							// JavaScript directory
-		define( 'CTC_IMG_DIR', 		'images' );						// images directory
-		define( 'CTC_LANG_DIR', 	'languages' );					// languages directory
+		define( 'CTCI_INC_DIR',		'includes' );					// includes directory
+		define( 'CTCI_ADMIN_DIR',	CTCI_INC_DIR . '/admin' );		// admin directory
+		define( 'CTCI_CLASS_DIR', 	CTCI_INC_DIR . '/classes' );		// classes directory
+		define( 'CTCI_LIB_DIR', 		CTCI_INC_DIR . '/libraries' );	// libraries directory
+		define( 'CTCI_CSS_DIR', 		'css' );						// stylesheets directory
+		define( 'CTCI_JS_DIR', 		'js' );							// JavaScript directory
+		define( 'CTCI_IMG_DIR', 		'images' );						// images directory
+		define( 'CTCI_LANG_DIR', 	'languages' );					// languages directory
 
 		// CT Meta Box
 		if ( ! defined( 'CTMB_URL' ) ) { // in case also used in theme or other plugin
-			define( 'CTMB_URL', CTC_URL . '/' . CTC_LIB_DIR . '/ct-meta-box' ); // for enqueing JS/CSS
+			define( 'CTMB_URL', CTCI_URL . '/' . CTCI_LIB_DIR . '/ct-meta-box' ); // for enqueing JS/CSS
 		}
 
 	}
@@ -132,9 +128,7 @@ class Church_Theme_Content_Integration
 	 * If not, then the 'languages' direcory inside the plugin will be used.
 	 * It is ideal to keep translation files outside of the plugin to avoid loss during updates.
 	 *
-	 * @since 0.9
-	 * @access public
-	 */
+	 /
 	public function load_textdomain() {
 
 		// Textdomain
@@ -162,42 +156,33 @@ class Church_Theme_Content_Integration
 	/**
 	 * Set includes
 	 *
-	 * @since 0.9
-	 * @access public
 	 */
 	public function set_includes() {
 
-		$this->includes = apply_filters( 'ctc_includes', array(
+		$this->includes = apply_filters( 'ctci_includes', array(
 
 			// Frontend or admin
-			'always' => array(
-				
-				// Functions
-				CTC_INC_DIR . '/helpers.php',
-				CTC_INC_DIR . '/mime-types.php',
-				CTC_INC_DIR . '/post-types.php', 
-				CTC_INC_DIR . '/schedule.php',
-				CTC_INC_DIR . '/support.php',
-				CTC_INC_DIR . '/taxonomies.php',
-			),
+			/*'always' => array(
+
+			),*/
 
 			// Admin only
 			'admin' => array(
 			
 				// Functions
-				CTC_ADMIN_DIR . '/activation.php',
-				CTC_ADMIN_DIR . '/admin-helpers.php',
-				CTC_ADMIN_DIR . '/admin-menu.php',
-				CTC_ADMIN_DIR . '/admin-posts.php',
-				CTC_ADMIN_DIR . '/admin-support.php',
-				CTC_ADMIN_DIR . '/event-fields.php',
-				CTC_ADMIN_DIR . '/import.php',
-				CTC_ADMIN_DIR . '/location-fields.php',
-				CTC_ADMIN_DIR . '/person-fields.php',
-				CTC_ADMIN_DIR . '/sermon-fields.php', 
+				CTCI_ADMIN_DIR . '/activation.php',
+				CTCI_ADMIN_DIR . '/admin-helpers.php',
+				CTCI_ADMIN_DIR . '/admin-menu.php',
+				CTCI_ADMIN_DIR . '/admin-posts.php',
+				CTCI_ADMIN_DIR . '/admin-support.php',
+				CTCI_ADMIN_DIR . '/event-fields.php',
+				CTCI_ADMIN_DIR . '/import.php',
+				CTCI_ADMIN_DIR . '/location-fields.php',
+				CTCI_ADMIN_DIR . '/person-fields.php',
+				CTCI_ADMIN_DIR . '/sermon-fields.php', 
 				
 				// Libraries
-				CTC_LIB_DIR . '/ct-meta-box/ct-meta-box.php', // see CTMB_URL constant defined above
+				CTCI_LIB_DIR . '/ct-meta-box/ct-meta-box.php', // see CTMB_URL constant defined above
 
 			),
 			

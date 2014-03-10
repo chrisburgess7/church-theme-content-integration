@@ -6,7 +6,7 @@
  * Time: 5:18 PM
  */
 
-require_once dirname(__FILE__) . '/../../church-theme-content-integration/CTCI_Person.php';
+require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-person.php';
 
 class CTCIPersonTest extends PHPUnit_Framework_TestCase
 {

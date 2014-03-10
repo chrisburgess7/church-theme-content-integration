@@ -1,5 +1,5 @@
 <?php
-require_once 'CTCI_F1APIUtil.php';
+require_once 'class-f1-api-util.php';
 /**
  * Copyright 2009 Fellowship Technologies
  * Licensed under the Apache License, Version 2.0 (the "License");

@@ -6,7 +6,7 @@
  * Time: 11:35 AM
  */
 
-require_once 'CTCI_WPALInterface.php';
+require_once 'interface-wpal.php';
 
 class CTCI_WPAL implements CTCI_WPALInterface
 {

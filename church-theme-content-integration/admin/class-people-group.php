@@ -6,7 +6,7 @@
  * Time: 10:07 AM
  */
 
-require_once 'CTCI_PeopleGroupInterface.php';
+require_once 'interface-people-group.php';
 
 class CTCI_PeopleGroup implements CTCI_PeopleGroupInterface
 {

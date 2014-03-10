@@ -7,8 +7,8 @@
  */
 
 require_once dirname(__FILE__) . '/../../church-theme-content-integration/CTCI_DBAL.php';
-require_once dirname(__FILE__) . '/../../church-theme-content-integration/CTCI_SettingsManager.php';
-require_once dirname(__FILE__) . '/../../church-theme-content-integration/F1/OAuth/CTCI_F1AppConfig.php';
+require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-settings-manager.php';
+require_once dirname(__FILE__) . '/../../church-theme-content-integration/F1/OAuth/class-f1-app-config.php';
 
 class CTCISettingsManagerTest extends PHPUnit_Framework_TestCase
 {

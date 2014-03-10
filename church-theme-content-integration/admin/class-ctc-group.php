@@ -6,7 +6,7 @@
  * Time: 10:49 AM
  */
 
-require_once 'CTCI_CTCGroupInterface.php';
+require_once 'interface-ctc-group.php';
 
 class CTCI_CTCGroup implements CTCI_CTCGroupInterface
 {

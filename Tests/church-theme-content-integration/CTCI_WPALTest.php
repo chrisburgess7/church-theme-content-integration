@@ -7,9 +7,9 @@
  */
 
 require_once dirname(__FILE__) . '/../CTCI_BaseDatabaseTestCase.php';
-require_once dirname(__FILE__) . '/../../church-theme-content-integration/CTCI_WPAL.php';
-require_once dirname(__FILE__) . '/../../church-theme-content-integration/CTCI_PeopleGroup.php';
-require_once dirname(__FILE__) . '/../../church-theme-content-integration/CTCI_CTCGroup.php';
+require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-wpal.php';
+require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-people-group.php';
+require_once dirname(__FILE__) . '/../../church-theme-content-integration/class-ctc-group.php';
 
 class WPUnitTestCaseTest extends WP_UnitTestCase
 {
