@@ -8,62 +8,52 @@
 
 require_once 'interface-people-group.php';
 
-class CTCI_PeopleGroup implements CTCI_PeopleGroupInterface
-{
-    protected $providerTag;
-    protected $id;
-    protected $name;
-    protected $desc;
+class CTCI_PeopleGroup implements CTCI_PeopleGroupInterface {
+	protected $providerTag;
+	protected $id;
+	protected $name;
+	protected $desc;
 
-    public function __construct($providerTag, $id, $name, $description)
-    {
-        $this->providerTag = $providerTag;
-        $this->id = $id;
-        $this->name = $name;
-        $this->desc = $description;
-    }
+	public function __construct( $providerTag, $id, $name, $description ) {
+		$this->providerTag = $providerTag;
+		$this->id = $id;
+		$this->name = $name;
+		$this->desc = $description;
+	}
 
-    public function setId($id)
-    {
-        $this->id = $id;
-        return $this;
-    }
+	public function setId( $id ) {
+		$this->id = $id;
+		return $this;
+	}
 
-    public function id()
-    {
-        return $this->id;
-    }
+	public function id() {
+		return $this->id;
+	}
 
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
+	public function setName( $name ) {
+		$this->name = $name;
+		return $this;
+	}
 
-    public function getName()
-    {
-        return $this->name;
-    }
+	public function getName() {
+		return $this->name;
+	}
 
-    public function setDescription($description)
-    {
-        $this->desc = $description;
-        return $this;
-    }
+	public function setDescription( $description ) {
+		$this->desc = $description;
+		return $this;
+	}
 
-    public function getDescription()
-    {
-        return $this->desc;
-    }
+	public function getDescription() {
+		return $this->desc;
+	}
 
-    public function setProviderTag($tag)
-    {
-        $this->providerTag = $tag;
-        return $this;
-    }
+	public function setProviderTag( $tag ) {
+		$this->providerTag = $tag;
+		return $this;
+	}
 
-    public function getProviderTag()
-    {
-        return $this->providerTag;
-    }
+	public function getProviderTag() {
+		return $this->providerTag;
+	}
 }

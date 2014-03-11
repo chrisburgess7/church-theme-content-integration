@@ -8,59 +8,51 @@
 
 require_once 'interface-ctc-group.php';
 
-class CTCI_CTCGroup implements CTCI_CTCGroupInterface
-{
-    protected $id;
-    protected $name;
-    protected $desc;
+class CTCI_CTCGroup implements CTCI_CTCGroupInterface {
+	protected $id;
+	protected $name;
+	protected $desc;
 
-    public function __construct($id, $name, $description)
-    {
-        $this->setId($id)->setName($name)->setDescription($description);
-    }
+	public function __construct( $id, $name, $description ) {
+		$this->setId( $id )->setName( $name )->setDescription( $description );
+	}
 
-    /**
-     * @param $id
-     * @return CTCI_CTCGroup
-     */
-    public function setId($id)
-    {
-        $this->id = $id;
-        return $this;
-    }
+	/**
+	 * @param $id
+	 * @return CTCI_CTCGroup
+	 */
+	public function setId( $id ) {
+		$this->id = $id;
+		return $this;
+	}
 
-    public function id()
-    {
-        return $this->id;
-    }
+	public function id() {
+		return $this->id;
+	}
 
-    /**
-     * @param $name
-     * @return CTCI_CTCGroup
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
+	/**
+	 * @param $name
+	 * @return CTCI_CTCGroup
+	 */
+	public function setName( $name ) {
+		$this->name = $name;
+		return $this;
+	}
 
-    public function getName()
-    {
-        return $this->name;
-    }
+	public function getName() {
+		return $this->name;
+	}
 
-    /**
-     * @param $description
-     * @return CTCI_CTCGroup
-     */
-    public function setDescription($description)
-    {
-        $this->desc = $description;
-        return $this;
-    }
+	/**
+	 * @param $description
+	 * @return CTCI_CTCGroup
+	 */
+	public function setDescription( $description ) {
+		$this->desc = $description;
+		return $this;
+	}
 
-    public function getDescription()
-    {
-        return $this->desc;
-    }
+	public function getDescription() {
+		return $this->desc;
+	}
 }

@@ -1,113 +1,118 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: Chris
  * Date: 27/02/14
  * Time: 2:40 PM
  */
+interface CTCI_PersonInterface {
+	public function setId( $id );
 
-interface CTCI_PersonInterface
-{
-    public function setId($id);
+	public function id();
 
-    public function id();
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setTitle( $value = '' );
 
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setTitle($value = '');
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setNamePrefix($value = '');
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setFirstName($value = '');
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setGoesByName($value = '');
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setMiddleName($value = '');
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setLastName($value = '');
-    /**
-     * @param string $value
-     * @return CTCI_PersonInterface
-     */
-    public function setNameSuffix($value = '');
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setNamePrefix( $value = '' );
 
-    public function setNameFormat($format = 'F L');
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setFirstName( $value = '' );
 
-    public function getName($format = '');
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setGoesByName( $value = '' );
 
-    public function setSyncName($sync = true);
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setMiddleName( $value = '' );
 
-    public function syncName();
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setLastName( $value = '' );
 
-    public function setPosition($value = '');
+	/**
+	 * @param string $value
+	 * @return CTCI_PersonInterface
+	 */
+	public function setNameSuffix( $value = '' );
 
-    public function getPosition();
+	public function setNameFormat( $format = 'F L' );
 
-    public function setSyncPosition($sync = true);
+	public function getName( $format = '' );
 
-    public function syncPosition();
+	public function setSyncName( $sync = true );
 
-    public function setPhone($value = '');
+	public function syncName();
 
-    public function getPhone();
+	public function setPosition( $value = '' );
 
-    public function setSyncPhone($sync = true);
+	public function getPosition();
 
-    public function syncPhone();
+	public function setSyncPosition( $sync = true );
 
-    public function setEmail($value = '');
+	public function syncPosition();
 
-    public function getEmail();
+	public function setPhone( $value = '' );
 
-    public function setSyncEmail($sync = true);
+	public function getPhone();
 
-    public function syncEmail();
+	public function setSyncPhone( $sync = true );
 
-    public function setFacebookURL($value = '');
+	public function syncPhone();
 
-    public function getFacebookURL();
+	public function setEmail( $value = '' );
 
-    public function setSyncFacebookURL($sync = true);
+	public function getEmail();
 
-    public function syncFacebookURL();
+	public function setSyncEmail( $sync = true );
 
-    public function setTwitterURL($value = '');
+	public function syncEmail();
 
-    public function getTwitterURL();
+	public function setFacebookURL( $value = '' );
 
-    public function setSyncTwitterURL($sync = true);
+	public function getFacebookURL();
 
-    public function syncTwitterURL();
+	public function setSyncFacebookURL( $sync = true );
 
-    public function setLinkedInURL($value = '');
+	public function syncFacebookURL();
 
-    public function getLinkedInURL();
+	public function setTwitterURL( $value = '' );
 
-    public function setSyncLinkedInURL($sync = true);
+	public function getTwitterURL();
 
-    public function syncLinkedInURL();
+	public function setSyncTwitterURL( $sync = true );
 
-    public function addGroup(CTCI_PeopleGroupInterface $group);
+	public function syncTwitterURL();
 
-    /**
-     * @return array    An array of CTCI_PeopleGroupInterface for each group that this person belongs to
-     */
-    public function getGroups();
+	public function setLinkedInURL( $value = '' );
+
+	public function getLinkedInURL();
+
+	public function setSyncLinkedInURL( $sync = true );
+
+	public function syncLinkedInURL();
+
+	public function addGroup( CTCI_PeopleGroupInterface $group );
+
+	/**
+	 * @return array    An array of CTCI_PeopleGroupInterface for each group that this person belongs to
+	 */
+	public function getGroups();
 } 
