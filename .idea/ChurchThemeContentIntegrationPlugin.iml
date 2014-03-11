@@ -7,16 +7,12 @@
     <orderEntry type="module-library">
       <library name="PHP">
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../wordpress" />
-          <root url="file://C:/wamp/www/ctcsandbox/wp-includes" />
           <root url="file://C:/wamp/bin/php/php5.3.20/pear" />
-          <root url="file://C:/wamp/www/ctcsandbox/wp-admin/includes" />
+          <root url="file://$MODULE_DIR$/../wordpress" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../wordpress" />
-          <root url="file://C:/wamp/www/ctcsandbox/wp-includes" />
           <root url="file://C:/wamp/bin/php/php5.3.20/pear" />
-          <root url="file://C:/wamp/www/ctcsandbox/wp-admin/includes" />
+          <root url="file://$MODULE_DIR$/../wordpress" />
         </SOURCES>
       </library>
     </orderEntry>

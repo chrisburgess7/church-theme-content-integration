@@ -3,7 +3,7 @@
  * Plugin Name: Church Theme Content Integration
  * Plugin URI:
  * Description: Provides integration functionality between the Church Theme Content plugin and other church-related service providers.
- * Version: 1.0
+ * Version: 0.1
  * Author: Chris Burgess
  * Author URI:
  * License: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -20,6 +20,8 @@ if ( !defined( 'ABSPATH' ) ) {
  */
 class Church_Theme_Content_Integration {
 
+	public static $DB_VERSION = '0.1';
+	public static $PLUGIN_PATH = '';
 	/**
 	 * Plugin data from get_plugins()
 	 *
@@ -57,6 +59,7 @@ class Church_Theme_Content_Integration {
 		// Load includes
 		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 1 );
 
+		register_activation_hook( __FILE__, array( $this, 'setup_db' ) );
 	}
 
 	/**
@@ -91,31 +94,22 @@ class Church_Theme_Content_Integration {
 	 * @since 0.9
 	 * @access public
 	 */
-	public function define_constants() {
+	public function init_plugin_variables() {
 
+		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
 		// Plugin details
-		define( 'CTCI_VERSION', $this->plugin_data[ 'Version' ] ); // plugin version
+		/*define( 'CTCI_VERSION', $this->plugin_data[ 'Version' ] ); // plugin version
 		define( 'CTCI_NAME', $this->plugin_data[ 'Name' ] ); // plugin name
 		define( 'CTCI_INFO_URL', $this->plugin_data[ 'PluginURI' ] ); // plugin's info page URL
 		define( 'CTCI_FILE', __FILE__ ); // plugin's main file path
 		define( 'CTCI_DIR', dirname( plugin_basename( CTCI_FILE ) ) ); // plugin's directory
 		define( 'CTCI_PATH', untrailingslashit( plugin_dir_path( CTCI_FILE ) ) ); // plugin's directory
 		define( 'CTCI_URL', untrailingslashit( plugin_dir_url( CTCI_FILE ) ) ); // plugin's directory URL
+		define( 'CTCI_DB_VERSION', '0.1');
 
 		// Directories
-		define( 'CTCI_INC_DIR', 'includes' ); // includes directory
-		define( 'CTCI_ADMIN_DIR', CTCI_INC_DIR . '/admin' ); // admin directory
-		define( 'CTCI_CLASS_DIR', CTCI_INC_DIR . '/classes' ); // classes directory
-		define( 'CTCI_LIB_DIR', CTCI_INC_DIR . '/libraries' ); // libraries directory
-		define( 'CTCI_CSS_DIR', 'css' ); // stylesheets directory
-		define( 'CTCI_JS_DIR', 'js' ); // JavaScript directory
-		define( 'CTCI_IMG_DIR', 'images' ); // images directory
-		define( 'CTCI_LANG_DIR', 'languages' ); // languages directory
-
-		// CT Meta Box
-		if ( !defined( 'CTMB_URL' ) ) { // in case also used in theme or other plugin
-			define( 'CTMB_URL', CTCI_URL . '/' . CTCI_LIB_DIR . '/ct-meta-box' ); // for enqueing JS/CSS
-		}
+		define( 'CTCI_ADMIN_DIR', CTCI_DIR . '/admin' ); // admin directory
+		define( 'CTCI_LANG_DIR', 'languages' ); // languages directory*/
 
 	}
 
@@ -259,13 +253,31 @@ class Church_Theme_Content_Integration {
 			if ( $do_includes ) {
 
 				foreach ( $files as $file ) {
-					require_once trailingslashit( CTC_PATH ) . $file;
+					require_once trailingslashit( self::$PLUGIN_PATH ) . $file;
 				}
 
 			}
 
 		}
 
+	}
+
+	public function setup_db() {
+		global $wpdb;
+		// make sure the includes are loaded before this...
+		$tableName = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+
+		$connectTableSQL = "CREATE TABLE $tableName (
+			term_id bigint(20) NOT NULL,
+			data_provider varchar(16) NOT NULL,
+			provider_group_id varchar(32) NOT NULL,
+			KEY term_id (term_id)
+		);";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta($connectTableSQL);
+
+		add_option( "ctci_db_version", self::$DB_VERSION);
 	}
 
 }
