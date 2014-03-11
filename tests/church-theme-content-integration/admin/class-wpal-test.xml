@@ -1,0 +1,15 @@
+<phpunit
+	bootstrap="tests/phpunit/includes/bootstrap.php"
+        backupGlobals="false"
+        colors="true"
+        >
+    <testsuites>
+        <!-- Default test suite to run all tests -->
+        <testsuite>
+            <file>tests/admin/class-wpal-test.php</file>
+        </testsuite>
+    </testsuites>
+    <logging>
+        <log type="junit" target="tests/phpunit/build/logs/junit.xml" logIncompleteSkipped="false"/>
+    </logging>
+</phpunit>

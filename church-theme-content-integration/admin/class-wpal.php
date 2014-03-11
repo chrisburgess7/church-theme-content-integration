@@ -35,6 +35,8 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		global $wpdb;
 		$attachTable = $wpdb->prefix . self::$ctcGroupConnectTable;
 
+		// simply updates the record if it already exists
+		// so this will overwrite any existing attach record for the group / term id
 		$updateResult = $wpdb->update(
 			$attachTable,
 			array(
