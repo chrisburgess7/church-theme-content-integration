@@ -22,6 +22,9 @@ class Church_Theme_Content_Integration {
 
 	public static $DB_VERSION = '0.1';
 	public static $PLUGIN_PATH = '';
+	public static $PLUGIN_DIR = '';
+	public static $ADMIN_DIR = '';
+	
 	/**
 	 * Plugin data from get_plugins()
 	 *
@@ -45,10 +48,10 @@ class Church_Theme_Content_Integration {
 	public function __construct() {
 
 		// Set plugin data
-		//add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
 
-		// Define constants
-		//add_action( 'plugins_loaded', array( &$this, 'define_constants' ), 1 );
+		// init variables
+		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 1 );
 
 		// Load language file
 		//add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 1 );
@@ -97,6 +100,8 @@ class Church_Theme_Content_Integration {
 	public function init_plugin_variables() {
 
 		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
+		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
+		self::$ADMIN_DIR = 'admin';
 		// Plugin details
 		/*define( 'CTCI_VERSION', $this->plugin_data[ 'Version' ] ); // plugin version
 		define( 'CTCI_NAME', $this->plugin_data[ 'Name' ] ); // plugin name
@@ -164,26 +169,27 @@ class Church_Theme_Content_Integration {
 			// Admin only
 			'admin' => array(
 
-				CTCI_ADMIN_DIR . '/class-ctc-group.php',
-				CTCI_ADMIN_DIR . '/class-people-group.php',
-				CTCI_ADMIN_DIR . '/class-person.php',
-				CTCI_ADMIN_DIR . '/class-settings-manager.php',
-				CTCI_ADMIN_DIR . '/class-wpal.php',
-				CTCI_ADMIN_DIR . '/interface-ctc-group.php',
-				CTCI_ADMIN_DIR . '/interface-f1-api-settings.php',
-				CTCI_ADMIN_DIR . '/interface-f1-people-sync-settings.php',
-				CTCI_ADMIN_DIR . '/interface-general-settings.php',
-				CTCI_ADMIN_DIR . '/interface-people-data-provider.php',
-				CTCI_ADMIN_DIR . '/interface-people-group.php',
-				CTCI_ADMIN_DIR . '/interface-person.php',
-				CTCI_ADMIN_DIR . '/interface-wpal.php',
+				self::$ADMIN_DIR . '/class-ctc-group.php',
+				self::$ADMIN_DIR . '/class-people-group.php',
+				self::$ADMIN_DIR . '/class-person.php',
+				self::$ADMIN_DIR . '/class-settings-manager.php',
+				self::$ADMIN_DIR . '/class-wpal.php',
+				self::$ADMIN_DIR . '/interface-ctc-group.php',
+				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
+				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
+				self::$ADMIN_DIR . '/interface-general-settings.php',
+				self::$ADMIN_DIR . '/interface-people-data-provider.php',
+				self::$ADMIN_DIR . '/interface-people-group.php',
+				self::$ADMIN_DIR . '/interface-person.php',
+				self::$ADMIN_DIR . '/interface-wpal.php',
 
 				// f1 - todo: make this pluggable for all providers
-				CTCI_ADMIN_DIR . '/class-f1-api-util.php',
-				CTCI_ADMIN_DIR . '/class-f1-app-config.php',
-				CTCI_ADMIN_DIR . '/class-f1-oauth-client.php',
-				CTCI_ADMIN_DIR . '/class-request-signer.php',
-				CTCI_ADMIN_DIR . '/interface-f1-oauth-client.php',
+				self::$ADMIN_DIR . '/F1/class-f1-people-data-provider.php',
+				self::$ADMIN_DIR . '/F1/OAuth/class-f1-api-util.php',
+				self::$ADMIN_DIR . '/F1/OAuth/class-f1-app-config.php',
+				self::$ADMIN_DIR . '/F1/OAuth/class-f1-oauth-client.php',
+				self::$ADMIN_DIR . '/F1/OAuth/class-request-signer.php',
+				self::$ADMIN_DIR . '/F1/OAuth/interface-f1-oauth-client.php',
 
 				// Libraries
 				//CTCI_LIB_DIR . '/ct-meta-box/ct-meta-box.php', // see CTMB_URL constant defined above
@@ -263,11 +269,7 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function setup_db() {
-		global $wpdb;
-		// make sure the includes are loaded before this...
-		$tableName = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
-
-		$connectTableSQL = "CREATE TABLE $tableName (
+		$connectTableSQL = "CREATE TABLE ctci_ctcgroup_connect (
 			term_id bigint(20) NOT NULL,
 			data_provider varchar(16) NOT NULL,
 			provider_group_id varchar(32) NOT NULL,
