@@ -86,6 +86,10 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		) );
 	}
 
+	/**
+	 * @param CTCI_PeopleGroupInterface $group
+	 * @return CTCI_CTCGroupInterface|null|WP_Error
+	 */
 	public function getAttachedCTCGroup( CTCI_PeopleGroupInterface $group ) {
 		/** @var $wpdb wpdb */
 		global $wpdb;
@@ -111,7 +115,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 			return $ctcGroupTermRecord;
 		}
 
-		$ctcGroup = new CTCI_CTCGroup( $ctcGroupTermRecord[ 'id' ], $ctcGroupTermRecord[ 'name' ], $ctcGroupTermRecord[ 'description' ] );
+		$ctcGroup = new CTCI_CTCGroup( $ctcGroupTermRecord[ 'term_id' ], $ctcGroupTermRecord[ 'name' ], $ctcGroupTermRecord[ 'description' ] );
 
 		return $ctcGroup;
 	}

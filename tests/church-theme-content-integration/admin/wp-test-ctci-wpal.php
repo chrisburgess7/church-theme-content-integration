@@ -8,7 +8,7 @@
 
 class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 
-	/** @var CTCI_WPALInterface */
+	/** @var CTCI_WPAL */
 	protected $sut;
 
 	public function setUp() {
@@ -90,6 +90,34 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertFalse(is_wp_error($term));
 		$this->assertEquals($group->getName(), $term['name']);
 		$this->assertEquals($group->getDescription(), $term['description']);
+	}
+
+	public function testGetAttachedCTCGroup() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		// insert a ctc group / term record
+		$ids = wp_insert_term('CTC Group', CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+				'description' => 'CTC Group desc')
+		);
+		$this->assertFalse(is_wp_error($ids));
+		// insert an attach record for it
+		$attachTable = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+		$result = $wpdb->insert( $attachTable, array(
+				'data_provider' => 'f1',
+				'term_id' => $ids['term_id'],
+				'provider_group_id' => '12345'
+			), array( '%s', '%d', '%s' )
+		);
+		$this->assertTrue( $result !== false );
+		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', '');
+
+		// act
+		$ctcGroup = $this->sut->getAttachedCTCGroup($group);
+
+		$this->assertTrue( is_object( $ctcGroup ) && get_class($ctcGroup) === 'CTCI_CTCGroup' );
+		$this->assertEquals( $ctcGroup->id(), $ids['term_id'] );
+		$this->assertEquals( $ctcGroup->getName(), 'CTC Group' );
+		$this->assertEquals( $ctcGroup->getDescription(), 'CTC Group desc' );
 	}
 }
  
