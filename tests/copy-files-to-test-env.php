@@ -81,10 +81,4 @@ mkdir( $wordpressPluginTestDir );
 copyFiles( $pluginDir, '', $wordpressPluginDir );
 copyFiles( $testFilesDir, '', $wordpressPluginDir . DIRECTORY_SEPARATOR . 'tests' );
 
-// copy some test files into the base plugin folder required
-//copy( $testFilesDir)
-
 echo PHP_EOL . 'Copy Complete' . PHP_EOL;
-
-// load the wordpress bootstrap file
-//require_once $wordpressBootstrapFile;
