@@ -24,10 +24,14 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	// TODO: create a createAndAttachCTCGroup method, plus create exceptions for better error handling
 
 	public function createCTCGroup( CTCI_PeopleGroupInterface $group ) {
-		return wp_insert_term( $group->getName(), CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+		$result = wp_insert_term( $group->getName(), CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
 				'description' => $group->getDescription()
 			)
 		);
+		if ( is_wp_error($result) ) {
+			throw new CTCI_CreateCTCGroupException($result);
+		}
+		return $result;
 	}
 
 	/**
@@ -129,5 +133,17 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		$ctcGroup = new CTCI_CTCGroup( $ctcGroupTermRecord[ 'term_id' ], $ctcGroupTermRecord[ 'name' ], $ctcGroupTermRecord[ 'description' ] );
 
 		return $ctcGroup;
+	}
+}
+
+class CTCI_CreateCTCGroupException extends Exception {
+	protected $wp_error;
+	public function __construct( WP_Error $wp_error, $message = "", $code = 0, Exception $previous = null ) {
+		parent::__construct( $message, $code, $previous );
+		$this->wp_error = $wp_error;
+	}
+
+	public function getWPError() {
+		return $this->wp_error;
 	}
 }
