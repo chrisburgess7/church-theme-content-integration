@@ -9,6 +9,8 @@
 interface CTCI_WPALInterface {
 	public function getOption( $option );
 
+	public function createCTCGroup( CTCI_PeopleGroupInterface $group );
+
 	public function attachCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group );
 
 	public function updateCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group );

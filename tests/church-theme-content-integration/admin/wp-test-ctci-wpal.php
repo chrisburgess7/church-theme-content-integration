@@ -119,5 +119,17 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $ctcGroup->getName(), 'CTC Group' );
 		$this->assertEquals( $ctcGroup->getDescription(), 'CTC Group desc' );
 	}
+
+	public function testCreateCTCGroup() {
+		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', 'My group description');
+
+		$this->sut->createCTCGroup( $group );
+
+		$termRecord = get_term_by( 'name', 'My group', CTCI_WPAL::$ctcPersonGroupTaxonomy, ARRAY_A );
+		$this->assertTrue( $termRecord !== false );
+		$this->assertFalse( is_wp_error( $termRecord ) );
+		$this->assertEquals( $termRecord['name'], 'My group' );
+		$this->assertEquals( $termRecord['description'], 'My group description' );
+	}
 }
  

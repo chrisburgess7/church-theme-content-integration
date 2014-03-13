@@ -21,6 +21,15 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		// TODO: Implement getOption() method.
 	}
 
+	// TODO: create a createAndAttachCTCGroup method, plus create exceptions for better error handling
+
+	public function createCTCGroup( CTCI_PeopleGroupInterface $group ) {
+		return wp_insert_term( $group->getName(), CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+				'description' => $group->getDescription()
+			)
+		);
+	}
+
 	/**
 	 * Attaches the CTC group in the first argument to the people group in the second argument.
 	 * This works whether or not the CTC group already has an attach record. It updates if it exists
@@ -72,6 +81,8 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 			return true;
 		}
 	}
+
+
 
 	/**
 	 * Updates the name and description of a CTC group with the info from the second argument
