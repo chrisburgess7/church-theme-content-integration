@@ -19,6 +19,11 @@ $GLOBALS['wp_tests_options'] = array(
 
 echo PHP_EOL . 'Loading WP bootstrap...' . PHP_EOL;
 
+// we need to include files in the admin section so define this to force that to occur
+// the wordpress bootstrap file below has also been edited to set the PHP_SELF to a
+// wp-admin url if this is defined
+define ('WP_ADMIN', true);
+
 // If the develop repo location is defined (as WP_DEVELOP_DIR), use that
 // location. Otherwise, we'll just assume that this plugin is installed in a
 // WordPress develop SVN checkout.
@@ -28,3 +33,4 @@ if( false !== getenv( 'WP_DEVELOP_DIR' ) ) {
 } else {
 	require dirname(__FILE__) . '/../../../../../tests/phpunit/includes/bootstrap.php';
 }
+

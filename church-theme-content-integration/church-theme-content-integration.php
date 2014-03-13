@@ -46,7 +46,6 @@ class Church_Theme_Content_Integration {
 	 *
 	 */
 	public function __construct() {
-
 		// Set plugin data
 		add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
 
@@ -191,17 +190,14 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/F1/OAuth/class-request-signer.php',
 				self::$ADMIN_DIR . '/F1/OAuth/interface-f1-oauth-client.php',
 
-				// Libraries
-				//CTCI_LIB_DIR . '/ct-meta-box/ct-meta-box.php', // see CTMB_URL constant defined above
-
 			),
 
 			// Frontend only
-			/*
-			'frontend' => array (
 
-			),
-			*/
+			/*'frontend' => array (
+
+			),*/
+
 
 		) );
 
@@ -216,52 +212,37 @@ class Church_Theme_Content_Integration {
 	 * @access public
 	 */
 	public function load_includes() {
-
 		// Get includes
 		$includes = $this->includes;
 
 		// Loop conditions
 		foreach ( $includes as $condition => $files ) {
-
 			$do_includes = false;
-
 			// Check condition
 			switch ( $condition ) {
-
 				// Admin Only
 				case 'admin':
-
 					if ( is_admin() ) {
 						$do_includes = true;
 					}
-
 					break;
-
 				// Frontend Only
 				case 'frontend':
-
 					if ( !is_admin() ) {
 						$do_includes = true;
 					}
-
 					break;
-
 				// Admin or Frontend (always)
 				default:
-
 					$do_includes = true;
-
 					break;
-
 			}
 
 			// Loop files if condition met
 			if ( $do_includes ) {
-
 				foreach ( $files as $file ) {
 					require_once trailingslashit( self::$PLUGIN_PATH ) . $file;
 				}
-
 			}
 
 		}

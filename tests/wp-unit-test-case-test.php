@@ -7,9 +7,12 @@
  * Time: 9:58 PM
  */
 
-require_once dirname(__FILE__) . '/../admin/class-wpal.php';
-
 class WP_Test_UnitTestCaseTest extends WP_UnitTestCase {
+
+	/*public function setUp() {
+		parent::setUp();
+
+	}*/
 
 	public function test_plugins_active() {
 		$this->assertTrue(is_plugin_active('church-theme-content/church-theme-content.php'));
