@@ -1,0 +1,8 @@
+<phpunit bootstrap="bootstrap.php" backupGlobals="false" colors="true">
+    <testsuites>
+        <!-- Default test suite to run all tests -->
+        <testsuite name="wp-unit-test-case-test.php">
+            <directory prefix="wp-unit-test-case-" suffix="test.php">.</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

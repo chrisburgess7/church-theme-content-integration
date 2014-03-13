@@ -9,12 +9,20 @@
  * (https://github.com/tierra/wordpress-plugin-tests) for testing against wordpress itself.
  */
 
-$wordpressDir = dirname( __FILE__ ) . '/../../wordpress';
-$wordpressPluginsDir = $wordpressDir . '/src/wp-content/plugins';
+// name of this plugin being tested
 $pluginDirName = 'church-theme-content-integration';
+// location of plugin directory in this project
 $pluginDir = dirname( __FILE__ ) . '/../' . $pluginDirName;
-$wordpressPluginDir = $wordpressPluginsDir . '/' . $pluginDirName;
+// base folder for test files in this project
 $testFilesDir = dirname( __FILE__ );
+
+// location of wordpress test env
+$wordpressDir = dirname( __FILE__ ) . '/../../wordpress';
+// locations of plugins directory in wordpress test env
+$wordpressPluginsDir = $wordpressDir . '/src/wp-content/plugins';
+// directory of this plugin in wordpress test env
+$wordpressPluginDir = $wordpressPluginsDir . '/' . $pluginDirName;
+// location of test files for this plugin in test wordpress env
 $wordpressPluginTestDir = $wordpressPluginDir . '/tests';
 
 function copyFiles( $baseDir, $subDir, $destDir ) {
@@ -45,29 +53,38 @@ function copyFiles( $baseDir, $subDir, $destDir ) {
 	}
 }
 
-function rrmdir( $dir ) {
+function rrmdir( $dir, $deleteCurrent = false ) {
 	if ( is_dir( $dir ) ) {
 		$objects = scandir( $dir );
 		foreach ( $objects as $object ) {
 			if ( $object != "." && $object != ".." ) {
 				if ( filetype( $dir . "/" . $object ) == "dir" ) {
-					rrmdir( $dir . "/" . $object );
+					rrmdir( $dir . "/" . $object, true );
 				} else {
 					unlink( $dir . "/" . $object );
 				}
 			}
 		}
 		reset( $objects );
-		rmdir( $dir );
+		if ($deleteCurrent) {
+			rmdir( $dir );
+		}
 	}
 }
 
-// clean up old stuff
+// clean up old stuff - assumes the plugin directory itself already exists
 if ( file_exists( $wordpressPluginDir ) ) {
 	rrmdir( $wordpressPluginDir );
 }
-mkdir( $wordpressPluginDir );
 mkdir( $wordpressPluginTestDir );
 
 copyFiles( $pluginDir, '', $wordpressPluginDir );
 copyFiles( $testFilesDir, '', $wordpressPluginDir . DIRECTORY_SEPARATOR . 'tests' );
+
+// copy some test files into the base plugin folder required
+//copy( $testFilesDir)
+
+echo PHP_EOL . 'Copy Complete' . PHP_EOL;
+
+// load the wordpress bootstrap file
+//require_once $wordpressBootstrapFile;

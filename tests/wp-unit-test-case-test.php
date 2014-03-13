@@ -6,16 +6,23 @@
  * Date: 10/03/14
  * Time: 9:58 PM
  */
+
+require_once dirname(__FILE__) . '/../admin/class-wpal.php';
+
 class WP_Test_UnitTestCaseTest extends WP_UnitTestCase {
-	// TODO NEXT write a test to check the WP unit testing setup, with loading CTC specifically
-	// unit tests will need a start task that copies all plugin files and test files to
-	// the dev wordpress folder, and then run the test from there. The file loading script in
-	// this plugin's main file ought to handle any dependencies
+
+	public function test_plugins_active() {
+		$this->assertTrue(is_plugin_active('church-theme-content/church-theme-content.php'));
+		$this->assertTrue(is_plugin_active('church-theme-content-integration/church-theme-content-integration.php'));
+	}
 
 	public function test_db_setup() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
 		$tableName = CTCI_WPAL::$ctcGroupConnectTable;
-		$result = mysql_query("SHOW TABLES LIKE '$tableName'");
-		$this->assertGreaterThan(0, mysql_num_rows($result));
+		$sql = "SHOW TABLES LIKE '$tableName'";
+		//var_dump($sql);
+		$this->assertEquals($wpdb->get_var($sql), $tableName);
 	}
 
 } 

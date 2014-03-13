@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <phpunit>
     <php>
-        <var name="DB_DSN" value="mysql:dbname=ctc_sandbox;host=localhost"/>
+        <var name="DB_DSN" value="mysql:dbname=wordpressdb;host=localhost"/>
         <var name="DB_USER" value="user"/>
         <var name="DB_PASSWD" value="passwd"/>
-        <var name="DB_DBNAME" value="ctc_sandbox"/>
+        <var name="DB_DBNAME" value="wordpressdb"/>
     </php>
 </phpunit>
