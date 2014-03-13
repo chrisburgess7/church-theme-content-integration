@@ -1,0 +1,8 @@
+<phpunit bootstrap="bootstrap.php" backupGlobals="false" colors="true">
+    <testsuites>
+        <!-- Default test suite to run all tests -->
+        <testsuite name="wp-test-ctci-wpal.php">
+            <directory prefix="wp-test-ctci-wpal" suffix=".php">.</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

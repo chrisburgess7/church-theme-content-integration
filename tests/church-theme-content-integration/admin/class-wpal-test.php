@@ -11,10 +11,6 @@ require_once dirname( __FILE__ ) . '/../../church-theme-content-integration/clas
 require_once dirname( __FILE__ ) . '/../../church-theme-content-integration/class-people-group.php';
 require_once dirname( __FILE__ ) . '/../../church-theme-content-integration/class-ctc-group.php';
 
-class WPUnitTestCaseTest extends WP_UnitTestCase {
-
-}
-
 class CTCI_WPALTest extends CTCI_BaseDatabaseTestCase {
 	/**
 	 * Returns the test dataset.

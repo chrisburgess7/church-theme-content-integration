@@ -250,7 +250,9 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function setup_db() {
-		$connectTableSQL = "CREATE TABLE ctci_ctcgroup_connect (
+		global $wpdb;
+		$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
+		$connectTableSQL = "CREATE TABLE $tableName (
 			term_id bigint(20) NOT NULL,
 			data_provider varchar(16) NOT NULL,
 			provider_group_id varchar(32) NOT NULL,

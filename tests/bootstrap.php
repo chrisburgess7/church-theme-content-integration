@@ -34,3 +34,15 @@ if( false !== getenv( 'WP_DEVELOP_DIR' ) ) {
 	require dirname(__FILE__) . '/../../../../../tests/phpunit/includes/bootstrap.php';
 }
 
+// perform the db setup upon activation, which doesn't get run above
+global $wpdb;
+$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
+$connectTableSQL = "CREATE TABLE $tableName (
+			term_id bigint(20) NOT NULL,
+			data_provider varchar(16) NOT NULL,
+			provider_group_id varchar(32) NOT NULL,
+			KEY term_id (term_id)
+		);";
+
+require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+dbDelta($connectTableSQL);
