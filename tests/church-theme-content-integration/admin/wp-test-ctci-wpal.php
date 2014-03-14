@@ -54,6 +54,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 			$wpdb = $wpdbActual;
 			throw $e;
 		}
+		$wpdb = $wpdbActual;
 	}
 
 	public function testAttachCTCGroupAlreadyAttached() {
@@ -120,7 +121,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 			$wpdb = $wpdbActual;
 			throw $e;
 		}
-
+		$wpdb = $wpdbActual;
 	}
 
 	public function testUpdateCTCGroup() {
