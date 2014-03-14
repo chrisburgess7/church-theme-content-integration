@@ -89,18 +89,22 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	}
 
 
-
 	/**
 	 * Updates the name and description of a CTC group with the info from the second argument
 	 * @param CTCI_CTCGroupInterface $ctcGroup
 	 * @param CTCI_PeopleGroupInterface $group
-	 * @return array|\WP_Error
+	 * @throws CTCI_UpdateCTCGroupException
+	 * @return array
 	 */
 	public function updateCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group ) {
-		return wp_update_term( $ctcGroup->id(), static::$ctcPersonGroupTaxonomy, array(
+		$result = wp_update_term( $ctcGroup->id(), static::$ctcPersonGroupTaxonomy, array(
 			'name' => $group->getName(),
 			'description' => $group->getDescription()
 		) );
+		if ( is_wp_error($result) ) {
+			throw new CTCI_UpdateCTCGroupException($result);
+		}
+		return $result;
 	}
 
 	/**
@@ -139,6 +143,18 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 }
 
 class CTCI_CreateCTCGroupException extends Exception {
+	protected $wp_error;
+	public function __construct( WP_Error $wp_error, $message = "", $code = 0, Exception $previous = null ) {
+		parent::__construct( $message, $code, $previous );
+		$this->wp_error = $wp_error;
+	}
+
+	public function getWPError() {
+		return $this->wp_error;
+	}
+}
+
+class CTCI_UpdateCTCGroupException extends Exception {
 	protected $wp_error;
 	public function __construct( WP_Error $wp_error, $message = "", $code = 0, Exception $previous = null ) {
 		parent::__construct( $message, $code, $previous );
