@@ -21,8 +21,11 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		// TODO: Implement getOption() method.
 	}
 
-	// TODO: create a createAndAttachCTCGroup method, plus create exceptions for better error handling
-
+	/**
+	 * @param CTCI_PeopleGroupInterface $group
+	 * @return CTCI_CTCGroup An array containing term_id and taxonomy_id
+	 * @throws CTCI_CreateCTCGroupException
+	 */
 	public function createCTCGroup( CTCI_PeopleGroupInterface $group ) {
 		$result = wp_insert_term( $group->getName(), CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
 				'description' => $group->getDescription()
@@ -31,7 +34,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		if ( is_wp_error($result) ) {
 			throw new CTCI_CreateCTCGroupException($result);
 		}
-		return $result;
+		return $this->getCTCGroup( $result['term_id'] );
 	}
 
 	/**
@@ -88,6 +91,15 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		}
 	}
 
+	/**
+	 * @param CTCI_PeopleGroupInterface $group
+	 * @return CTCI_CTCGroup
+	 */
+	public function createAttachedCTCGroup( CTCI_PeopleGroupInterface $group ) {
+		$ctcGroup = $this->createCTCGroup( $group );
+		$this->attachCTCGroup( $ctcGroup, $group );
+		return $ctcGroup;
+	}
 
 	/**
 	 * Updates the name and description of a CTC group with the info from the second argument
@@ -105,6 +117,23 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 			throw new CTCI_UpdateCTCGroupException($result);
 		}
 		return $result;
+	}
+
+	/**
+	 * @param $term_id
+	 * @return CTCI_CTCGroup
+	 * @throws CTCI_CouldNotRetrieveCTCGroupException
+	 */
+	public function getCTCGroup( $term_id ) {
+		$ctcGroupTermRecord = get_term( $term_id, self::$ctcPersonGroupTaxonomy, ARRAY_A );
+
+		if ( $ctcGroupTermRecord === null || is_wp_error( $ctcGroupTermRecord ) ) {
+			throw new CTCI_CouldNotRetrieveCTCGroupException;
+		}
+
+		$ctcGroup = new CTCI_CTCGroup( $ctcGroupTermRecord[ 'term_id' ], $ctcGroupTermRecord[ 'name' ], $ctcGroupTermRecord[ 'description' ] );
+
+		return $ctcGroup;
 	}
 
 	/**
@@ -131,15 +160,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 			return null;
 		}
 
-		$ctcGroupTermRecord = get_term( $ctcGroupConnectRow[ 'term_id' ], self::$ctcPersonGroupTaxonomy, ARRAY_A );
-
-		if ( $ctcGroupTermRecord === null || is_wp_error( $ctcGroupTermRecord ) ) {
-			throw new CTCI_CouldNotRetrieveCTCGroupException;
-		}
-
-		$ctcGroup = new CTCI_CTCGroup( $ctcGroupTermRecord[ 'term_id' ], $ctcGroupTermRecord[ 'name' ], $ctcGroupTermRecord[ 'description' ] );
-
-		return $ctcGroup;
+		return $this->getCTCGroup( $ctcGroupConnectRow[ 'term_id' ] );
 	}
 }
 

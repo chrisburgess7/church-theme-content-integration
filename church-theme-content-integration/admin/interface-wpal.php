@@ -13,7 +13,11 @@ interface CTCI_WPALInterface {
 
 	public function attachCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group );
 
+	public function createAttachedCTCGroup( CTCI_PeopleGroupInterface $group );
+
 	public function updateCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group );
+
+	public function getCTCGroup( $term_id );
 
 	public function getAttachedCTCGroup( CTCI_PeopleGroupInterface $group );
 } 

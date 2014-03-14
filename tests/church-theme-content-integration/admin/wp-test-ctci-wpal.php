@@ -16,6 +16,35 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->sut = new CTCI_WPAL();
 	}
 
+	public function testCreateCTCGroup() {
+		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', 'My group description');
+
+		$result = $this->sut->createCTCGroup( $group );
+
+		// check the returned result
+		$this->assertInstanceOf( 'CTCI_CTCGroup', $result );
+		$this->assertEquals( 'My group', $result->getName() );
+		$this->assertEquals( 'My group description', $result->getDescription() );
+		// check the term in the db
+		$termRecord = get_term( $result->id(), CTCI_WPAL::$ctcPersonGroupTaxonomy, ARRAY_A );
+		$this->assertTrue( $termRecord !== false );
+		$this->assertFalse( is_wp_error( $termRecord ) );
+		$this->assertEquals( $termRecord['name'], 'My group' );
+		$this->assertEquals( $termRecord['description'], 'My group description' );
+	}
+
+	public function testCreateCTCGroupException() {
+		// empty name triggers exception
+		$group = new CTCI_PeopleGroup('f1', '12345', '', 'My group description');
+		$this->setExpectedException('CTCI_CreateCTCGroupException');
+		try {
+			$this->sut->createCTCGroup( $group );
+		} catch (CTCI_CreateCTCGroupException $e) {
+			$this->assertTrue( is_wp_error($e->getWPError() ) );
+			throw $e;
+		}
+	}
+
 	public function testAttachCTCGroup() {
 		/** @var $wpdb wpdb */
 		global $wpdb;
@@ -124,6 +153,30 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$wpdb = $wpdbActual;
 	}
 
+	public function testCreateAttachedCTCGroup() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', 'My group description');
+
+		$result = $this->sut->createAttachedCTCGroup( $group );
+
+		// check the returned result
+		$this->assertInstanceOf( 'CTCI_CTCGroup', $result );
+		$this->assertEquals( 'My group', $result->getName() );
+		$this->assertEquals( 'My group description', $result->getDescription() );
+		// check the term in the db
+		$termRecord = get_term( $result->id(), CTCI_WPAL::$ctcPersonGroupTaxonomy, ARRAY_A );
+		$this->assertTrue( $termRecord !== false );
+		$this->assertFalse( is_wp_error( $termRecord ) );
+		$this->assertEquals( $termRecord['name'], 'My group' );
+		$this->assertEquals( $termRecord['description'], 'My group description' );
+		// check the attach record
+		$result = $wpdb->get_row("SELECT * FROM " . $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable .
+			" WHERE term_id = {$result->id()} AND data_provider = 'f1' AND provider_group_id = '12345'"
+		);
+		$this->assertNotNull( $result );
+	}
+
 	public function testUpdateCTCGroup() {
 		$ctcGroup = new CTCI_CTCGroup( 25, 'CTC Group', 'CTC description' );
 		$group = new CTCI_PeopleGroup( 'f1', '37e21', 'Provider Group', 'Provider description' );
@@ -218,31 +271,5 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		CTCI_WPAL::$ctcPersonGroupTaxonomy = $tax;
 	}
 
-	public function testCreateCTCGroup() {
-		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', 'My group description');
 
-		$result = $this->sut->createCTCGroup( $group );
-
-		// check the returned result
-		$this->assertTrue( isset( $result['term_id'] ) );
-		$this->assertTrue( isset( $result['term_taxonomy_id'] ) );
-		// check the term in the db
-		$termRecord = get_term_by( 'name', 'My group', CTCI_WPAL::$ctcPersonGroupTaxonomy, ARRAY_A );
-		$this->assertTrue( $termRecord !== false );
-		$this->assertFalse( is_wp_error( $termRecord ) );
-		$this->assertEquals( $termRecord['name'], 'My group' );
-		$this->assertEquals( $termRecord['description'], 'My group description' );
-	}
-
-	public function testCreateCTCGroupException() {
-		// empty name triggers exception
-		$group = new CTCI_PeopleGroup('f1', '12345', '', 'My group description');
-		$this->setExpectedException('CTCI_CreateCTCGroupException');
-		try {
-			$this->sut->createCTCGroup( $group );
-		} catch (CTCI_CreateCTCGroupException $e) {
-			$this->assertTrue( is_wp_error($e->getWPError() ) );
-			throw $e;
-		}
-	}
 }
