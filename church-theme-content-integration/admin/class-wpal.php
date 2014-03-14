@@ -41,7 +41,9 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	 *
 	 * @param CTCI_CTCGroupInterface $ctcGroup
 	 * @param CTCI_PeopleGroupInterface $group
-	 * @return bool
+	 * @throws CTCI_UpdateCTCGroupAttachRecordException
+	 * @throws CTCI_InsertCTCGroupAttachRecordException
+	 * @return string       If record updated, returns 'updated', if inserted, returns 'inserted'
 	 */
 	public function attachCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group ) {
 		/** @var $wpdb wpdb */
@@ -65,10 +67,10 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 		// an error occurred during update, so we don't know if attach record exists or not, abort
 		if ( $updateResult === false ) {
-			return false;
+			throw new CTCI_UpdateCTCGroupAttachRecordException($ctcGroup, $group);
 		} elseif ( $updateResult > 0 ) {
 			// successful update
-			return true;
+			return 'updated';
 		}
 
 		// if no update error and no rows affected, then we need a new entry
@@ -80,9 +82,9 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		);
 
 		if ( $result === false ) {
-			return false;
+			throw new CTCI_InsertCTCGroupAttachRecordException($ctcGroup, $group);
 		} else {
-			return true;
+			return 'inserted';
 		}
 	}
 
@@ -147,3 +149,18 @@ class CTCI_CreateCTCGroupException extends Exception {
 		return $this->wp_error;
 	}
 }
+
+class CTCI_CTCGroupAttachException extends Exception {
+	protected $ctcGroup;
+	protected $group;
+	public function __construct( CTCI_CTCGroup $ctcGroup, CTCI_PeopleGroup $group, $message = "", $code = 0, Exception $previous = null ) {
+		parent::__construct( $message, $code, $previous );
+		$this->ctcGroup = $ctcGroup;
+		$this->group = $group;
+	}
+	public function getCTCGroup() { return $this->ctcGroup; }
+	public function getGroup() { return $this->group; }
+}
+
+class CTCI_UpdateCTCGroupAttachRecordException extends CTCI_CTCGroupAttachException {}
+class CTCI_InsertCTCGroupAttachRecordException extends CTCI_CTCGroupAttachException {}

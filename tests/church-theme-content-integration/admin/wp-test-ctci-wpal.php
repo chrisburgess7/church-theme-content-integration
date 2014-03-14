@@ -25,13 +25,35 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 
 		$response = $this->sut->attachCTCGroup( $ctcGroup, $group );
 
-		$this->assertTrue( $response );
+		$this->assertEquals( 'inserted', $response );
 
 		$result = $wpdb->get_row("SELECT * FROM " . $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable .
 			" WHERE term_id = 25 AND data_provider = 'f1' AND provider_group_id = '37e21'"
 		);
 
 		$this->assertNotNull( $result );
+	}
+
+	public function testAttachCTCGroupInsertException() {
+		/** @var $wpdb PHPUnit_Framework_MockObject_MockObject */
+		global $wpdb;
+		$wpdbActual = $wpdb;
+		$wpdb = $this->getMockBuilder('wpdb')->disableOriginalConstructor()->getMock();
+		$wpdb->expects($this->any())
+			->method('insert')
+			->will($this->returnValue(false));
+		$this->setExpectedException('CTCI_InsertCTCGroupAttachRecordException');
+		// id of 25 matches the Elders group in the sample data
+		$ctcGroup = new CTCI_CTCGroup( 25, 'CTC Group', '' );
+		$group = new CTCI_PeopleGroup( 'f1', '37e21', 'My Group', '' );
+
+		try {
+			$this->sut->attachCTCGroup( $ctcGroup, $group );
+		} catch (Exception $e) {
+			// make sure to reset the global wpdb for other tests
+			$wpdb = $wpdbActual;
+			throw $e;
+		}
 	}
 
 	public function testAttachCTCGroupAlreadyAttached() {
@@ -43,7 +65,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 
 		// attach the first group
 		$response = $this->sut->attachCTCGroup( $ctcGroup, $group );
-		$this->assertTrue( $response );
+		$this->assertEquals( 'inserted', $response );
 		// check it's ok
 		$result = $wpdb->get_row("SELECT * FROM " . $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable .
 			" WHERE term_id = 25 AND data_provider = 'f1' AND provider_group_id = '37e21'"
@@ -54,7 +76,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$group = new CTCI_PeopleGroup( 'f1', '18391', 'My Group', '' );
 
 		$response = $this->sut->attachCTCGroup( $ctcGroup, $group );
-		$this->assertTrue( $response );
+		$this->assertEquals( 'updated', $response );
 
 		$result = $wpdb->get_row("SELECT * FROM " . $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable .
 			" WHERE term_id = 25 AND data_provider = 'f1' AND provider_group_id = '37e21'"
@@ -67,6 +89,38 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		);
 		// now check that there is a row with the new attach record
 		$this->assertNotNull( $result );
+	}
+
+	public function testAttachCTCGroupAlreadyAttachedUpdateException() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$wpdbActual = $wpdb;
+		// id of 25 matches the Elders group in the sample data
+		$ctcGroup = new CTCI_CTCGroup( 25, 'CTC Group', '' );
+		$group = new CTCI_PeopleGroup( 'f1', '37e21', 'My Group', '' );
+
+		// attach the first group
+		$response = $this->sut->attachCTCGroup( $ctcGroup, $group );
+		$this->assertEquals( 'inserted', $response );
+
+		// attach a new group
+		$group = new CTCI_PeopleGroup( 'f1', '18391', 'My Group', '' );
+		// set it up to throw exception
+		/** @var $wpdb PHPUnit_Framework_MockObject_MockObject */
+		$wpdb = $this->getMockBuilder('wpdb')->disableOriginalConstructor()->getMock();
+		$wpdb->expects($this->any())
+			->method('update')
+			->will($this->returnValue(false));
+		$this->setExpectedException('CTCI_UpdateCTCGroupAttachRecordException');
+
+		try {
+			$this->sut->attachCTCGroup( $ctcGroup, $group );
+		} catch (Exception $e) {
+			// make sure to reset the global wpdb for other tests
+			$wpdb = $wpdbActual;
+			throw $e;
+		}
+
 	}
 
 	public function testUpdateCTCGroup() {
