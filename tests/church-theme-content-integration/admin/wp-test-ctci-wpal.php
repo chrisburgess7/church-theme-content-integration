@@ -174,6 +174,49 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $ctcGroup->getDescription(), 'CTC Group desc' );
 	}
 
+	public function testGetAttachedCTCGroup_NoAttachRecord() {
+		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', '');
+
+		// act
+		$ctcGroup = $this->sut->getAttachedCTCGroup($group);
+
+		$this->assertNull($ctcGroup);
+	}
+
+	public function testGetAttachedCTCGroup_GetTermError() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		// insert a ctc group / term record
+		$ids = wp_insert_term('CTC Group', CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+				'description' => 'CTC Group desc')
+		);
+		$this->assertFalse(is_wp_error($ids));
+		// insert an attach record for it
+		$attachTable = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+		$result = $wpdb->insert( $attachTable, array(
+				'data_provider' => 'f1',
+				'term_id' => $ids['term_id'],
+				'provider_group_id' => '12345'
+			), array( '%s', '%d', '%s' )
+		);
+		$this->assertTrue( $result !== false );
+		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', '');
+
+		//change the taxonomy to force the error
+		$tax = CTCI_WPAL::$ctcPersonGroupTaxonomy;
+		CTCI_WPAL::$ctcPersonGroupTaxonomy = 'rubbish_owehf823938h287fg2io78gf2g7ef827';
+		$this->setExpectedException('CTCI_CouldNotRetrieveCTCGroupException');
+
+		// act
+		try{
+			$this->sut->getAttachedCTCGroup( $group );
+		} catch ( Exception $e ) {
+			CTCI_WPAL::$ctcPersonGroupTaxonomy = $tax;
+			throw $e;
+		}
+		CTCI_WPAL::$ctcPersonGroupTaxonomy = $tax;
+	}
+
 	public function testCreateCTCGroup() {
 		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', 'My group description');
 

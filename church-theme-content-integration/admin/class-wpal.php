@@ -109,7 +109,8 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 	/**
 	 * @param CTCI_PeopleGroupInterface $group
-	 * @return CTCI_CTCGroupInterface|null|WP_Error
+	 * @throws CTCI_CouldNotRetrieveCTCGroupException
+	 * @return CTCI_CTCGroupInterface|null
 	 */
 	public function getAttachedCTCGroup( CTCI_PeopleGroupInterface $group ) {
 		/** @var $wpdb wpdb */
@@ -133,7 +134,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		$ctcGroupTermRecord = get_term( $ctcGroupConnectRow[ 'term_id' ], self::$ctcPersonGroupTaxonomy, ARRAY_A );
 
 		if ( $ctcGroupTermRecord === null || is_wp_error( $ctcGroupTermRecord ) ) {
-			return $ctcGroupTermRecord;
+			throw new CTCI_CouldNotRetrieveCTCGroupException;
 		}
 
 		$ctcGroup = new CTCI_CTCGroup( $ctcGroupTermRecord[ 'term_id' ], $ctcGroupTermRecord[ 'name' ], $ctcGroupTermRecord[ 'description' ] );
@@ -180,3 +181,5 @@ class CTCI_CTCGroupAttachException extends Exception {
 
 class CTCI_UpdateCTCGroupAttachRecordException extends CTCI_CTCGroupAttachException {}
 class CTCI_InsertCTCGroupAttachRecordException extends CTCI_CTCGroupAttachException {}
+
+class CTCI_CouldNotRetrieveCTCGroupException extends Exception {}
