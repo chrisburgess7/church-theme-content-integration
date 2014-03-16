@@ -200,6 +200,28 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals($group->getDescription(), $term['description']);
 	}
 
+	public function testGetCTCGroup() {
+		// insert a ctc group / term record
+		$ids = wp_insert_term('CTC Group', CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+				'description' => 'CTC Group desc')
+		);
+		$this->assertFalse(is_wp_error($ids));
+
+		// act
+		$ctcGroup = $this->sut->getCTCGroup($ids['term_id']);
+
+		$this->assertInstanceOf('CTCI_CTCGroup', $ctcGroup);
+		$this->assertEquals($ids['term_id'], $ctcGroup->id());
+		$this->assertEquals('CTC Group', $ctcGroup->getName());
+		$this->assertEquals('CTC Group desc', $ctcGroup->getDescription());
+	}
+
+	public function testGetCTCGroup_CouldNotRetrieveException() {
+		$this->setExpectedException('CTCI_CouldNotRetrieveCTCGroupException');
+		// act
+		$this->sut->getCTCGroup(192784691);
+	}
+
 	public function testGetAttachedCTCGroup() {
 		/** @var $wpdb wpdb */
 		global $wpdb;
