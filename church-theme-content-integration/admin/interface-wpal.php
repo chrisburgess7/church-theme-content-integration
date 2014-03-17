@@ -20,4 +20,12 @@ interface CTCI_WPALInterface {
 	public function getCTCGroup( $term_id );
 
 	public function getAttachedCTCGroup( CTCI_PeopleGroupInterface $group );
+
+	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+
+	/**
+	 * @param $providerTag
+	 * @return CTCI_CTCPersonInterface[]
+	 */
+	public function getCTCPeopleAttachedViaProvider( $providerTag );
 } 

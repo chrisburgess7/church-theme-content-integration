@@ -162,6 +162,14 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 		return $this->getCTCGroup( $ctcGroupConnectRow[ 'term_id' ] );
 	}
+
+	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+
+	}
+
+	public function getCTCPeopleAttachedViaProvider( $providerTag ) {
+
+	}
 }
 
 class CTCI_CreateCTCGroupException extends Exception {

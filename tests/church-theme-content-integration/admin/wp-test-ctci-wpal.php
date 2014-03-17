@@ -283,7 +283,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		CTCI_WPAL::$ctcPersonGroupTaxonomy = 'rubbish_owehf823938h287fg2io78gf2g7ef827';
 		$this->setExpectedException('CTCI_CouldNotRetrieveCTCGroupException');
 
-		// act
+		// act - resetting the taxonomy string for other tests
 		try{
 			$this->sut->getAttachedCTCGroup( $group );
 		} catch ( Exception $e ) {
@@ -293,5 +293,28 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		CTCI_WPAL::$ctcPersonGroupTaxonomy = $tax;
 	}
 
+	public function testCreateCTCPerson() {
 
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson
+			->setId(27)
+			->setName('New Person')
+			->setBio('<h2>Example Heading</h2> This is the bio text, http://www.youtube.com/watch?v=3F1V2fZS7yA')
+			->setPosition('Lead Pastor')
+			->setPhone('(02) 4211 1111')
+			->setEmail('new.person@test.com')
+			->setUrlsFromArray(array('http://facebook.com', 'http://twitter.com', 'https://linkedin.com'))
+			->setExcerpt('New person excerpt');
+
+		$id = $this->sut->createCTCPerson( $ctcPerson );
+
+		// check id looks ok
+		$this->assertNotSame( 0, $id );
+		$this->assertFalse( is_wp_error($id) );
+		$this->assertTrue( is_int($id) && $id > 0 );
+	}
+
+	public function testGetCTCPeopleAttachedViaProvider() {
+
+	}
 }

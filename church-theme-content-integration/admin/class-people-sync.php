@@ -8,43 +8,80 @@
  */
 class CTCI_PeopleSync {
 	/**
-	 * @var CTCI_PeopleDataProviderInterface
+	 * @var CTCI_PeopleDataProviderInterface[]
 	 */
-	protected $dataProvider;
+	protected $dataProviders;
 
-	public function __construct( CTCI_PeopleDataProviderInterface $dataProvider ) {
-		$this->dataProvider = $dataProvider;
+	/** @var \CTCI_WPALInterface $wpal */
+	protected $wpal;
+
+	public function __construct( CTCI_WPALInterface $wpal, array $dataProviders ) {
+		$this->wpal = $wpal;
+		$this->dataProviders = $dataProviders;
 	}
 
 	public function sync() {
-		$this->dataProvider->setupForPeopleSync();
 
-		if ( $this->dataProvider->getPeopleSyncSetting( 'syncGroups' ) ) {
-			$this->updateGroups();
-		}
+		/** @var $dataProvider CTCI_PeopleDataProviderInterface */
+		foreach ( $this->dataProviders as $dataProvider ) {
+			$dataProvider->setupForPeopleSync();
 
-		$people = $this->dataProvider->getPeople();
+			// update the list of groups if they are being synced
+			if ( $dataProvider->syncGroups() ) {
+				$this->updateGroups();
+			}
 
-		foreach ( $people as $person ) {
+			// get the people to sync from the data provider
+			$people = $dataProvider->getPeople();
 
-			// get existing person record, if any
-			$ctcPerson = $this->getCTCPerson( $this->dataProvider->getProviderPersonTag(), $person->id() );
+			// process the ctc person's that are currently attached
+			$attachedCTCPeople = $this->wpal->getCTCPeopleAttachedViaProvider( $dataProvider->getProviderPersonTag() );
 
-			if ( $ctcPerson !== null ) {
-				if ( $this->dataProvider->getPeopleSyncSetting( 'syncGroups' ) ) {
-					$this->syncCTCPersonsGroups( $ctcPerson, $person );
+			foreach ( $attachedCTCPeople as $ctcPerson ) {
+				// search the provider persons list for an attached record
+
+				$dpId = $this->wpal->getAttachedPersonId( $ctcPerson );
+
+				$match = false;
+				foreach ( $people as $person ) {
+					if ($person->id() == $dpId) {
+						// we have the attached record
+						$this->syncCTCPerson( $ctcPerson, $person, $dataProvider->syncGroups() );
+						$match = true;
+						break;
+					}
 				}
-				$this->syncCTCPerson( $ctcPerson, $person );
-			} else {
+				if ( ! $match ) {
+					// this means that a CTC person with an attached record, no longer has that record in the list
+					// of people to sync, so either just delete the attach record, or delete the CTC person entirely
+					$this->wpal->unattachCTCPerson( $ctcPerson );
+					if ( $dataProvider->deleteUnattached() ) {
+						$this->wpal->deleteCTCPerson( $ctcPerson );
+					}
+				} else {
+					// we've just synced an attached person, so we don't need the record any more
+					unset( $people[$dpId] );
+				}
+			}
+
+			// now check the unattached people - all attached persons have been removed above
+			foreach ( $people as $person ) {
+
 				// attempt to attach the person from the data provider to
 				// a person record in wp db
 				$attached = $this->attachPerson( $person );
 
+				// no luck, so we create a new person
 				if ( !$attached ) {
 					$this->createNewCTCPerson( $person );
 				}
 			}
 		}
+
+
+
+
+
 
 		$this->syncCleanUp();
 	}
@@ -78,17 +115,21 @@ class CTCI_PeopleSync {
 		return false;
 	}
 
-	protected function syncCTCPerson( WP_Post $ctcPerson, CTCI_PersonInterface $person ) {
-
+	protected function syncCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person, $syncGroups ) {
+		if ( $syncGroups ) {
+			$this->syncCTCPersonsGroups( $ctcPerson, $person);
+		}
+		// perform person sync
 	}
 
-	protected function syncCTCPersonsGroups( WP_Post $ctcPerson, CTCI_PersonInterface $person ) {
+	protected function syncCTCPersonsGroups( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person ) {
 		// replaces all existing terms i.e. groups, with the new ones
 		//wp_set_object_terms($ctcPerson->ID, $person->getGroups(), CTCI_Config::$ctcPersonGroupTaxonomy);
 	}
 
-	protected function attachPerson( $person ) {
-		// should only attach to a person with no attachment to any data provider (not just the current one)
+	protected function attachPerson( CTCI_PersonInterface $person ) {
+		// should only attach to a ctc person with no attachment to any data provider (not just the current one)
+		// this may also need to call $this->syncCTCPerson after attaching
 		return false;
 	}
 

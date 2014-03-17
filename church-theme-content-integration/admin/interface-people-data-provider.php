@@ -12,6 +12,7 @@ interface CTCI_PeopleDataProviderInterface {
 	public function setupForPeopleSync();
 
 	/**
+	 * Must return an associative array of CTCI_PersonInterface's, with the array key being the person id
 	 * @return CTCI_PersonInterface[]
 	 */
 	public function getPeople();
