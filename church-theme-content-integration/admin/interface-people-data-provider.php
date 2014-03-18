@@ -20,7 +20,7 @@ interface CTCI_PeopleDataProviderInterface {
 	/**
 	 * Return the groups defined in the data provider in the form of an array, where each element is an
 	 * array containing 'id' and 'name'.
-	 * @return array
+	 * @return CTCI_PeopleGroupInterface[]
 	 */
 	public function getGroups();
 
