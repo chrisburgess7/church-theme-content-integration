@@ -107,7 +107,6 @@ class CTCI_PeopleSync {
 
 		// go through any groups from provider that are new (attached ones removed above)
 		foreach ( $groups as $group ) {
-
 			$unattachedCTCGroups = $this->wpal->getUnattachedCTCGroups();
 			$attached = false;
 			foreach ( $unattachedCTCGroups as $unattachedCTCGroup ) {

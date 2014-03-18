@@ -451,6 +451,22 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertNull( $ctcGroupRow );
 	}
 
+	public function testGetUnattachedCTCGroups() {
+		$unattachedGroups = array();
+
+		// insert some groups
+		$ids = wp_insert_term( 'Group 1', CTCI_WPAL::$ctcPersonGroupTaxonomy, array( 'description' => 'G1d' ) );
+		$unattachedGroups[ $ids['term_id'] ] = new CTCI_CTCGroup( $ids['term_id'], 'Group 1', 'G1d' );
+		$this->insertAttachedCTCGroup( 'Group 2', 'G2d', 'f1' , '1234' );
+		$ids = wp_insert_term( 'Group 3', CTCI_WPAL::$ctcPersonGroupTaxonomy, array( 'description' => 'G3d' ) );
+		$unattachedGroups[ $ids['term_id'] ] = new CTCI_CTCGroup( $ids['term_id'], 'Group 3', 'G3d' );
+		$this->insertAttachedCTCGroup( 'Group 4', 'G4d', 'ccb' , '9876' );
+
+		$actual = $this->sut->getUnattachedCTCGroups();
+
+		$this->assertEquals( $unattachedGroups, $actual );
+	}
+
 	/*public function testCreateCTCPerson() {
 
 		$ctcPerson = new CTCI_CTCPerson();

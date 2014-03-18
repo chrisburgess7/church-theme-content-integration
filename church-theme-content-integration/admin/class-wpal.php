@@ -145,6 +145,8 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	 * @throws CTCI_CouldNotRetrieveCTCGroupException
 	 */
 	public function getCTCGroup( $term_id ) {
+		// convert to int, as sometimes WP returns term id's as strings
+		$term_id = (int) $term_id;
 		$ctcGroupTermRecord = get_term( $term_id, self::$ctcPersonGroupTaxonomy, ARRAY_A );
 
 		if ( $ctcGroupTermRecord === null || is_wp_error( $ctcGroupTermRecord ) ) {
@@ -215,6 +217,34 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcGroups;
 	}
 
+	public function getUnattachedCTCGroups() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$attachTable = $wpdb->prefix . self::$ctcGroupConnectTable;
+
+		$attachedIds = $wpdb->get_results( "SELECT term_id FROM $attachTable" );
+		$attachedTermIds = array();
+		foreach ( $attachedIds as $id ) {
+			$attachedTermIds[] = (int)$id->term_id;
+		}
+
+		$unattachedCTCGroupTerms = get_terms( CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+			'hide_empty' => false,
+			'exclude' => $attachedTermIds
+		) );
+
+		if ( is_wp_error( $unattachedCTCGroupTerms ) ) {
+			throw new CTCI_CouldNotRetrieveUnattachedCTCGroupsException;
+		}
+
+		$ctcGroups = array();
+		foreach ( $unattachedCTCGroupTerms as $ctcGroupTerm ) {
+			$id = (int)$ctcGroupTerm->term_id;
+			$ctcGroups[$id] = new CTCI_CTCGroup( $id, $ctcGroupTerm->name, $ctcGroupTerm->description );
+		}
+		return $ctcGroups;
+	}
+
 	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
 
 	}
@@ -281,3 +311,5 @@ class CTCI_CTCGroupExceptionType extends Exception {
 class CTCI_CouldNotUnattachCTCGroupException extends CTCI_CTCGroupExceptionType {}
 
 class CTCI_CouldNotDeleteCTCGroupException extends CTCI_CTCGroupExceptionType {}
+
+class CTCI_CouldNotRetrieveUnattachedCTCGroupsException extends Exception {}

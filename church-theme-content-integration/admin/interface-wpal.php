@@ -32,6 +32,8 @@ interface CTCI_WPALInterface {
 	 */
 	public function getCTCGroupsAttachedViaProvider( $providerTag );
 
+	public function getUnattachedCTCGroups();
+
 	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 
 	/**
