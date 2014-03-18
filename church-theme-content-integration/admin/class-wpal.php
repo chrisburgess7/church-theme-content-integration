@@ -163,6 +163,38 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $this->getCTCGroup( $ctcGroupConnectRow[ 'term_id' ] );
 	}
 
+	/**
+	 * @param $providerTag
+	 * @return CTCI_CTCGroupInterface[]
+	 */
+	public function getCTCGroupsAttachedViaProvider( $providerTag ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$attachTable = $wpdb->prefix . self::$ctcGroupConnectTable;
+
+		$ctcGroupsConnect = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT term_id, provider_group_id FROM $attachTable WHERE data_provider = %s",
+				$providerTag
+			),
+			ARRAY_A
+		);
+
+		// no attached groups for provider
+		if ( $ctcGroupsConnect === null ) {
+			return array();
+		}
+
+		$ctcGroups = array();
+		foreach ( $ctcGroupsConnect as $groupConnect ) {
+			$ctcGroup = $this->getCTCGroup( $groupConnect['term_id'] );
+			$ctcGroup->setAttachedGroup( $providerTag, $groupConnect['provider_group_id'] );
+			$ctcGroups[ $ctcGroup->getAttachedGroupProviderId() ] = $ctcGroup;
+		}
+
+		return $ctcGroups;
+	}
+
 	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
 
 	}

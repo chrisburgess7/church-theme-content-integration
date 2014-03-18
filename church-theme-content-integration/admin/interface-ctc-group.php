@@ -18,4 +18,10 @@ interface CTCI_CTCGroupInterface {
 	public function setDescription( $description );
 
 	public function getDescription();
+
+	public function setAttachedGroup( $providerTag, $providerId );
+
+	public function getAttachedGroupProviderTag();
+
+	public function getAttachedGroupProviderId();
 } 

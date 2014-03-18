@@ -293,7 +293,113 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		CTCI_WPAL::$ctcPersonGroupTaxonomy = $tax;
 	}
 
-	public function testCreateCTCPerson() {
+	public function testGetCTCGroupsAttachedViaProvider() {
+		$this->insertAttachedCTCGroup( 'Group 1', 'Desc. 1', 'f1', '1111');
+		$this->insertAttachedCTCGroup( 'Group 2', 'Desc. 2', 'ccb', '1111');
+		$this->insertAttachedCTCGroup( 'Group 3', 'Desc. 3', 'f1', '1112');
+		$this->insertAttachedCTCGroup( 'Group 4', 'Desc. 4', 'ccb', '2112');
+		$this->insertAttachedCTCGroup( 'Group 5', 'Desc. 5', 'ccb', '2113');
+		$this->insertAttachedCTCGroup( 'Group 6', 'Desc. 6', 'f1', '1113');
+		
+		$f1Groups = $this->sut->getCTCGroupsAttachedViaProvider( 'f1' );
+		$ccbGroups = $this->sut->getCTCGroupsAttachedViaProvider( 'ccb' );
+
+		$this->assertTrue( isset( $f1Groups['1111'] ), 'F1:1111 not set' );
+		$this->assertTrue( isset( $f1Groups['1112'] ) );
+		$this->assertTrue( isset( $f1Groups['1113'] ) );
+		$this->assertInstanceOf( 'CTCI_CTCGroupInterface', $f1Groups['1111'] );
+		$this->assertInstanceOf( 'CTCI_CTCGroupInterface', $f1Groups['1112'] );
+		$this->assertInstanceOf( 'CTCI_CTCGroupInterface', $f1Groups['1113'] );
+		$this->assertTrue( is_int( $f1Groups['1111']->id() ) && $f1Groups['1111']->id() > 0);
+		$this->assertTrue( is_int( $f1Groups['1112']->id() ) && $f1Groups['1112']->id() > 0);
+		$this->assertTrue( is_int( $f1Groups['1113']->id() ) && $f1Groups['1113']->id() > 0);
+		$this->assertEquals( 
+			'f1:1111:Group 1:Desc. 1',
+			implode( ':', array(
+				$f1Groups['1111']->getAttachedGroupProviderTag(),
+				$f1Groups['1111']->getAttachedGroupProviderId(),
+				$f1Groups['1111']->getName(),
+				$f1Groups['1111']->getDescription()
+			) )
+		);
+		$this->assertEquals(
+			'f1:1112:Group 3:Desc. 3',
+			implode( ':', array(
+				$f1Groups['1112']->getAttachedGroupProviderTag(),
+				$f1Groups['1112']->getAttachedGroupProviderId(),
+				$f1Groups['1112']->getName(),
+				$f1Groups['1112']->getDescription()
+			) )
+		);
+		$this->assertEquals(
+			'f1:1113:Group 6:Desc. 6',
+			implode( ':', array(
+				$f1Groups['1113']->getAttachedGroupProviderTag(),
+				$f1Groups['1113']->getAttachedGroupProviderId(),
+				$f1Groups['1113']->getName(),
+				$f1Groups['1113']->getDescription()
+			) )
+		);
+
+		$this->assertTrue( isset( $ccbGroups['1111'] ) );
+		$this->assertTrue( isset( $ccbGroups['2112'] ) );
+		$this->assertTrue( isset( $ccbGroups['2113'] ) );
+		$this->assertInstanceOf( 'CTCI_CTCGroupInterface', $ccbGroups['1111'] );
+		$this->assertInstanceOf( 'CTCI_CTCGroupInterface', $ccbGroups['2112'] );
+		$this->assertInstanceOf( 'CTCI_CTCGroupInterface', $ccbGroups['2113'] );
+		$this->assertTrue( is_int( $ccbGroups['1111']->id() ) && $ccbGroups['1111']->id() > 0);
+		$this->assertTrue( is_int( $ccbGroups['2112']->id() ) && $ccbGroups['2112']->id() > 0);
+		$this->assertTrue( is_int( $ccbGroups['2113']->id() ) && $ccbGroups['2113']->id() > 0);
+		$this->assertEquals(
+			'ccb:1111:Group 2:Desc. 2',
+			implode( ':', array(
+				$ccbGroups['1111']->getAttachedGroupProviderTag(),
+				$ccbGroups['1111']->getAttachedGroupProviderId(),
+				$ccbGroups['1111']->getName(),
+				$ccbGroups['1111']->getDescription()
+			) )
+		);
+		$this->assertEquals(
+			'ccb:2112:Group 4:Desc. 4',
+			implode( ':', array(
+				$ccbGroups['2112']->getAttachedGroupProviderTag(),
+				$ccbGroups['2112']->getAttachedGroupProviderId(),
+				$ccbGroups['2112']->getName(),
+				$ccbGroups['2112']->getDescription()
+			) )
+		);
+		$this->assertEquals(
+			'ccb:2113:Group 5:Desc. 5',
+			implode( ':', array(
+				$ccbGroups['2113']->getAttachedGroupProviderTag(),
+				$ccbGroups['2113']->getAttachedGroupProviderId(),
+				$ccbGroups['2113']->getName(),
+				$ccbGroups['2113']->getDescription()
+			) )
+		);
+	}
+	
+	protected function insertAttachedCTCGroup( $name, $description, $providerTag, $providerId ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		// insert a ctc group / term record
+		$ids = wp_insert_term( $name, CTCI_WPAL::$ctcPersonGroupTaxonomy, array(
+				'description' => $description 
+			)
+		);
+		$this->assertFalse( is_wp_error($ids) );
+		// insert an attach record for it
+		$attachTable = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+		$result = $wpdb->insert( $attachTable, array(
+				'data_provider' => $providerTag,
+				'term_id' => $ids['term_id'],
+				'provider_group_id' => $providerId
+			), array( '%s', '%d', '%s' )
+		);
+		$this->assertTrue( $result !== false );
+	}
+	
+	/*public function testCreateCTCPerson() {
 
 		$ctcPerson = new CTCI_CTCPerson();
 		$ctcPerson
@@ -312,7 +418,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertNotSame( 0, $id );
 		$this->assertFalse( is_wp_error($id) );
 		$this->assertTrue( is_int($id) && $id > 0 );
-	}
+	}*/
 
 	public function testGetCTCPeopleAttachedViaProvider() {
 

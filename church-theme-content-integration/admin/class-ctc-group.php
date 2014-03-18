@@ -12,9 +12,13 @@ class CTCI_CTCGroup implements CTCI_CTCGroupInterface {
 	protected $id;
 	protected $name;
 	protected $desc;
+	protected $attachedGroupProviderTag;
+	protected $attachedGroupProviderId;
 
 	public function __construct( $id, $name, $description ) {
 		$this->setId( $id )->setName( $name )->setDescription( $description );
+		$this->attachedGroupProviderTag = null;
+		$this->attachedGroupProviderId = null;
 	}
 
 	/**
@@ -54,5 +58,19 @@ class CTCI_CTCGroup implements CTCI_CTCGroupInterface {
 
 	public function getDescription() {
 		return $this->desc;
+	}
+
+	public function setAttachedGroup( $providerTag, $providerId ) {
+		$this->attachedGroupProviderTag = $providerTag;
+		$this->attachedGroupProviderId = $providerId;
+		return $this;
+	}
+
+	public function getAttachedGroupProviderTag() {
+		return $this->attachedGroupProviderTag;
+	}
+
+	public function getAttachedGroupProviderId() {
+		return $this->attachedGroupProviderId;
 	}
 }
