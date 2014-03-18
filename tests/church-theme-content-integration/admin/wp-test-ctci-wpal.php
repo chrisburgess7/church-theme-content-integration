@@ -398,7 +398,30 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		);
 		$this->assertTrue( $result !== false );
 	}
-	
+
+	public function testUnattachCTCGroup() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$attachTable = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+
+		$this->insertAttachedCTCGroup( 'Test group', 'Test group', 'f1', '9183' );
+
+		// verify it has been recorded
+		$ctcGroupConnectRow = $wpdb->get_row(
+			"SELECT term_id FROM $attachTable WHERE data_provider = 'f1' AND provider_group_id = '9183'",
+			ARRAY_A
+		);
+		$this->assertNotNull($ctcGroupConnectRow);
+
+		$this->sut->unattachCTCGroup( new CTCI_CTCGroup( $ctcGroupConnectRow['term_id'], 'Test group', 'Test group' ) );
+
+		// verify it has been removed
+		$ctcGroupConnectRow = $wpdb->get_row(
+			"SELECT term_id FROM $attachTable WHERE data_provider = 'f1' AND provider_group_id = '9183'"
+		);
+		$this->assertNull($ctcGroupConnectRow);
+	}
+
 	/*public function testCreateCTCPerson() {
 
 		$ctcPerson = new CTCI_CTCPerson();

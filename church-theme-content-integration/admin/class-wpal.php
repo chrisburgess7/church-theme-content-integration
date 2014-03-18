@@ -101,6 +101,18 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcGroup;
 	}
 
+	public function unattachCTCGroup( CTCI_CTCGroupInterface $ctcGroup ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$attachTable = $wpdb->prefix . self::$ctcGroupConnectTable;
+		$return = $wpdb->delete( $attachTable, array( 'term_id' => $ctcGroup->id() ), array( '%d') );
+		if ( $return === false ) {
+			throw new CTCI_CouldNotUnattachCTCGroupException( $ctcGroup );
+		} else {
+			return $return;
+		}
+	}
+
 	/**
 	 * Updates the name and description of a CTC group with the info from the second argument
 	 * @param CTCI_CTCGroupInterface $ctcGroup
@@ -244,3 +256,16 @@ class CTCI_UpdateCTCGroupAttachRecordException extends CTCI_CTCGroupAttachExcept
 class CTCI_InsertCTCGroupAttachRecordException extends CTCI_CTCGroupAttachException {}
 
 class CTCI_CouldNotRetrieveCTCGroupException extends Exception {}
+
+class CTCI_CouldNotUnattachCTCGroupException extends Exception {
+	protected $ctcGroup;
+
+	public function __construct( CTCI_CTCGroupInterface $ctcGroup, $message = '', $code = 0, $innerException = null ) {
+		parent::__construct( $message, $code, $innerException );
+		$this->ctcGroup = $ctcGroup;
+	}
+
+	public function getCTCGroup() {
+		return $this->ctcGroup;
+	}
+}
