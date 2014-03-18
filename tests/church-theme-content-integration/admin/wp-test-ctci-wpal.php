@@ -422,6 +422,35 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertNull($ctcGroupConnectRow);
 	}
 
+	public function testDeleteCTCGroup() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$attachTable = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+
+		$this->insertAttachedCTCGroup( 'Test group', 'Test group', 'f1', '9183' );
+
+		// verify it has been recorded
+		$ctcGroupConnectRow = $wpdb->get_row(
+			"SELECT term_id FROM $attachTable WHERE data_provider = 'f1' AND provider_group_id = '9183'",
+			ARRAY_A
+		);
+		$termId = $ctcGroupConnectRow['term_id'];
+		$this->assertNotNull($ctcGroupConnectRow);
+		$ctcGroupRow = get_term( $termId, CTCI_WPAL::$ctcPersonGroupTaxonomy );
+		$this->assertNotNull( $ctcGroupRow );
+		$this->assertFalse( is_wp_error( $ctcGroupRow ) );
+
+		$this->sut->deleteCTCGroup( new CTCI_CTCGroup( $termId, 'Test group', 'Test group' ) );
+
+		// verify it has been removed
+		$ctcGroupConnectRow = $wpdb->get_row(
+			"SELECT term_id FROM $attachTable WHERE data_provider = 'f1' AND provider_group_id = '9183'"
+		);
+		$this->assertNull($ctcGroupConnectRow);
+		$ctcGroupRow = get_term( $termId, CTCI_WPAL::$ctcPersonGroupTaxonomy );
+		$this->assertNull( $ctcGroupRow );
+	}
+
 	/*public function testCreateCTCPerson() {
 
 		$ctcPerson = new CTCI_CTCPerson();

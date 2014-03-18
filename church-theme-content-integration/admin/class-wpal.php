@@ -131,6 +131,14 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $result;
 	}
 
+	public function deleteCTCGroup( CTCI_CTCGroupInterface $ctcGroup ) {
+		$this->unattachCTCGroup( $ctcGroup );
+		$result = wp_delete_term( $ctcGroup->id(), CTCI_WPAL::$ctcPersonGroupTaxonomy );
+		if ( $result === false || is_wp_error( $result ) ) {
+			throw new CTCI_CouldNotDeleteCTCGroupException( $ctcGroup );
+		}
+	}
+
 	/**
 	 * @param $term_id
 	 * @return CTCI_CTCGroup
@@ -257,7 +265,7 @@ class CTCI_InsertCTCGroupAttachRecordException extends CTCI_CTCGroupAttachExcept
 
 class CTCI_CouldNotRetrieveCTCGroupException extends Exception {}
 
-class CTCI_CouldNotUnattachCTCGroupException extends Exception {
+class CTCI_CTCGroupExceptionType extends Exception {
 	protected $ctcGroup;
 
 	public function __construct( CTCI_CTCGroupInterface $ctcGroup, $message = '', $code = 0, $innerException = null ) {
@@ -269,3 +277,7 @@ class CTCI_CouldNotUnattachCTCGroupException extends Exception {
 		return $this->ctcGroup;
 	}
 }
+
+class CTCI_CouldNotUnattachCTCGroupException extends CTCI_CTCGroupExceptionType {}
+
+class CTCI_CouldNotDeleteCTCGroupException extends CTCI_CTCGroupExceptionType {}

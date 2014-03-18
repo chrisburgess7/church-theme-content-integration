@@ -97,9 +97,10 @@ class CTCI_PeopleSync {
 				unset( $groups[ $dpId ] );
 			} else {
 				// previously attached CTC group no longer has an associated group from the provider
-				$this->wpal->unattachCTCGroup( $ctcGroup );
 				if ( $dataProvider->deleteUnattachedGroups() ) {
-					$this->wpal->deleteCTCGroup( $ctcGroup );
+					$this->wpal->deleteCTCGroup( $ctcGroup ); // Note that this also unattaches before deleting
+				} else {
+					$this->wpal->unattachCTCGroup( $ctcGroup );
 				}
 			}
 		}

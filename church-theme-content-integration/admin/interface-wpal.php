@@ -19,6 +19,8 @@ interface CTCI_WPALInterface {
 
 	public function updateCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group );
 
+	public function deleteCTCGroup( CTCI_CTCGroupInterface $ctcGroup );
+
 	public function getCTCGroup( $term_id );
 
 	public function getAttachedCTCGroup( CTCI_PeopleGroupInterface $group );
