@@ -577,4 +577,24 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 
 		$this->assertEquals( '9e73', $attachedId );
 	}
+
+	public function testUnattachCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id) && $id > 0);
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
+		// quick check that post meta added correctly
+		$this->assertEquals( 'f1', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEquals( '9e73', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$this->sut->unattachCTCPerson( $ctcPerson );
+
+		$this->assertEquals( '', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEquals( '', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+	}
 }

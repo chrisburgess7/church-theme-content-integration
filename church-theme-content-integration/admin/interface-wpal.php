@@ -47,4 +47,6 @@ interface CTCI_WPALInterface {
 	public function getCTCPeopleAttachedViaProvider( $providerTag );
 
 	public function getAttachedPersonId( CTCI_CTCPersonInterface $ctcPerson );
+
+	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 } 

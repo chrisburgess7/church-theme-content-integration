@@ -313,6 +313,21 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public function getAttachedPersonId( CTCI_CTCPersonInterface $ctcPerson ) {
 		return get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, true );
 	}
+
+	/**
+	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @return bool     Returns false if any call to delete_post_meta returned false, otherwise true
+	 */
+	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$success = true;
+		if ( ! delete_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag ) ) {
+			$success = false;
+		}
+		if ( ! delete_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag ) ) {
+			$success = false;
+		}
+		return $success;
+	}
 }
 
 class CTCI_CreateCTCGroupException extends Exception {
