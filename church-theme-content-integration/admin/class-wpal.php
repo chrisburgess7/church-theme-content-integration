@@ -315,6 +315,29 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	}
 
 	/**
+	 * @return CTCI_CTCPersonInterface[]
+	 */
+	public function getUnattachedCTCPeople() {
+		$posts = get_posts( array(
+			'post_type' => self::$ctcPersonPostType,
+			'post_status' => 'any',
+			'meta_query' => array(
+				array(
+					'key' => self::$ctcPersonProviderTagMetaTag,
+					'value' => 'novalue', // see https://codex.wordpress.org/Class_Reference/WP_Query#Custom_Field_Parameters
+										// for why this is here - WP issue
+					'compare' => 'NOT EXISTS',
+				)
+			)
+		) );
+		$ctcPeople = array();
+		foreach ( $posts as $post ) {
+			$ctcPeople[ $post->ID ] = $this->populateCTCPersonFromPost( $post );
+		}
+		return $ctcPeople;
+	}
+
+	/**
 	 * @param CTCI_CTCPersonInterface $ctcPerson
 	 * @return bool     Returns false if any call to delete_post_meta returned false, otherwise true
 	 */

@@ -578,6 +578,65 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( '9e73', $attachedId );
 	}
 
+	public function testGetUnattachedCTCPeople() {
+		// create a person post
+		$id[0] = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+		));
+		$this->assertTrue( is_int($id[0]) && $id[0] > 0);
+		// add an attach record
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
+		// person 2 not attached
+		$id[1] = wp_insert_post( array(
+			'post_title' => 'Test Person 2',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			'post_content' => 'Test person bio',
+			'post_excerpt' => 'Test person excerpt',
+		));
+		$this->assertTrue( is_int($id[1]) && $id[1] > 0);
+		update_post_meta( $id[1], CTCI_WPAL::$ctcPersonPositionMetaTag, 'Leader' );
+		update_post_meta( $id[1], CTCI_WPAL::$ctcPersonPhoneMetaTag, '4200 0000' );
+		update_post_meta( $id[1], CTCI_WPAL::$ctcPersonEmailMetaTag, 'test@gmail.com' );
+		update_post_meta( $id[1], CTCI_WPAL::$ctcPersonURLSMetaTag, "http://facebook.com\nhttp://twitter.com" );
+		// person 3 attached to another provider
+		$id[2] = wp_insert_post( array(
+			'post_title' => 'Test Person 3',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id[2]) && $id[2] > 0);
+		// add an attach record
+		update_post_meta( $id[2], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'ccb' );
+		update_post_meta( $id[2], CTCI_WPAL::$ctcPersonProviderIdMetaTag, '1782' );
+		// person 4 not attached
+		$id[3] = wp_insert_post( array(
+			'post_title' => 'Test Person 4',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id[3]) && $id[3] > 0);
+		
+		$ctcPeople = $this->sut->getUnattachedCTCPeople();
+		
+		$this->assertTrue( is_array( $ctcPeople ) );
+		$this->assertEquals( 2, count( $ctcPeople ) );
+		foreach ( $ctcPeople as $ctcPerson ) {
+			$this->assertInstanceOf( 'CTCI_CTCPerson', $ctcPerson );
+		}
+		$this->assertTrue( isset( $ctcPeople[ $id[1] ] ) );
+		$this->assertEquals( $ctcPeople[ $id[1] ]->id(), $id[1] );
+		$this->assertEquals( $ctcPeople[ $id[1] ]->getName(), 'Test Person 2' );
+		$this->assertEquals( 'Test person bio', $ctcPeople[ $id[1] ]->getBio() );
+		$this->assertEquals( 'Test person excerpt', $ctcPeople[ $id[1] ]->getExcerpt() );
+		$this->assertEquals( 'Leader', $ctcPeople[ $id[1] ]->getPosition() );
+		$this->assertEquals( '4200 0000', $ctcPeople[ $id[1] ]->getPhone() );
+		$this->assertEquals( 'test@gmail.com', $ctcPeople[ $id[1] ]->getEmail() );
+		$this->assertEquals( "http://facebook.com\nhttp://twitter.com", $ctcPeople[ $id[1] ]->getURLs() );
+		$this->assertTrue( isset( $ctcPeople[ $id[3] ] ) );
+		$this->assertEquals( $ctcPeople[ $id[3] ]->id(), $id[3] );
+		$this->assertEquals( $ctcPeople[ $id[3] ]->getName(), 'Test Person 4' );
+	}
+	
 	public function testUnattachCTCPerson() {
 		$id = wp_insert_post( array(
 			'post_title' => 'Test Person',
