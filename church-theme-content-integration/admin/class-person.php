@@ -10,6 +10,7 @@ require_once 'interface-person.php';
 
 class CTCI_Person implements CTCI_PersonInterface {
 	protected $id;
+	protected $providerTag;
 	protected $title;
 	protected $namePrefix;
 	protected $firstName;
@@ -34,7 +35,8 @@ class CTCI_Person implements CTCI_PersonInterface {
 
 	protected $groups = array();
 
-	public function __construct( $id = 0 ) {
+	public function __construct( $providerTag, $id = 0 ) {
+		$this->setProviderTag( $providerTag );
 		$this->setId( $id );
 		$this->syncName = true;
 		$this->syncPosition = false;
@@ -53,6 +55,15 @@ class CTCI_Person implements CTCI_PersonInterface {
 
 	public function id() {
 		return $this->id;
+	}
+
+	public function setProviderTag( $tag ) {
+		$this->providerTag = $tag;
+		return $this;
+	}
+
+	public function getProviderTag() {
+		return $this->providerTag;
 	}
 
 	public function setTitle( $value = '' ) {

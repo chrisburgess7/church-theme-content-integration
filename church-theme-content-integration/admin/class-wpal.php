@@ -339,6 +339,49 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 	/**
 	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @param CTCI_PersonInterface $person
+	 * @param string $mode      Set to 'new' to only attach if ctcPerson has no current attach record.
+	 *                          Set to 'replace' to either add a new attachment, or overwrite an existing one.
+	 * @return bool     If $mode is 'new' returns true if attach successful, false if ctcPerson is already attached/
+	 *                  If $mode is 'replace' true if update succeeded, including if ctcPerson was already attached
+	 *                  to the given $person. Otherwise false if an error occurred.
+	 */
+	public function attachCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person, $mode = 'new' ) {
+
+		if ( $mode === 'new' ) {
+			if ( ! add_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag, $person->getProviderTag(), true ) ) {
+				return false;
+			}
+			if ( ! add_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, $person->id(), true ) ) {
+				return false;
+			}
+			return true;
+		} elseif ( $mode === 'replace' ) {
+			// these will add the meta tags if they don't exist
+			$tagSuccess = update_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag, $person->getProviderTag() );
+			$idSuccess = update_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, $person->id() );
+
+			// because update_post_meta returns false for errors as well as if the meta tag already exists with the same value
+			// we need to run our own queries to be sure that the update has occurred...
+			$tagValueCorrect =
+				get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag ) ===
+				array( $person->getProviderTag() );
+			$idValueCorrect =
+				get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag ) ===
+				array( $person->id() );
+
+			if ( ( $tagSuccess === false && ! $tagValueCorrect ) || $idSuccess === false && ! $idValueCorrect ) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * @param CTCI_CTCPersonInterface $ctcPerson
 	 * @return bool     Returns false if any call to delete_post_meta returned false, otherwise true
 	 */
 	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {

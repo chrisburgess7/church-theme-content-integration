@@ -11,6 +11,9 @@ interface CTCI_PersonInterface {
 
 	public function id();
 
+	public function setProviderTag( $tag );
+	public function getProviderTag();
+
 	/**
 	 * @param string $value
 	 * @return CTCI_PersonInterface

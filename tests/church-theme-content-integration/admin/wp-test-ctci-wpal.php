@@ -636,7 +636,49 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $ctcPeople[ $id[3] ]->id(), $id[3] );
 		$this->assertEquals( $ctcPeople[ $id[3] ]->getName(), 'Test Person 4' );
 	}
-	
+
+	public function testAttachCTCPerson() {
+		// create a person post
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		// check nothing attached
+		$this->assertEmpty( get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEmpty( get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$person = new CTCI_Person('f1', '8a781');
+
+		// first attach with mode new, should be fine
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'new' );
+
+		$this->assertTrue( $success );
+		$this->assertEquals( array( 'f1' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
+		$this->assertEquals( array( '8a781' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
+
+		$person->setId( '12345' );
+		$person->setProviderTag( 'ccb' );
+
+		// now we have a record, calling again with mode new should simply return false with no change
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'new' );
+		$this->assertFalse( $success );
+		// having the array here ensures we test that we dont have multiple entries
+		$this->assertEquals( array( 'f1' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
+		$this->assertEquals( array( '8a781' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
+
+		// now call with mode replace, which should update the record with the new id, even with an existing attachment
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'replace' );
+		$this->assertTrue( $success );
+		$this->assertEquals( array( 'ccb' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
+		$this->assertEquals( array( '12345' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
+
+		// and repeating in mode replace should still return true, even with the same values
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'replace' );
+		$this->assertTrue( $success );
+	}
+
 	public function testUnattachCTCPerson() {
 		$id = wp_insert_post( array(
 			'post_title' => 'Test Person',

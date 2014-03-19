@@ -48,12 +48,16 @@ interface CTCI_WPALInterface {
 
 	public function getAttachedPersonId( CTCI_CTCPersonInterface $ctcPerson );
 
+	/**
+	 * @return CTCI_CTCPersonInterface[]
+	 */
 	public function getUnattachedCTCPeople();
+
+	public function attachCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person );
 
 	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 
 	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 
 	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
-
 } 
