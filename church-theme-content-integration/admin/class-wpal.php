@@ -328,6 +328,15 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		}
 		return $success;
 	}
+
+	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$success = wp_delete_post( $ctcPerson->id() );
+		if ( $success === false ) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 }
 
 class CTCI_CreateCTCGroupException extends Exception {
