@@ -169,11 +169,14 @@ class Church_Theme_Content_Integration {
 			'admin' => array(
 
 				self::$ADMIN_DIR . '/class-ctc-group.php',
+				self::$ADMIN_DIR . '/class-ctc-person.php',
 				self::$ADMIN_DIR . '/class-people-group.php',
+				self::$ADMIN_DIR . '/class-people-sync.php',
 				self::$ADMIN_DIR . '/class-person.php',
 				self::$ADMIN_DIR . '/class-settings-manager.php',
 				self::$ADMIN_DIR . '/class-wpal.php',
 				self::$ADMIN_DIR . '/interface-ctc-group.php',
+				self::$ADMIN_DIR . '/interface-ctc-person.php',
 				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
 				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
