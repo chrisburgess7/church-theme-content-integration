@@ -604,11 +604,27 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 			'post_title' => 'Test Person',
 			'post_type' => CTCI_WPAL::$ctcPersonPostType
 		));
+		$this->assertNotNull( get_post( $id ) );
 
 		$ctcPerson = new CTCI_CTCPerson();
 		$ctcPerson->setId( $id );
 		$this->sut->deleteCTCPerson( $ctcPerson );
 
 		$this->assertNull( get_post( $id ) );
+	}
+
+	public function testUnpublishCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			'post_status' => 'publish'
+		));
+		$this->assertEquals( 'publish', get_post( $id )->post_status );
+
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$this->sut->unPublishCTCPerson( $ctcPerson );
+
+		$this->assertEquals( 'draft', get_post( $id )->post_status );
 	}
 }

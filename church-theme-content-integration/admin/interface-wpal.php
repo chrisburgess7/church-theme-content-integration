@@ -51,4 +51,6 @@ interface CTCI_WPALInterface {
 	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 
 	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+
+	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 } 

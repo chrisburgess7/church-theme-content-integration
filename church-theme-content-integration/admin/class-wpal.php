@@ -337,6 +337,18 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 			return true;
 		}
 	}
+
+	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$return = wp_update_post( array(
+			'ID' => $ctcPerson->id(),
+			'post_status' => 'draft'
+		) );
+		if ( $return === 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 }
 
 class CTCI_CreateCTCGroupException extends Exception {
