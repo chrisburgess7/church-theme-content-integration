@@ -9,13 +9,30 @@
 require_once 'interface-wpal.php';
 
 class CTCI_WPAL implements CTCI_WPALInterface {
+	// CTC values
+	public static $ctcPersonPostType = 'ctc_person';
+	public static $ctcPersonPositionMetaTag = '_ctc_person_position';
+	public static $ctcPersonPhoneMetaTag = '_ctc_person_phone';
+	public static $ctcPersonEmailMetaTag = '_ctc_person_email';
+	public static $ctcPersonURLSMetaTag = '_ctc_person_urls';
 	public static $ctcPersonGroupTaxonomy = 'ctc_person_group';
 
+	// CTCI values
 	public static $ctcGroupConnectTable = 'ctci_ctcgroup_connect';
+	public static $ctcPersonProviderTagMetaTag = '_ctci_person_provider_tag';
+	public static $ctcPersonProviderIdMetaTag = '_ctci_person_provider_id';
 
 	/*public static $ctcGroupConnectProviderTagField = 'data_provider';
 	public static $ctcGroupConnectTermIDField = 'term_id';
 	public static $ctcGroupConnectGroupIDField = 'provider_group_id';*/
+
+	/*public static function makePersonAttachValueString( $providerTag, $providerId ) {
+		return $providerTag . ':' . $providerId;
+	}
+
+	public static function extractPersonAttachValuesFromString( $value ) {
+		return explode( ':', $value);
+	}*/
 
 	public function getOption( $option ) {
 		// TODO: Implement getOption() method.
@@ -217,6 +234,10 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcGroups;
 	}
 
+	/**
+	 * @return CTCI_CTCGroup[]
+	 * @throws CTCI_CouldNotRetrieveUnattachedCTCGroupsException
+	 */
 	public function getUnattachedCTCGroups() {
 		/** @var $wpdb wpdb */
 		global $wpdb;
@@ -249,8 +270,44 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 	}
 
+	/**
+	 * @param $providerTag
+	 * @return array|CTCI_CTCPersonInterface[]
+	 */
 	public function getCTCPeopleAttachedViaProvider( $providerTag ) {
+		$posts = get_posts( array(
+			'post_type' => self::$ctcPersonPostType,
+			'post_status' => 'any',
+			'meta_query' => array(
+				array(
+					'key' => self::$ctcPersonProviderTagMetaTag,
+					'value' => $providerTag
+				)
+			)
+		) );
+		$ctcPeople = array();
+		foreach ( $posts as $post ) {
+			$ctcPeople[ $post->ID ] = $this->populateCTCPersonFromPost( $post );
+		}
+		return $ctcPeople;
+	}
 
+	protected function populateCTCPersonFromPost( WP_Post $post ) {
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson
+			->setId( $post->ID )
+			->setName( $post->post_title )
+			->setBio( $post->post_content )
+			->setExcerpt( $post->post_excerpt )
+			->setPosition( get_post_meta( $post->ID, self::$ctcPersonPositionMetaTag, true ) )
+			->setPhone( get_post_meta( $post->ID, self::$ctcPersonPhoneMetaTag, true ) )
+			->setEmail( get_post_meta( $post->ID, self::$ctcPersonEmailMetaTag, true ) )
+			->setUrls( get_post_meta( $post->ID, self::$ctcPersonURLSMetaTag, true ) );
+		return $ctcPerson;
+	}
+
+	public function getAttachedPersonId( CTCI_CTCPersonInterface $ctcPerson ) {
+		//$metaValue = get_post_meta( $ctcPerson->id(), self::$ctcPersonAttachMetaTag, true );
 	}
 }
 

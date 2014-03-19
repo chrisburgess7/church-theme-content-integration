@@ -489,6 +489,89 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 	}*/
 
 	public function testGetCTCPeopleAttachedViaProvider() {
+		// create a person post
+		$id[0] = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			'post_content' => 'Test person bio',
+			'post_excerpt' => 'Test person excerpt'
+		));
+		$this->assertTrue( is_int($id[0]) && $id[0] > 0);
+		// add an attach record
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonPositionMetaTag, 'Leader' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonPhoneMetaTag, '4200 0000' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonEmailMetaTag, 'test@gmail.com' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonURLSMetaTag, "http://facebook.com\nhttp://twitter.com" );
+		// person 2 not attached
+		$id[1] = wp_insert_post( array(
+			'post_title' => 'Test Person 2',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id[1]) && $id[1] > 0);
+		// person 3 attached to another provider
+		$id[2] = wp_insert_post( array(
+			'post_title' => 'Test Person 3',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id[2]) && $id[2] > 0);
+		// add an attach record
+		update_post_meta( $id[2], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'ccb' );
+		update_post_meta( $id[2], CTCI_WPAL::$ctcPersonProviderIdMetaTag, '1782' );
+		// person 4 attached
+		$id[3] = wp_insert_post( array(
+			'post_title' => 'Test Person 4',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id[3]) && $id[3] > 0);
+		// add an attach record
+		update_post_meta( $id[3], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id[3], CTCI_WPAL::$ctcPersonProviderIdMetaTag, 'ab81' );
+
+		$f1People = $this->sut->getCTCPeopleAttachedViaProvider( 'f1' );
+		$ccbPeople = $this->sut->getCTCPeopleAttachedViaProvider( 'ccb' );
+
+		// assert f1
+		$this->assertTrue( is_array( $f1People ) );
+		$this->assertEquals( 2, count( $f1People ) );
+		foreach ( $f1People as $ctcPerson ) {
+			$this->assertInstanceOf( 'CTCI_CTCPerson', $ctcPerson );
+		}
+		$this->assertTrue( isset( $f1People[ $id[0] ] ) );
+		$this->assertEquals( $f1People[ $id[0] ]->id(), $id[0] );
+		$this->assertEquals( $f1People[ $id[0] ]->getName(), 'Test Person' );
+		$this->assertEquals( 'Test person bio', $f1People[ $id[0] ]->getBio() );
+		$this->assertEquals( 'Test person excerpt', $f1People[ $id[0] ]->getExcerpt() );
+		$this->assertEquals( 'Leader', $f1People[ $id[0] ]->getPosition() );
+		$this->assertEquals( '4200 0000', $f1People[ $id[0] ]->getPhone() );
+		$this->assertEquals( 'test@gmail.com', $f1People[ $id[0] ]->getEmail() );
+		$this->assertEquals( "http://facebook.com\nhttp://twitter.com", $f1People[ $id[0] ]->getURLs() );
+		$this->assertTrue( isset( $f1People[ $id[3] ] ) );
+		$this->assertEquals( $f1People[ $id[3] ]->id(), $id[3] );
+		$this->assertEquals( $f1People[ $id[3] ]->getName(), 'Test Person 4' );
+
+		// assert ccb
+		$this->assertTrue( is_array( $ccbPeople ) && count( $ccbPeople ) === 1 );
+		foreach ( $ccbPeople as $ctcPerson ) {
+			$this->assertInstanceOf( 'CTCI_CTCPerson', $ctcPerson );
+		}
+		$this->assertTrue( isset( $ccbPeople[ $id[2] ] ) );
+		$this->assertEquals( $ccbPeople[ $id[2] ]->id(), $id[2] );
+		$this->assertEquals( $ccbPeople[ $id[2] ]->getName(), 'Test Person 3' );
 
 	}
+
+	/*public function testGetAttachedPersonId() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id) && $id > 0);
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonAttachMetaTag, CTCI_WPAL::makePersonAttachValueString( 'f1', '9e73' ) );
+
+		$attachedId = $this->sut->getAttachedPersonId( new CTCI_CTCPerson( $id, 'Test Person', 'Test desc' ) );
+
+		$this->assertEquals( '9e73', $attachedId );
+	}*/
 }

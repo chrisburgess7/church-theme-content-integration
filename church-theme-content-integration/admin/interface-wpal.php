@@ -32,6 +32,10 @@ interface CTCI_WPALInterface {
 	 */
 	public function getCTCGroupsAttachedViaProvider( $providerTag );
 
+	/**
+	 * @return CTCI_CTCGroupInterface[]
+	 * @throws CTCI_CouldNotRetrieveUnattachedCTCGroupsException
+	 */
 	public function getUnattachedCTCGroups();
 
 	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
@@ -41,4 +45,6 @@ interface CTCI_WPALInterface {
 	 * @return CTCI_CTCPersonInterface[]
 	 */
 	public function getCTCPeopleAttachedViaProvider( $providerTag );
+
+	public function getAttachedPersonId( CTCI_CTCPersonInterface $ctcPerson );
 } 
