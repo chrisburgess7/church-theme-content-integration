@@ -306,8 +306,12 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcPerson;
 	}
 
+	/**
+	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @return string   The provider ID attached to the given person, or an empty string if no attach record
+	 */
 	public function getAttachedPersonId( CTCI_CTCPersonInterface $ctcPerson ) {
-		//$metaValue = get_post_meta( $ctcPerson->id(), self::$ctcPersonAttachMetaTag, true );
+		return get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, true );
 	}
 }
 

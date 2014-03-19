@@ -562,16 +562,19 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 
 	}
 
-	/*public function testGetAttachedPersonId() {
+	public function testGetAttachedPersonId() {
 		$id = wp_insert_post( array(
 			'post_title' => 'Test Person',
 			'post_type' => CTCI_WPAL::$ctcPersonPostType
 		));
 		$this->assertTrue( is_int($id) && $id > 0);
-		update_post_meta( $id, CTCI_WPAL::$ctcPersonAttachMetaTag, CTCI_WPAL::makePersonAttachValueString( 'f1', '9e73' ) );
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
 
-		$attachedId = $this->sut->getAttachedPersonId( new CTCI_CTCPerson( $id, 'Test Person', 'Test desc' ) );
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$attachedId = $this->sut->getAttachedPersonId( $ctcPerson );
 
 		$this->assertEquals( '9e73', $attachedId );
-	}*/
+	}
 }
