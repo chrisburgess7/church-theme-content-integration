@@ -679,6 +679,10 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertTrue( $success );
 	}
 
+	public function testUpdateCTCPerson() {
+
+	}
+
 	public function testUnattachCTCPerson() {
 		$id = wp_insert_post( array(
 			'post_title' => 'Test Person',

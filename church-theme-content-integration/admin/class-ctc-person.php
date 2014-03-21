@@ -10,6 +10,16 @@ require_once dirname(__FILE__) . '/interface-ctc-person.php';
 
 class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 
+	protected static $urlTypes = array(
+		'facebook', 'twitter', 'plus.google', 'pinterest', 'youtube', 'vimeo', 'flickr', 'picasa', 'instagram',
+		'foursquare', 'tumblr', 'skype', 'soundcloud', 'linkedin', 'github', 'dribble',
+		'itunes', 'podcast', /*, array( 'rss', 'feed', 'atom' ), 'http' - need special handling, could be more than one from either provider or WP, need some way to record if website came from provider to know whether or not to overwrite it */
+	);
+
+	protected $urlRegex1;
+	protected $urlRegex2;
+	protected $skypeRegex;
+
 	protected $nameDirty;
 	protected $bioDirty;
 	protected $positionDirty;
@@ -28,6 +38,20 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 	protected $excerpt;
 
 	public function __construct() {
+		$this->setClean();
+		// credits: https://gist.github.com/dperini/729294
+		// this is hitting backtrack limit, try atomic grouping or abandon
+		$this->urlRegex1 = '_' .
+			'(?:(?:https?)://)' .
+			'(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*\.?';
+		$this->urlRegex2 = '(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*' . // domain name
+			'(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,}))' . // TLD identifier
+			'(?::\d{2,5})?(?:/[^\s]*)?' .  // rest of path
+			'_iuS';
+		$this->skypeRegex = '_skype:\/\/(?:[^\s]*)?_iuS';
+	}
+
+	public function setClean() {
 		$this->nameDirty = false;
 		$this->bioDirty = false;
 		$this->positionDirty = false;
@@ -36,6 +60,7 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 		$this->urlsDirty = false;
 		$this->excerptDirty = false;
 	}
+
 
 	/**
 	 * @param mixed $bio
@@ -159,7 +184,7 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 	}
 
 	public function setURLsFromArray( array $urls ) {
-		$this->urls = implode('\n', $urls);
+		$this->urls = implode("\n", $urls);
 		return $this;
 	}
 
@@ -170,36 +195,32 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 		return $this->urls;
 	}
 
-	public function setClean() {
-		// TODO: Implement setClean() method.
-	}
-
 	public function isNameDirty() {
-		// TODO: Implement isNameDirty() method.
+		return $this->nameDirty;
 	}
 
 	public function isBioDirty() {
-		// TODO: Implement isBioDirty() method.
+		return $this->bioDirty;
 	}
 
 	public function isPositionDirty() {
-		// TODO: Implement isPositionDirty() method.
+		return $this->positionDirty;
 	}
 
 	public function isPhoneDirty() {
-		// TODO: Implement isPhoneDirty() method.
+		return $this->phoneDirty;
 	}
 
 	public function isEmailDirty() {
-		// TODO: Implement isEmailDirty() method.
+		return $this->emailDirty;
 	}
 
 	public function isURLsDirty() {
-		// TODO: Implement isURLsDirty() method.
+		return $this->urlsDirty;
 	}
 
 	public function isExcerptDirty() {
-		// TODO: Implement isExcerptDirty() method.
+		return $this->excerptDirty;
 	}
 
 	public function setGroups( array $ctcGroups ) {
@@ -208,5 +229,76 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 
 	public function getGroups() {
 		// TODO: Implement getGroups() method.
+	}
+
+	public function editName( $name ) {
+		$this->setName( $name );
+		$this->nameDirty = true;
+		return $this;
+	}
+
+	public function editBio( $bio ) {
+		$this->setBio( $bio );
+		$this->bioDirty = true;
+		return $this;
+	}
+
+	public function editPosition( $position ) {
+		$this->setPosition( $position );
+		$this->positionDirty = true;
+		return $this;
+	}
+
+	public function editPhone( $phone ) {
+		$this->setPhone( $phone );
+		$this->phoneDirty = true;
+		return $this;
+	}
+
+	public function editEmail( $email ) {
+		$this->setEmail( $email );
+		$this->emailDirty = true;
+		return $this;
+	}
+
+	public function editURLs( $urls ) {
+		$this->setUrls( $urls );
+		$this->urlsDirty = true;
+		return $this;
+	}
+
+	public function editURLsFromArray( array $urls ) {
+		$this->setURLsFromArray( $urls );
+		$this->urlsDirty = true;
+		return $this;
+	}
+
+	public function editURL( $url ) {
+		foreach ( self::$urlTypes as $urlType ) {
+			// see if $url is a recognised type
+			$urlTypeRegex = $this->urlRegex1 . $urlType . $this->urlRegex2; // this could be hard-coded instead of recalculated here
+			if ( preg_match( $urlTypeRegex, $url ) ) {
+				$replaced = 0;
+				$urls = preg_replace( $urlTypeRegex, $url, $this->urls, 1, $replaced );
+				if ( $replaced ) {
+					$this->urls = $urls;
+				} else {
+					if ( ! empty( $this->urls ) ) {
+						$this->urls .= "\n" . $url;
+					} else {
+						$this->urls = $url;
+					}
+				}
+				break;
+			}
+		}
+		$this->urlsDirty = true;
+		return $this;
+	}
+
+	public function editExcerpt( $excerpt ) {
+		$this->setExcerpt( $excerpt );
+		$this->excerptDirty = true;
+		return $this;
 	}
 }

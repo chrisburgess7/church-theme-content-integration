@@ -40,6 +40,15 @@ class CTCI_PeopleSync {
 			foreach ( $attachedCTCPeople as $ctcPerson ) {
 				$dpId = $this->wpal->getAttachedPersonId( $ctcPerson );
 
+				// if the CTC person is attached there should be an associated id no. for the attached record
+				// in the data provider. If that is not so, something has gone wrong, so we quit before more
+				// damage is potentially done...
+				if ( $dpId === '' ) {
+					// todo: it would be better if we simply logged this issue, then continued immediately on to
+					// the next person
+					throw new CTCI_NoProviderIdForAttachedCTCPerson( $ctcPerson );
+				}
+
 				if ( isset( $people[ $dpId ] ) ) {
 					$this->syncCTCPerson( $ctcPerson, $people[ $dpId ], $dataProvider->syncGroups() );
 					// we've just synced an attached person, so we don't need the record any more
@@ -51,7 +60,7 @@ class CTCI_PeopleSync {
 					if ( $dataProvider->deleteUnattachedPeople() ) {
 						$this->wpal->deleteCTCPerson( $ctcPerson );
 					} else {
-						$this->wpal->unPublishCTCPerson( $ctcPerson );
+						$this->wpal->unpublishCTCPerson( $ctcPerson );
 					}
 				}
 			}
@@ -62,10 +71,12 @@ class CTCI_PeopleSync {
 
 				// attempt to attach the person from the data provider to
 				// a person record in wp db
-				$attached = $this->attachPerson( $person, $dataProvider );
+				// this returns the attached ctc person if found, o.w. false
+				$attached = $this->attachPerson( $person );
 
-				// no luck, so we create a new person
-				if ( !$attached ) {
+				if ( $attached instanceof CTCI_CTCPersonInterface ) {
+					$this->syncCTCPerson( $attached, $person, $dataProvider->syncGroups() );
+				} else {
 					$this->createNewCTCPerson( $person );
 				}
 			}
@@ -132,6 +143,27 @@ class CTCI_PeopleSync {
 			$this->wpal->setCTCPersonsGroups( $ctcPerson, $person->getGroups() );
 		}
 		// perform person sync
+		if ( $person->syncName() ) {
+			$ctcPerson->editName( $person->getName() );
+		}
+		if ( $person->syncEmail() ) {
+			$ctcPerson->editEmail( $person->getEmail() );
+		}
+		if ( $person->syncPhone() ) {
+			$ctcPerson->editPhone( $person->getPhone() );
+		}
+		if ( $person->syncPosition() ) {
+			$ctcPerson->editPosition( $person->getPosition() );
+		}
+		if ( $person->syncFacebookURL() ) {
+			$ctcPerson->editURL( $person->getFacebookURL() );
+		}
+		if ( $person->syncTwitterURL() ) {
+			$ctcPerson->editURL( $person->getTwitterURL() );
+		}
+		if ( $person->syncLinkedInURL() ) {
+			$ctcPerson->editURL( $person->getLinkedInURL() );
+		}
 		$this->wpal->updateCTCPerson( $ctcPerson, $person );
 	}
 
@@ -141,16 +173,18 @@ class CTCI_PeopleSync {
 
 	}*/
 
-	protected function attachPerson( CTCI_PersonInterface $person, CTCI_PeopleDataProviderInterface $dataProvider ) {
+	protected function attachPerson( CTCI_PersonInterface $person ) {
 		$unattachedCTCPeople = $this->wpal->getUnattachedCTCPeople();
 
 		foreach ( $unattachedCTCPeople as $unattachedCTCPerson ) {
 			if ( $person->getEmail() === $unattachedCTCPerson->getEmail() &&
-				$person->getName( $dataProvider->getNameFormat() ) === $unattachedCTCPerson->getName()
+				$person->getName() === $unattachedCTCPerson->getName()
 			) {
-				$this->wpal->attachCTCPerson( $unattachedCTCPerson, $person );
-				$this->wpal->updateCTCPerson( $unattachedCTCPerson, $person );
-				return true;
+				if ( ! $this->wpal->attachCTCPerson( $unattachedCTCPerson, $person ) ) {
+					return false; // todo: specific exception / error handling for this scenario???
+				} else {
+					return $unattachedCTCPerson;
+				}
 			}
 		}
 		return false;
@@ -162,4 +196,15 @@ class CTCI_PeopleSync {
 
 	protected function syncCleanUp() {
 	}
-} 
+}
+
+class CTCI_NoProviderIdForAttachedCTCPerson extends Exception {
+	protected $ctcPerson;
+	public function __construct( CTCI_CTCPersonInterface $ctcPerson, $message = '', $code = 0, $innerException = null ) {
+		parent::__construct( $message, $code, $innerException );
+		$this->ctcPerson = $ctcPerson;
+	}
+	public function getCTCPerson() {
+		return $this->ctcPerson;
+	}
+}

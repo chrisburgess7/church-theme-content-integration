@@ -380,6 +380,10 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		}
 	}
 
+	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person ) {
+
+	}
+
 	/**
 	 * @param CTCI_CTCPersonInterface $ctcPerson
 	 * @return bool     Returns false if any call to delete_post_meta returned false, otherwise true

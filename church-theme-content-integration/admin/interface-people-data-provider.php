@@ -30,4 +30,8 @@ interface CTCI_PeopleDataProviderInterface {
 	 * @return bool
 	 */
 	public function syncGroups();
+
+	public function cleanUpAfterPeopleSync();
+
+	public function deleteUnattachedGroups();
 } 
