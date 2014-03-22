@@ -10,12 +10,7 @@ require_once dirname(__FILE__) . '/interface-ctc-person.php';
 
 class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 
-	protected static $urlTypes = array(
-		'facebook', 'twitter', 'plus.google', 'pinterest', 'youtube', 'vimeo', 'flickr', 'picasa', 'instagram',
-		'foursquare', 'tumblr', 'skype', 'soundcloud', 'linkedin', 'github', 'dribble',
-		'itunes', 'podcast', /*, array( 'rss', 'feed', 'atom' ), 'http' - need special handling, could be more than one from either provider or WP, need some way to record if website came from provider to know whether or not to overwrite it */
-	);
-
+	protected $urlRegex;
 	protected $urlRegex1;
 	protected $urlRegex2;
 	protected $skypeRegex;
@@ -47,6 +42,10 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 			'(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,}))' . // TLD identifier
 			'(?::\d{2,5})?(?:/[^\s]*)?' .  // rest of path
 			'_iuS';
+		$this->urlRegex = $this->urlRegex1 .
+			'(facebook|twitter|plus.google|pinterest|youtube|vimeo|flickr|picasa|' .
+			'instagram|foursquare|tumblr|soundcloud|linkedin|github|dribbble|itunes)' .
+			$this->urlRegex2;
 		$this->skypeRegex = '_skype://(?:[^\s]*)_iuS';
 	}
 
@@ -273,16 +272,28 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 	}
 
 	public function editURL( $url ) {
-		foreach ( self::$urlTypes as $urlType ) {
-			if ( $urlType === 'skype' ) {
-				$urlTypeRegex = $this->skypeRegex;
+		$matches = array();
+		// check the passed url to see if it matches a known type
+		if ( preg_match( $this->urlRegex, $url, $matches ) ) {
+			$urlType = $matches[1];
+			// create a regex for just this url type, so we replace the right one
+			$urlTypeRegex = $this->urlRegex1 . $urlType . $this->urlRegex2;
+			$replaced = 0;
+			$urls = preg_replace( $urlTypeRegex, $url, $this->urls, 1, $replaced );
+			if ( $replaced ) {
+				$this->urls = $urls;
 			} else {
-				// see if $url is a recognised type
-				$urlTypeRegex = $this->urlRegex1 . $urlType . $this->urlRegex2; // this could be hard-coded instead of recalculated here
+				if ( ! empty( $this->urls ) ) {
+					$this->urls .= "\n" . $url;
+				} else {
+					$this->urls = $url;
+				}
 			}
-			if ( preg_match( $urlTypeRegex, $url ) ) {
+		} else {
+			// check if skype url
+			if ( preg_match( $this->skypeRegex, $url ) ) {
 				$replaced = 0;
-				$urls = preg_replace( $urlTypeRegex, $url, $this->urls, 1, $replaced );
+				$urls = preg_replace( $this->skypeRegex, $url, $this->urls, 1, $replaced );
 				if ( $replaced ) {
 					$this->urls = $urls;
 				} else {
@@ -292,7 +303,13 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 						$this->urls = $url;
 					}
 				}
-				break;
+			} else {
+				// if all else fails, just append
+				if ( ! empty( $this->urls ) ) {
+					$this->urls .= "\n" . $url;
+				} else {
+					$this->urls = $url;
+				}
 			}
 		}
 		$this->urlsDirty = true;
