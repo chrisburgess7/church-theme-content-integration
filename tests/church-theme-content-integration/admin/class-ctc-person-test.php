@@ -90,7 +90,8 @@ https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2')
 					'http://twitter.com/username77',
 					'http://www.facebook.com/username77',
 					'https://plus.google.com/u/0/+UserName/posts',
-					'http://www.linkedin.com/profile/view?id=123456789'
+					'http://www.linkedin.com/profile/view?id=123456789',
+					'https://itunes.apple.com/au/podcast/mypodcast/id123456789?mt=2'
 				),
 				str_replace( "\r", '',
 'http://www.facebook.com/username77
@@ -108,6 +109,30 @@ http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
 skype://notsurewhatgoeshere
 https://soundcloud.com/iambrodydalle
 http://www.linkedin.com/profile/view?id=123456789
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/mypodcast/id123456789?mt=2')
+			), array(
+				$fullURLSample,
+				array(
+					'skype://username.skype.com'
+				),
+				str_replace( "\r", '',
+'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://username.skype.com
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
 https://github.com/chrisburgess7
 http://dribbble.com/MailChimp
 https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2')

@@ -40,15 +40,14 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 	public function __construct() {
 		$this->setClean();
 		// credits: https://gist.github.com/dperini/729294
-		// this is hitting backtrack limit, try atomic grouping or abandon
 		$this->urlRegex1 = '_' .
 			'(?:(?:https?)://)' .
-			'(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*\.?';
+			'(?>[a-z\x{00a1}-\x{ffff}0-9]+-?)*\.?'; // Note that this is an atomic group - needed to avoid catastrophic backtracking
 		$this->urlRegex2 = '(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*' . // domain name
 			'(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,}))' . // TLD identifier
 			'(?::\d{2,5})?(?:/[^\s]*)?' .  // rest of path
 			'_iuS';
-		$this->skypeRegex = '_skype:\/\/(?:[^\s]*)?_iuS';
+		$this->skypeRegex = '_skype://(?:[^\s]*)_iuS';
 	}
 
 	public function setClean() {
@@ -275,8 +274,12 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 
 	public function editURL( $url ) {
 		foreach ( self::$urlTypes as $urlType ) {
-			// see if $url is a recognised type
-			$urlTypeRegex = $this->urlRegex1 . $urlType . $this->urlRegex2; // this could be hard-coded instead of recalculated here
+			if ( $urlType === 'skype' ) {
+				$urlTypeRegex = $this->skypeRegex;
+			} else {
+				// see if $url is a recognised type
+				$urlTypeRegex = $this->urlRegex1 . $urlType . $this->urlRegex2; // this could be hard-coded instead of recalculated here
+			}
 			if ( preg_match( $urlTypeRegex, $url ) ) {
 				$replaced = 0;
 				$urls = preg_replace( $urlTypeRegex, $url, $this->urls, 1, $replaced );
