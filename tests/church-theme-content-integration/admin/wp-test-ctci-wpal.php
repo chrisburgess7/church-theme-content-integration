@@ -680,7 +680,83 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 	}
 
 	public function testUpdateCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		// create object to match DB
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$ctcPerson->setName('Test Person');
+		// now edit it
+		$ctcPerson->editName('Edited Person');
+		$ctcPerson->editBio('Edited bio');
+		$ctcPerson->editPosition('Edited position');
+		$ctcPerson->editEmail('edit@test.com');
+		$ctcPerson->editPhone('4299 9999');
+		$ctcPerson->editURL('http://www.facebook.com/editedusername');
+		$ctcPerson->editURL('http://twitter.com/editedusername');
+		$ctcPerson->editExcerpt('Edited excerpt');
 
+		$success = $this->sut->updateCTCPerson( $ctcPerson );
+
+		$this->assertTrue( $success );
+		$post = get_post( $id );
+		$this->assertEquals( 'Edited Person', $post->post_title );
+		$this->assertEquals( 'Edited bio', $post->post_content );
+		$this->assertEquals( 'Edited position', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
+		$this->assertEquals( 'edit@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
+		$this->assertEquals( '4299 9999', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
+		$this->assertEquals(
+			"http://www.facebook.com/editedusername\nhttp://twitter.com/editedusername",
+			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
+		);
+		$this->assertEquals( 'Edited excerpt', $post->post_excerpt );
+	}
+
+	public function testUpdateCTCPerson_PartialUpdateOnly() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			'post_content' => 'An unchanged bio',
+			'post_excerpt' => 'An unchanged excerpt'
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		$this->assertTrue( false !== update_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, 'Unchanged Position') );
+		$this->assertTrue(
+			false !== update_post_meta(
+				$id, CTCI_WPAL::$ctcPersonURLSMetaTag, "http://www.facebook.com/username\nhttp://twitter.com/username"
+			)
+		);
+		// set object to match DB
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$ctcPerson->setName('Test Person');
+		$ctcPerson->setBio('An unchanged bio');
+		$ctcPerson->setExcerpt('An unchanged excerpt');
+		$ctcPerson->setPosition('Unchanged Position');
+		$ctcPerson->setUrls("http://www.facebook.com/username\nhttp://twitter.com/username");
+		// now perform edits
+		$ctcPerson->editName('Edited Person');
+		$ctcPerson->editEmail('edit@test.com');
+		$ctcPerson->editPhone('4299 9999');
+		$ctcPerson->editURL('http://twitter.com/editedusername');
+
+		$success = $this->sut->updateCTCPerson( $ctcPerson );
+
+		$this->assertTrue( $success );
+		$post = get_post( $id );
+		$this->assertEquals( 'Edited Person', $post->post_title );
+		$this->assertEquals( 'An unchanged bio', $post->post_content );
+		$this->assertEquals( 'Unchanged Position', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
+		$this->assertEquals( 'edit@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
+		$this->assertEquals( '4299 9999', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
+		$this->assertEquals(
+			"http://www.facebook.com/username\nhttp://twitter.com/editedusername",
+			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
+		);
+		$this->assertEquals( 'An unchanged excerpt', $post->post_excerpt );
 	}
 
 	public function testUnattachCTCPerson() {
@@ -688,7 +764,7 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 			'post_title' => 'Test Person',
 			'post_type' => CTCI_WPAL::$ctcPersonPostType
 		));
-		$this->assertTrue( is_int($id) && $id > 0);
+		$this->assertTrue( is_int($id) && $id > 0 );
 		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
 		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
 		// quick check that post meta added correctly

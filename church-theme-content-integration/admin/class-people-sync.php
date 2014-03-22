@@ -164,7 +164,7 @@ class CTCI_PeopleSync {
 		if ( $person->syncLinkedInURL() ) {
 			$ctcPerson->editURL( $person->getLinkedInURL() );
 		}
-		$this->wpal->updateCTCPerson( $ctcPerson, $person );
+		$this->wpal->updateCTCPerson( $ctcPerson );
 	}
 
 	/*protected function syncCTCPersonsGroups( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person ) {

@@ -66,4 +66,11 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 		return $this->groups;
 	}
 
+	public function cleanUpAfterPeopleSync() {
+		// TODO: Implement cleanUpAfterPeopleSync() method.
+	}
+
+	public function deleteUnattachedGroups() {
+		// TODO: Implement deleteUnattachedGroups() method.
+	}
 }

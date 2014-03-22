@@ -380,8 +380,44 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		}
 	}
 
-	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person ) {
-
+	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$success = true;
+		$fieldsToUpdate = array( 'ID' => $ctcPerson->id() );
+		if ( $ctcPerson->isNameDirty() ) {
+			// shouldn't need the wp_strip_all_tags, but we'll play it safe
+			$fieldsToUpdate['post_title'] = wp_strip_all_tags( $ctcPerson->getName() );
+		}
+		if ( $ctcPerson->isBioDirty() ) {
+			$fieldsToUpdate['post_content'] = $ctcPerson->getBio();
+		}
+		if ( $ctcPerson->isExcerptDirty() ) {
+			$fieldsToUpdate['post_excerpt'] = $ctcPerson->getExcerpt();
+		}
+		$updateResult = wp_update_post( $fieldsToUpdate );
+		if ( 0 === $updateResult || is_wp_error( $updateResult ) ) {
+			$success = false;
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonEmailMetaTag, true ) !== $ctcPerson->getEmail() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonEmailMetaTag, $ctcPerson->getEmail() ) ) {
+				$success = false;
+			}
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonPhoneMetaTag, true ) !== $ctcPerson->getPhone() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonPhoneMetaTag, $ctcPerson->getPhone() ) ) {
+				$success = false;
+			}
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonPositionMetaTag, true ) !== $ctcPerson->getPosition() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonPositionMetaTag, $ctcPerson->getPosition() ) ) {
+				$success = false;
+			}
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonURLSMetaTag, true ) !== $ctcPerson->getURLs() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonURLSMetaTag, $ctcPerson->getURLs() ) ) {
+				$success = false;
+			}
+		}
+		return $success;
 	}
 
 	/**
