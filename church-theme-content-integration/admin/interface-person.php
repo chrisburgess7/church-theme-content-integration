@@ -118,4 +118,9 @@ interface CTCI_PersonInterface {
 	 * @return array    An array of CTCI_PeopleGroupInterface for each group that this person belongs to
 	 */
 	public function getGroups();
+
+	/**
+	 * @return array    An array containing all URL fields.
+	 */
+	public function getURLs();
 } 

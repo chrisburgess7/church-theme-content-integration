@@ -332,4 +332,18 @@ class CTCI_Person implements CTCI_PersonInterface {
 	public function getGroups() {
 		return $this->groups;
 	}
+
+	public function getURLs() {
+		$urls = array();
+		if ( ! empty( $this->facebookURL ) ) {
+			$urls[] = $this->facebookURL;
+		}
+		if ( ! empty( $this->twitterURL ) ) {
+			$urls[] = $this->twitterURL;
+		}
+		if ( ! empty( $this->linkedInURL ) ) {
+			$urls[] = $this->linkedInURL;
+		}
+		return $urls;
+	}
 }

@@ -467,26 +467,257 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $unattachedGroups, $actual );
 	}
 
-	/*public function testCreateCTCPerson() {
-
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson
-			->setId(27)
-			->setName('New Person')
-			->setBio('<h2>Example Heading</h2> This is the bio text, http://www.youtube.com/watch?v=3F1V2fZS7yA')
+	public function testCreateCTCPerson() {
+		$person = new CTCI_Person( 'f1' );
+		$person
+			//->setId(27)
+			->setFirstName('New')
+			->setLastName('Person')
 			->setPosition('Lead Pastor')
 			->setPhone('(02) 4211 1111')
 			->setEmail('new.person@test.com')
-			->setUrlsFromArray(array('http://facebook.com', 'http://twitter.com', 'https://linkedin.com'))
-			->setExcerpt('New person excerpt');
+			->setFacebookURL( 'http://facebook.com/newuser' )
+			->setTwitterURL( 'http://twitter.com/newuser')
+			->setLinkedInURL( 'https://linkedin.com/newuser' );
 
-		$id = $this->sut->createCTCPerson( $ctcPerson );
+		$person
+			->setSyncName()
+			->setSyncPosition()
+			->setSyncPhone()
+			->setSyncEmail()
+			->setSyncFacebookURL()
+			->setSyncTwitterURL()
+			->setSyncLinkedInURL();
+
+		$ctcPerson = $this->sut->createAttachedCTCPerson( $person );
 
 		// check id looks ok
-		$this->assertNotSame( 0, $id );
-		$this->assertFalse( is_wp_error($id) );
+		$this->assertInstanceOf( 'CTCI_CTCPersonInterface', $ctcPerson );
+		$id = $ctcPerson->id();
+		$post = get_post( $id );
+		$this->assertEquals( 'New Person', $post->post_title );
+		$this->assertEquals( 'New Person', $ctcPerson->getName() );
+		$this->assertEquals( 'Lead Pastor', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
+		$this->assertEquals( 'Lead Pastor', $ctcPerson->getPosition() );
+		$this->assertEquals( '(02) 4211 1111', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
+		$this->assertEquals( '(02) 4211 1111', $ctcPerson->getPhone() );
+		$this->assertEquals( 'new.person@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
+		$this->assertEquals( 'new.person@test.com', $ctcPerson->getEmail() );
+		$this->assertEquals(
+			"http://facebook.com/newuser\nhttp://twitter.com/newuser\nhttps://linkedin.com/newuser",
+			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
+		);
+		$this->assertEquals(
+			"http://facebook.com/newuser\nhttp://twitter.com/newuser\nhttps://linkedin.com/newuser",
+			$ctcPerson->getURLs()
+		);
+	}
+
+	public function testUpdateCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
 		$this->assertTrue( is_int($id) && $id > 0 );
-	}*/
+		// create object to match DB
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$ctcPerson->setName('Test Person');
+		// now edit it
+		$ctcPerson->editName('Edited Person');
+		$ctcPerson->editBio('Edited bio');
+		$ctcPerson->editPosition('Edited position');
+		$ctcPerson->editEmail('edit@test.com');
+		$ctcPerson->editPhone('4299 9999');
+		$ctcPerson->editURL('http://www.facebook.com/editedusername');
+		$ctcPerson->editURL('http://twitter.com/editedusername');
+		$ctcPerson->editExcerpt('Edited excerpt');
+
+		$success = $this->sut->updateCTCPerson( $ctcPerson );
+
+		$this->assertTrue( $success );
+		$post = get_post( $id );
+		$this->assertEquals( 'Edited Person', $post->post_title );
+		$this->assertEquals( 'Edited bio', $post->post_content );
+		$this->assertEquals( 'Edited position', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
+		$this->assertEquals( 'edit@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
+		$this->assertEquals( '4299 9999', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
+		$this->assertEquals(
+			"http://www.facebook.com/editedusername\nhttp://twitter.com/editedusername",
+			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
+		);
+		$this->assertEquals( 'Edited excerpt', $post->post_excerpt );
+	}
+
+	public function testUpdateCTCPerson_PartialUpdateOnly() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			'post_content' => 'An unchanged bio',
+			'post_excerpt' => 'An unchanged excerpt'
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		$this->assertTrue( false !== update_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, 'Unchanged Position') );
+		$this->assertTrue(
+			false !== update_post_meta(
+				$id, CTCI_WPAL::$ctcPersonURLSMetaTag, "http://www.facebook.com/username\nhttp://twitter.com/username"
+			)
+		);
+		// set object to match DB
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$ctcPerson->setName('Test Person');
+		$ctcPerson->setBio('An unchanged bio');
+		$ctcPerson->setExcerpt('An unchanged excerpt');
+		$ctcPerson->setPosition('Unchanged Position');
+		$ctcPerson->setUrls("http://www.facebook.com/username\nhttp://twitter.com/username");
+		// now perform edits
+		$ctcPerson->editName('Edited Person');
+		$ctcPerson->editEmail('edit@test.com');
+		$ctcPerson->editPhone('4299 9999');
+		$ctcPerson->editURL('http://twitter.com/editedusername');
+
+		$success = $this->sut->updateCTCPerson( $ctcPerson );
+
+		$this->assertTrue( $success );
+		$post = get_post( $id );
+		$this->assertEquals( 'Edited Person', $post->post_title );
+		$this->assertEquals( 'An unchanged bio', $post->post_content );
+		$this->assertEquals( 'Unchanged Position', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
+		$this->assertEquals( 'edit@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
+		$this->assertEquals( '4299 9999', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
+		$this->assertEquals(
+			"http://www.facebook.com/username\nhttp://twitter.com/editedusername",
+			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
+		);
+		$this->assertEquals( 'An unchanged excerpt', $post->post_excerpt );
+	}
+
+	public function testAttachCTCPerson() {
+		// create a person post
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		// check nothing attached
+		$this->assertEmpty( get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEmpty( get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$person = new CTCI_Person('f1', '8a781');
+
+		// first attach with mode new, should be fine
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'new' );
+
+		$this->assertTrue( $success );
+		$this->assertEquals( array( 'f1' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
+		$this->assertEquals( array( '8a781' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
+
+		$person->setId( '12345' );
+		$person->setProviderTag( 'ccb' );
+
+		// now we have a record, calling again with mode new should simply return false with no change
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'new' );
+		$this->assertFalse( $success );
+		// having the array here ensures we test that we dont have multiple entries
+		$this->assertEquals( array( 'f1' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
+		$this->assertEquals( array( '8a781' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
+
+		// now call with mode replace, which should update the record with the new id, even with an existing attachment
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'replace' );
+		$this->assertTrue( $success );
+		$this->assertEquals( array( 'ccb' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
+		$this->assertEquals( array( '12345' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
+
+		// and repeating in mode replace should still return true, even with the same values
+		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'replace' );
+		$this->assertTrue( $success );
+	}
+
+	public function testUnattachCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
+		// quick check that post meta added correctly
+		$this->assertEquals( 'f1', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEquals( '9e73', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$return = $this->sut->unattachCTCPerson( $ctcPerson );
+
+		$this->assertTrue( $return );
+		$this->assertEquals( '', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEquals( '', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+	}
+
+	public function testSetCTCPersonsGroups() {
+		// setup db
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+		));
+		$this->assertTrue( is_int($id) && $id > 0 );
+		$ids = wp_insert_term( 'Group 1', CTCI_WPAL::$ctcPersonGroupTaxonomy );
+		$this->assertTrue( isset( $ids['term_id'] ) );
+		$this->assertEmpty( wp_get_object_terms( $id, CTCI_WPAL::$ctcPersonGroupTaxonomy ) );
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		// insert an attach record for it
+		$attachTable = $wpdb->prefix . CTCI_WPAL::$ctcGroupConnectTable;
+		$result = $wpdb->insert( $attachTable, array(
+				'data_provider' => 'f1',
+				'term_id' => $ids['term_id'],
+				'provider_group_id' => '12345'
+			), array( '%s', '%d', '%s' )
+		);
+		$this->assertTrue( $result !== false );
+		// create objects with same data
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id )->setName( 'Test Person' );
+		$group = new CTCI_PeopleGroup( 'f1', '12345', 'Group 1', '');
+
+		// act
+		$this->sut->setCTCPersonsGroups( $ctcPerson, array( $group ) );
+
+		$objectTerms = wp_get_object_terms( $ctcPerson->id(), CTCI_WPAL::$ctcPersonGroupTaxonomy );
+		$this->assertCount( 1, $objectTerms );
+		$this->assertEquals( $ids['term_id'], $objectTerms[0]->term_id );
+	}
+
+	public function testDeleteCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType
+		));
+		$this->assertNotNull( get_post( $id ) );
+
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$this->sut->deleteCTCPerson( $ctcPerson );
+
+		$this->assertNull( get_post( $id ) );
+	}
+
+	public function testUnpublishCTCPerson() {
+		$id = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			'post_status' => 'publish'
+		));
+		$this->assertEquals( 'publish', get_post( $id )->post_status );
+
+		$ctcPerson = new CTCI_CTCPerson();
+		$ctcPerson->setId( $id );
+		$this->sut->unPublishCTCPerson( $ctcPerson );
+
+		$this->assertEquals( 'draft', get_post( $id )->post_status );
+	}
 
 	public function testGetCTCPeopleAttachedViaProvider() {
 		// create a person post
@@ -615,9 +846,9 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 			'post_type' => CTCI_WPAL::$ctcPersonPostType
 		));
 		$this->assertTrue( is_int($id[3]) && $id[3] > 0);
-		
+
 		$ctcPeople = $this->sut->getUnattachedCTCPeople();
-		
+
 		$this->assertTrue( is_array( $ctcPeople ) );
 		$this->assertEquals( 2, count( $ctcPeople ) );
 		foreach ( $ctcPeople as $ctcPerson ) {
@@ -637,175 +868,4 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $ctcPeople[ $id[3] ]->getName(), 'Test Person 4' );
 	}
 
-	public function testAttachCTCPerson() {
-		// create a person post
-		$id = wp_insert_post( array(
-			'post_title' => 'Test Person',
-			'post_type' => CTCI_WPAL::$ctcPersonPostType,
-		));
-		$this->assertTrue( is_int($id) && $id > 0 );
-		// check nothing attached
-		$this->assertEmpty( get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
-		$this->assertEmpty( get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson->setId( $id );
-		$person = new CTCI_Person('f1', '8a781');
-
-		// first attach with mode new, should be fine
-		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'new' );
-
-		$this->assertTrue( $success );
-		$this->assertEquals( array( 'f1' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
-		$this->assertEquals( array( '8a781' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
-
-		$person->setId( '12345' );
-		$person->setProviderTag( 'ccb' );
-
-		// now we have a record, calling again with mode new should simply return false with no change
-		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'new' );
-		$this->assertFalse( $success );
-		// having the array here ensures we test that we dont have multiple entries
-		$this->assertEquals( array( 'f1' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
-		$this->assertEquals( array( '8a781' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
-
-		// now call with mode replace, which should update the record with the new id, even with an existing attachment
-		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'replace' );
-		$this->assertTrue( $success );
-		$this->assertEquals( array( 'ccb' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag ) );
-		$this->assertEquals( array( '12345' ), get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag ) );
-
-		// and repeating in mode replace should still return true, even with the same values
-		$success = $this->sut->attachCTCPerson( $ctcPerson, $person, 'replace' );
-		$this->assertTrue( $success );
-	}
-
-	public function testUpdateCTCPerson() {
-		$id = wp_insert_post( array(
-			'post_title' => 'Test Person',
-			'post_type' => CTCI_WPAL::$ctcPersonPostType
-		));
-		$this->assertTrue( is_int($id) && $id > 0 );
-		// create object to match DB
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson->setId( $id );
-		$ctcPerson->setName('Test Person');
-		// now edit it
-		$ctcPerson->editName('Edited Person');
-		$ctcPerson->editBio('Edited bio');
-		$ctcPerson->editPosition('Edited position');
-		$ctcPerson->editEmail('edit@test.com');
-		$ctcPerson->editPhone('4299 9999');
-		$ctcPerson->editURL('http://www.facebook.com/editedusername');
-		$ctcPerson->editURL('http://twitter.com/editedusername');
-		$ctcPerson->editExcerpt('Edited excerpt');
-
-		$success = $this->sut->updateCTCPerson( $ctcPerson );
-
-		$this->assertTrue( $success );
-		$post = get_post( $id );
-		$this->assertEquals( 'Edited Person', $post->post_title );
-		$this->assertEquals( 'Edited bio', $post->post_content );
-		$this->assertEquals( 'Edited position', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
-		$this->assertEquals( 'edit@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
-		$this->assertEquals( '4299 9999', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
-		$this->assertEquals(
-			"http://www.facebook.com/editedusername\nhttp://twitter.com/editedusername",
-			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
-		);
-		$this->assertEquals( 'Edited excerpt', $post->post_excerpt );
-	}
-
-	public function testUpdateCTCPerson_PartialUpdateOnly() {
-		$id = wp_insert_post( array(
-			'post_title' => 'Test Person',
-			'post_type' => CTCI_WPAL::$ctcPersonPostType,
-			'post_content' => 'An unchanged bio',
-			'post_excerpt' => 'An unchanged excerpt'
-		));
-		$this->assertTrue( is_int($id) && $id > 0 );
-		$this->assertTrue( false !== update_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, 'Unchanged Position') );
-		$this->assertTrue(
-			false !== update_post_meta(
-				$id, CTCI_WPAL::$ctcPersonURLSMetaTag, "http://www.facebook.com/username\nhttp://twitter.com/username"
-			)
-		);
-		// set object to match DB
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson->setId( $id );
-		$ctcPerson->setName('Test Person');
-		$ctcPerson->setBio('An unchanged bio');
-		$ctcPerson->setExcerpt('An unchanged excerpt');
-		$ctcPerson->setPosition('Unchanged Position');
-		$ctcPerson->setUrls("http://www.facebook.com/username\nhttp://twitter.com/username");
-		// now perform edits
-		$ctcPerson->editName('Edited Person');
-		$ctcPerson->editEmail('edit@test.com');
-		$ctcPerson->editPhone('4299 9999');
-		$ctcPerson->editURL('http://twitter.com/editedusername');
-
-		$success = $this->sut->updateCTCPerson( $ctcPerson );
-
-		$this->assertTrue( $success );
-		$post = get_post( $id );
-		$this->assertEquals( 'Edited Person', $post->post_title );
-		$this->assertEquals( 'An unchanged bio', $post->post_content );
-		$this->assertEquals( 'Unchanged Position', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
-		$this->assertEquals( 'edit@test.com', get_post_meta( $id, CTCI_WPAL::$ctcPersonEmailMetaTag, true ) );
-		$this->assertEquals( '4299 9999', get_post_meta( $id, CTCI_WPAL::$ctcPersonPhoneMetaTag, true ) );
-		$this->assertEquals(
-			"http://www.facebook.com/username\nhttp://twitter.com/editedusername",
-			get_post_meta( $id, CTCI_WPAL::$ctcPersonURLSMetaTag, true )
-		);
-		$this->assertEquals( 'An unchanged excerpt', $post->post_excerpt );
-	}
-
-	public function testUnattachCTCPerson() {
-		$id = wp_insert_post( array(
-			'post_title' => 'Test Person',
-			'post_type' => CTCI_WPAL::$ctcPersonPostType
-		));
-		$this->assertTrue( is_int($id) && $id > 0 );
-		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
-		update_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
-		// quick check that post meta added correctly
-		$this->assertEquals( 'f1', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
-		$this->assertEquals( '9e73', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
-
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson->setId( $id );
-		$return = $this->sut->unattachCTCPerson( $ctcPerson );
-
-		$this->assertTrue( $return );
-		$this->assertEquals( '', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
-		$this->assertEquals( '', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
-	}
-
-	public function testDeleteCTCPerson() {
-		$id = wp_insert_post( array(
-			'post_title' => 'Test Person',
-			'post_type' => CTCI_WPAL::$ctcPersonPostType
-		));
-		$this->assertNotNull( get_post( $id ) );
-
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson->setId( $id );
-		$this->sut->deleteCTCPerson( $ctcPerson );
-
-		$this->assertNull( get_post( $id ) );
-	}
-
-	public function testUnpublishCTCPerson() {
-		$id = wp_insert_post( array(
-			'post_title' => 'Test Person',
-			'post_type' => CTCI_WPAL::$ctcPersonPostType,
-			'post_status' => 'publish'
-		));
-		$this->assertEquals( 'publish', get_post( $id )->post_status );
-
-		$ctcPerson = new CTCI_CTCPerson();
-		$ctcPerson->setId( $id );
-		$this->sut->unPublishCTCPerson( $ctcPerson );
-
-		$this->assertEquals( 'draft', get_post( $id )->post_status );
-	}
 }

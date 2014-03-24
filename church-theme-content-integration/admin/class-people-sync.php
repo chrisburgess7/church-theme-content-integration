@@ -77,7 +77,7 @@ class CTCI_PeopleSync {
 				if ( $attached instanceof CTCI_CTCPersonInterface ) {
 					$this->syncCTCPerson( $attached, $person, $dataProvider->syncGroups() );
 				} else {
-					$this->createNewCTCPerson( $person );
+					$this->createNewCTCPerson( $person, $dataProvider->syncGroups() );
 				}
 			}
 
@@ -190,8 +190,11 @@ class CTCI_PeopleSync {
 		return false;
 	}
 
-	protected function createNewCTCPerson( CTCI_PersonInterface $person ) {
-		$this->wpal->createAttachedCTCPerson( $person );
+	protected function createNewCTCPerson( CTCI_PersonInterface $person, $syncGroups ) {
+		$ctcPerson = $this->wpal->createAttachedCTCPerson( $person );
+		if ( $syncGroups ) {
+			$this->wpal->setCTCPersonsGroups( $ctcPerson, $person->getGroups() );
+		}
 	}
 
 	protected function syncCleanUp() {

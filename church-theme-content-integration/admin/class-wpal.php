@@ -111,6 +111,9 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	/**
 	 * @param CTCI_PeopleGroupInterface $group
 	 * @return CTCI_CTCGroup
+	 * @throws CTCI_CreateCTCGroupException
+	 * @throws CTCI_UpdateCTCGroupAttachRecordException
+	 * @throws CTCI_InsertCTCGroupAttachRecordException
 	 */
 	public function createAttachedCTCGroup( CTCI_PeopleGroupInterface $group ) {
 		$ctcGroup = $this->createCTCGroup( $group );
@@ -118,6 +121,11 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcGroup;
 	}
 
+	/**
+	 * @param CTCI_CTCGroupInterface $ctcGroup
+	 * @return int                  Number of groups deleted
+	 * @throws CTCI_CouldNotUnattachCTCGroupException
+	 */
 	public function unattachCTCGroup( CTCI_CTCGroupInterface $ctcGroup ) {
 		/** @var $wpdb wpdb */
 		global $wpdb;
@@ -148,6 +156,10 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $result;
 	}
 
+	/**
+	 * @param CTCI_CTCGroupInterface $ctcGroup
+	 * @throws CTCI_CouldNotDeleteCTCGroupException
+	 */
 	public function deleteCTCGroup( CTCI_CTCGroupInterface $ctcGroup ) {
 		$this->unattachCTCGroup( $ctcGroup );
 		$result = wp_delete_term( $ctcGroup->id(), CTCI_WPAL::$ctcPersonGroupTaxonomy );
@@ -266,8 +278,168 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcGroups;
 	}
 
-	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+	/**
+	 * Create a CTC Person from the CTCI_PersonInterface object. Note that this does not set the person's groups.
+	 * @param CTCI_PersonInterface $person
+	 * @return CTCI_CTCPersonInterface
+	 * @throws CTCI_CouldNotCreateCTCPersonFromPersonException
+	 */
+	public function createAttachedCTCPerson( CTCI_PersonInterface $person ) {
+		$fieldsToInsert = array( 'post_status' => 'publish' );
+		if ( $person->syncName() ) {
+			$fieldsToInsert['post_title'] = $person->getName();
+		}
+		$id = wp_insert_post( $fieldsToInsert, true );
+		if ( is_wp_error( $id ) ) {
+			throw new CTCI_CouldNotCreateCTCPersonFromPersonException( $person, $id );
+		}
+		add_post_meta( $id, self::$ctcPersonPositionMetaTag, $person->getPosition(), true );
+		add_post_meta( $id, self::$ctcPersonPhoneMetaTag, $person->getPhone(), true );
+		add_post_meta( $id, self::$ctcPersonEmailMetaTag, $person->getEmail(), true );
+		add_post_meta( $id, self::$ctcPersonURLSMetaTag, implode( "\n", $person->getURLs() ), true );
+		return $this->populateCTCPersonFromPost( get_post( $id ) );
+	}
 
+	/**
+	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @return bool
+	 */
+	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$success = true;
+		$fieldsToUpdate = array( 'ID' => $ctcPerson->id() );
+		if ( $ctcPerson->isNameDirty() ) {
+			// shouldn't need the wp_strip_all_tags, but we'll play it safe
+			$fieldsToUpdate['post_title'] = wp_strip_all_tags( $ctcPerson->getName() );
+		}
+		if ( $ctcPerson->isBioDirty() ) {
+			$fieldsToUpdate['post_content'] = $ctcPerson->getBio();
+		}
+		if ( $ctcPerson->isExcerptDirty() ) {
+			$fieldsToUpdate['post_excerpt'] = $ctcPerson->getExcerpt();
+		}
+		$updateResult = wp_update_post( $fieldsToUpdate );
+		if ( 0 === $updateResult || is_wp_error( $updateResult ) ) {
+			$success = false;
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonEmailMetaTag, true ) !== $ctcPerson->getEmail() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonEmailMetaTag, $ctcPerson->getEmail() ) ) {
+				$success = false;
+			}
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonPhoneMetaTag, true ) !== $ctcPerson->getPhone() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonPhoneMetaTag, $ctcPerson->getPhone() ) ) {
+				$success = false;
+			}
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonPositionMetaTag, true ) !== $ctcPerson->getPosition() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonPositionMetaTag, $ctcPerson->getPosition() ) ) {
+				$success = false;
+			}
+		}
+		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonURLSMetaTag, true ) !== $ctcPerson->getURLs() ) {
+			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonURLSMetaTag, $ctcPerson->getURLs() ) ) {
+				$success = false;
+			}
+		}
+		return $success;
+	}
+
+	/**
+	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @param CTCI_PersonInterface $person
+	 * @param string $mode      Set to 'new' to only attach if ctcPerson has no current attach record.
+	 *                          Set to 'replace' to either add a new attachment, or overwrite an existing one.
+	 * @return bool     If $mode is 'new' returns true if attach successful, false if ctcPerson is already attached
+	 *                  If $mode is 'replace' true if update succeeded, including if ctcPerson was already attached
+	 *                  to the given $person. Otherwise false if an error occurred.
+	 */
+	public function attachCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person, $mode = 'new' ) {
+
+		if ( $mode === 'new' ) {
+			if ( ! add_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag, $person->getProviderTag(), true ) ) {
+				return false;
+			}
+			if ( ! add_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, $person->id(), true ) ) {
+				return false;
+			}
+			return true;
+		} elseif ( $mode === 'replace' ) {
+			// these will add the meta tags if they don't exist
+			$tagSuccess = update_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag, $person->getProviderTag() );
+			$idSuccess = update_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, $person->id() );
+
+			// because update_post_meta returns false for errors as well as if the meta tag already exists with the same value
+			// we need to run our own queries to be sure that the update has occurred...
+			$tagValueCorrect =
+				get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag ) ===
+				array( $person->getProviderTag() );
+			$idValueCorrect =
+				get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag ) ===
+				array( $person->id() );
+
+			if ( ( $tagSuccess === false && ! $tagValueCorrect ) || $idSuccess === false && ! $idValueCorrect ) {
+				return false;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @return bool     Returns false if any call to delete_post_meta returned false, otherwise true
+	 */
+	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$success = true;
+		if ( ! delete_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag ) ) {
+			$success = false;
+		}
+		if ( ! delete_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag ) ) {
+			$success = false;
+		}
+		return $success;
+	}
+
+	/**
+	 * Set the groups for the given CTC person. This will replace all existing groups for the person, but will ignore
+	 * any passed PeopleGroups that are not attached to a CTC group. If there is no attach record mapping the people
+	 * group to a CTC group, there is no way to know what CTC group term to set on the CTC person.
+	 * @param CTCI_CTCPersonInterface $ctcPerson
+	 * @param CTCI_PeopleGroupInterface[] $groups
+	 */
+	public function setCTCPersonsGroups( CTCI_CTCPersonInterface $ctcPerson, array $groups ) {
+		$groupIds = array();
+		foreach ( $groups as $group ) {
+			$ctcGroup = $this->getAttachedCTCGroup( $group );
+			if ( null !== $ctcGroup ) {
+				// need to make sure that these are ints so wp_set_object_terms treats them as ids and not slugs
+				$groupIds[] = (int)$ctcGroup->id();
+			}
+		}
+		wp_set_object_terms( $ctcPerson->id(), $groupIds, self::$ctcPersonGroupTaxonomy );
+	}
+
+	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$success = wp_delete_post( $ctcPerson->id() );
+		if ( $success === false ) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$return = wp_update_post( array(
+			'ID' => $ctcPerson->id(),
+			'post_status' => 'draft'
+		) );
+		if ( $return === 0) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	/**
@@ -325,7 +497,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 				array(
 					'key' => self::$ctcPersonProviderTagMetaTag,
 					'value' => 'novalue', // see https://codex.wordpress.org/Class_Reference/WP_Query#Custom_Field_Parameters
-										// for why this is here - WP issue
+					// for why this is here - WP issue
 					'compare' => 'NOT EXISTS',
 				)
 			)
@@ -337,124 +509,6 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcPeople;
 	}
 
-	/**
-	 * @param CTCI_CTCPersonInterface $ctcPerson
-	 * @param CTCI_PersonInterface $person
-	 * @param string $mode      Set to 'new' to only attach if ctcPerson has no current attach record.
-	 *                          Set to 'replace' to either add a new attachment, or overwrite an existing one.
-	 * @return bool     If $mode is 'new' returns true if attach successful, false if ctcPerson is already attached/
-	 *                  If $mode is 'replace' true if update succeeded, including if ctcPerson was already attached
-	 *                  to the given $person. Otherwise false if an error occurred.
-	 */
-	public function attachCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person, $mode = 'new' ) {
-
-		if ( $mode === 'new' ) {
-			if ( ! add_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag, $person->getProviderTag(), true ) ) {
-				return false;
-			}
-			if ( ! add_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, $person->id(), true ) ) {
-				return false;
-			}
-			return true;
-		} elseif ( $mode === 'replace' ) {
-			// these will add the meta tags if they don't exist
-			$tagSuccess = update_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag, $person->getProviderTag() );
-			$idSuccess = update_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag, $person->id() );
-
-			// because update_post_meta returns false for errors as well as if the meta tag already exists with the same value
-			// we need to run our own queries to be sure that the update has occurred...
-			$tagValueCorrect =
-				get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag ) ===
-				array( $person->getProviderTag() );
-			$idValueCorrect =
-				get_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag ) ===
-				array( $person->id() );
-
-			if ( ( $tagSuccess === false && ! $tagValueCorrect ) || $idSuccess === false && ! $idValueCorrect ) {
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			return false;
-		}
-	}
-
-	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
-		$success = true;
-		$fieldsToUpdate = array( 'ID' => $ctcPerson->id() );
-		if ( $ctcPerson->isNameDirty() ) {
-			// shouldn't need the wp_strip_all_tags, but we'll play it safe
-			$fieldsToUpdate['post_title'] = wp_strip_all_tags( $ctcPerson->getName() );
-		}
-		if ( $ctcPerson->isBioDirty() ) {
-			$fieldsToUpdate['post_content'] = $ctcPerson->getBio();
-		}
-		if ( $ctcPerson->isExcerptDirty() ) {
-			$fieldsToUpdate['post_excerpt'] = $ctcPerson->getExcerpt();
-		}
-		$updateResult = wp_update_post( $fieldsToUpdate );
-		if ( 0 === $updateResult || is_wp_error( $updateResult ) ) {
-			$success = false;
-		}
-		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonEmailMetaTag, true ) !== $ctcPerson->getEmail() ) {
-			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonEmailMetaTag, $ctcPerson->getEmail() ) ) {
-				$success = false;
-			}
-		}
-		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonPhoneMetaTag, true ) !== $ctcPerson->getPhone() ) {
-			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonPhoneMetaTag, $ctcPerson->getPhone() ) ) {
-				$success = false;
-			}
-		}
-		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonPositionMetaTag, true ) !== $ctcPerson->getPosition() ) {
-			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonPositionMetaTag, $ctcPerson->getPosition() ) ) {
-				$success = false;
-			}
-		}
-		if ( get_post_meta( $ctcPerson->id(), self::$ctcPersonURLSMetaTag, true ) !== $ctcPerson->getURLs() ) {
-			if ( false === update_post_meta( $ctcPerson->id(), self::$ctcPersonURLSMetaTag, $ctcPerson->getURLs() ) ) {
-				$success = false;
-			}
-		}
-		return $success;
-	}
-
-	/**
-	 * @param CTCI_CTCPersonInterface $ctcPerson
-	 * @return bool     Returns false if any call to delete_post_meta returned false, otherwise true
-	 */
-	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
-		$success = true;
-		if ( ! delete_post_meta( $ctcPerson->id(), self::$ctcPersonProviderTagMetaTag ) ) {
-			$success = false;
-		}
-		if ( ! delete_post_meta( $ctcPerson->id(), self::$ctcPersonProviderIdMetaTag ) ) {
-			$success = false;
-		}
-		return $success;
-	}
-
-	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
-		$success = wp_delete_post( $ctcPerson->id() );
-		if ( $success === false ) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
-		$return = wp_update_post( array(
-			'ID' => $ctcPerson->id(),
-			'post_status' => 'draft'
-		) );
-		if ( $return === 0) {
-			return false;
-		} else {
-			return true;
-		}
-	}
 }
 
 class CTCI_CreateCTCGroupException extends Exception {
@@ -516,3 +570,27 @@ class CTCI_CouldNotUnattachCTCGroupException extends CTCI_CTCGroupExceptionType 
 class CTCI_CouldNotDeleteCTCGroupException extends CTCI_CTCGroupExceptionType {}
 
 class CTCI_CouldNotRetrieveUnattachedCTCGroupsException extends Exception {}
+
+class CTCI_CouldNotCreateCTCPersonFromPersonException extends Exception {
+	protected $person;
+	protected $wp_error;
+	public function __construct( CTCI_PersonInterface $person, WP_Error $error, $message = '', $code = 0, $innerException = null) {
+		parent::__construct( $message, $code, $innerException );
+		$this->person = $person;
+		$this->wp_error = $error;
+	}
+
+	/**
+	 * @return CTCI_PersonInterface
+	 */
+	public function getPerson() {
+		return $this->person;
+	}
+
+	/**
+	 * @return WP_Error
+	 */
+	public function getWPError() {
+		return $this->wp_error;
+	}
+}

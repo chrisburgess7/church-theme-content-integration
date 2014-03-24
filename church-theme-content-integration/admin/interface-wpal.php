@@ -38,7 +38,19 @@ interface CTCI_WPALInterface {
 	 */
 	public function getUnattachedCTCGroups();
 
-	public function createCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+	public function createAttachedCTCPerson( CTCI_PersonInterface $person );
+
+	public function attachCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person );
+
+	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+
+	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+
+	public function setCTCPersonsGroups( CTCI_CTCPersonInterface $ctcPerson, array $groups );
+
+	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+
+	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 
 	/**
 	 * @param $providerTag
@@ -52,16 +64,5 @@ interface CTCI_WPALInterface {
 	 * @return CTCI_CTCPersonInterface[]
 	 */
 	public function getUnattachedCTCPeople();
-
-	public function attachCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person );
-
-	public function updateCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
-
-	public function unattachCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
-
-	public function deleteCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
-
-	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
-
 
 } 
