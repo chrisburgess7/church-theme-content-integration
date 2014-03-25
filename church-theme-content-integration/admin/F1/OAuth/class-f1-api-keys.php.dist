@@ -1,0 +1,28 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: Chris
+ * Date: 25/03/14
+ * Time: 10:08 AM
+ */
+
+class CTCI_F1APIKeys {
+
+
+	/********************************KEYS*************************************************/
+	//
+	// Consumer Key and Secret (Provided by Service Provider
+	//
+
+	// The Base URL of the Service Provider
+	public static $base_url = '';
+
+	// Consumer Key
+	public static $consumer_key = '';
+	// Consumer Secret
+	public static $consumer_secret = '';
+
+	public static $username = '';
+
+	public static $password = '';
+} 

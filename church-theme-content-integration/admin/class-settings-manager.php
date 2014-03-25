@@ -9,6 +9,7 @@
 require_once 'interface-general-settings.php';
 require_once 'interface-f1-api-settings.php';
 require_once 'interface-f1-people-sync-settings.php';
+require_once dirname(__FILE__) . '/F1/OAuth/class-f1-api-keys.php';
 
 class CTCI_SettingsManager
 	implements CTCI_GeneralSettingsInterface,
@@ -44,28 +45,28 @@ class CTCI_SettingsManager
 		$this->dbal = $dbal;
 		$this->f1PeopleSyncEnabled = $this->dbal->getOption( self::F1PEOPLESYNCENABLED_OPT );
 		// if not set in config source file, retrieve from database
-		if ( !is_null( CTCI_F1AppConfig::$consumer_key ) && CTCI_F1AppConfig::$consumer_key !== '' ) {
-			$this->f1ConsumerKey = CTCI_F1AppConfig::$consumer_key;
+		if ( !is_null( CTCI_F1APIKeys::$consumer_key ) && CTCI_F1APIKeys::$consumer_key !== '' ) {
+			$this->f1ConsumerKey = CTCI_F1APIKeys::$consumer_key;
 		} else {
 			$this->f1ConsumerKey = $this->dbal->getOption( self::F1CONSUMERKEY_OPT );
 		}
-		if ( !is_null( CTCI_F1AppConfig::$consumer_secret ) && CTCI_F1AppConfig::$consumer_secret !== '' ) {
-			$this->f1ConsumerSecret = CTCI_F1AppConfig::$consumer_secret;
+		if ( !is_null( CTCI_F1APIKeys::$consumer_secret ) && CTCI_F1APIKeys::$consumer_secret !== '' ) {
+			$this->f1ConsumerSecret = CTCI_F1APIKeys::$consumer_secret;
 		} else {
 			$this->f1ConsumerSecret = $this->dbal->getOption( self::F1CONSUMERSECRET_OPT );
 		}
-		if ( !is_null( CTCI_F1AppConfig::$username ) && CTCI_F1AppConfig::$username !== '' ) {
-			$this->f1Username = CTCI_F1AppConfig::$username;
+		if ( !is_null( CTCI_F1APIKeys::$username ) && CTCI_F1APIKeys::$username !== '' ) {
+			$this->f1Username = CTCI_F1APIKeys::$username;
 		} else {
 			$this->f1Username = $this->dbal->getOption( self::F1USERNAME_OPT );
 		}
-		if ( !is_null( CTCI_F1AppConfig::$password ) && CTCI_F1AppConfig::$password !== '' ) {
-			$this->f1Password = CTCI_F1AppConfig::$password;
+		if ( !is_null( CTCI_F1APIKeys::$password ) && CTCI_F1APIKeys::$password !== '' ) {
+			$this->f1Password = CTCI_F1APIKeys::$password;
 		} else {
 			$this->f1Password = $this->dbal->getOption( self::F1PASSWORD_OPT );
 		}
-		if ( !is_null( CTCI_F1AppConfig::$base_url ) && CTCI_F1AppConfig::$base_url !== '' ) {
-			$this->f1ServerBaseURL = CTCI_F1AppConfig::$base_url;
+		if ( !is_null( CTCI_F1APIKeys::$base_url ) && CTCI_F1APIKeys::$base_url !== '' ) {
+			$this->f1ServerBaseURL = CTCI_F1APIKeys::$base_url;
 		} else {
 			switch ( $this->dbal->getOption( self::F1MODE_OPT ) ) {
 				case self::F1MODE_OPTVALUE_STAGING:
