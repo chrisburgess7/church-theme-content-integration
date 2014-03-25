@@ -23,8 +23,10 @@ class Church_Theme_Content_Integration {
 	public static $DB_VERSION = '0.1';
 	public static $PLUGIN_PATH = '';
 	public static $PLUGIN_DIR = '';
-	public static $ADMIN_DIR_NAME = '';
 	public static $ADMIN_DIR = '';
+	public static $ADMIN_PATH = '';
+	public static $CONFIG_CAPABILITY = 'ctci_plugin_config';
+	public static $SYNC_CAPABILITY = 'ctci_manage_sync';
 	
 	/**
 	 * Plugin data from get_plugins()
@@ -43,7 +45,7 @@ class Church_Theme_Content_Integration {
 	/**
 	 * @var CTCI_DataProviderInterface[]
 	 */
-	private $modules;
+	private $modules = array();
 
 	/**
 	 * Constructor
@@ -52,6 +54,9 @@ class Church_Theme_Content_Integration {
 	 *
 	 */
 	public function __construct() {
+
+		register_activation_hook( __FILE__, array( $this, 'activation' ) );
+		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
 		// Set plugin data
 		//add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
@@ -71,9 +76,59 @@ class Church_Theme_Content_Integration {
 		// Load includes
 		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 1 );
 
-		register_activation_hook( __FILE__, array( $this, 'setup_db' ) );
+		add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
 	}
 
+	public function activation() {
+		$this->setup_db();
+		$this->add_capabilities();
+	}
+
+	// TODO: add a delete action for removing this table
+	public function setup_db() {
+		global $wpdb;
+		$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
+		$connectTableSQL = "CREATE TABLE $tableName (
+			term_id bigint(20) NOT NULL,
+			data_provider varchar(16) NOT NULL,
+			provider_group_id varchar(32) NOT NULL,
+			KEY term_id (term_id)
+		);";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta($connectTableSQL);
+
+		add_option( "ctci_db_version", self::$DB_VERSION);
+	}
+
+	protected function add_capabilities() {
+		$roles = get_editable_roles();
+		/** @var $role WP_Role */
+		foreach ($GLOBALS['wp_roles']->role_objects as $key => $role) {
+			if (isset($roles[$key]) && $role->has_cap('manage_options')){
+				$role->add_cap(self::$CONFIG_CAPABILITY);
+			}
+			if (isset($roles[$key]) && $role->has_cap('edit_others_posts')){
+				$role->add_cap(self::$SYNC_CAPABILITY);
+			}
+		}
+	}
+
+	public function deactivation() {
+		$this->remove_cap();
+	} // function deactivation
+
+	// Remove the plugin-specific custom capability
+	protected function remove_cap() {
+		$roles = get_editable_roles();
+		/** @var $role WP_Role */
+		foreach ($GLOBALS['wp_roles']->role_objects as $key => $role) {
+			if (isset($roles[$key]) && $role->has_cap(self::$CONFIG_CAPABILITY))
+				$role->remove_cap(self::$CONFIG_CAPABILITY);
+			if (isset($roles[$key]) && $role->has_cap(self::$SYNC_CAPABILITY))
+				$role->remove_cap(self::$SYNC_CAPABILITY);
+		}
+	} // private function remove_cap
 	/**
 	 * Set plugin data
 	 *
@@ -110,8 +165,8 @@ class Church_Theme_Content_Integration {
 
 		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
 		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
-		self::$ADMIN_DIR_NAME = 'admin';
-		self::$ADMIN_DIR = trailingslashit( self::$PLUGIN_DIR ) . self::$ADMIN_DIR_NAME;
+		self::$ADMIN_DIR = 'admin';
+		self::$ADMIN_PATH = trailingslashit( self::$PLUGIN_PATH ) . self::$ADMIN_DIR;
 		// Plugin details
 		/*define( 'CTCI_VERSION', $this->plugin_data[ 'Version' ] ); // plugin version
 		define( 'CTCI_NAME', $this->plugin_data[ 'Name' ] ); // plugin name
@@ -131,10 +186,10 @@ class Church_Theme_Content_Integration {
 	public function load_modules() {
 		// add any sub-folders of admin that don't correspond to a service provider
 		$blacklist = array('.', '..');
-		$files = scandir( self::$ADMIN_DIR );
+		$files = scandir( self::$ADMIN_PATH );
 		foreach ( $files as $file ) {
 			if ( ! in_array( $file, $blacklist ) ) {
-				$fullFilename = trailingslashit( self::$ADMIN_DIR ) . $file;
+				$fullFilename = trailingslashit( self::$ADMIN_PATH ) . $file;
 				if ( is_dir( $fullFilename ) ) {
 					$providerClassFile = trailingslashit( $fullFilename ) . $file . '.php';
 					if ( file_exists( $providerClassFile ) ) {
@@ -201,22 +256,22 @@ class Church_Theme_Content_Integration {
 			// Admin only
 			'admin' => array(
 
-				self::$ADMIN_DIR_NAME . '/class-ctc-group.php',
-				self::$ADMIN_DIR_NAME . '/class-ctc-person.php',
-				self::$ADMIN_DIR_NAME . '/class-people-group.php',
-				self::$ADMIN_DIR_NAME . '/class-people-sync.php',
-				self::$ADMIN_DIR_NAME . '/class-person.php',
-				self::$ADMIN_DIR_NAME . '/class-settings-manager.php',
-				self::$ADMIN_DIR_NAME . '/class-wpal.php',
-				self::$ADMIN_DIR_NAME . '/interface-ctc-group.php',
-				self::$ADMIN_DIR_NAME . '/interface-ctc-person.php',
-				self::$ADMIN_DIR_NAME . '/interface-f1-api-settings.php',
-				self::$ADMIN_DIR_NAME . '/interface-f1-people-sync-settings.php',
-				self::$ADMIN_DIR_NAME . '/interface-general-settings.php',
-				self::$ADMIN_DIR_NAME . '/interface-people-data-provider.php',
-				self::$ADMIN_DIR_NAME . '/interface-people-group.php',
-				self::$ADMIN_DIR_NAME . '/interface-person.php',
-				self::$ADMIN_DIR_NAME . '/interface-wpal.php',
+				self::$ADMIN_DIR . '/class-ctc-group.php',
+				self::$ADMIN_DIR . '/class-ctc-person.php',
+				self::$ADMIN_DIR . '/class-people-group.php',
+				self::$ADMIN_DIR . '/class-people-sync.php',
+				self::$ADMIN_DIR . '/class-person.php',
+				self::$ADMIN_DIR . '/class-settings-manager.php',
+				self::$ADMIN_DIR . '/class-wpal.php',
+				self::$ADMIN_DIR . '/interface-ctc-group.php',
+				self::$ADMIN_DIR . '/interface-ctc-person.php',
+				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
+				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
+				self::$ADMIN_DIR . '/interface-general-settings.php',
+				self::$ADMIN_DIR . '/interface-people-data-provider.php',
+				self::$ADMIN_DIR . '/interface-people-group.php',
+				self::$ADMIN_DIR . '/interface-person.php',
+				self::$ADMIN_DIR . '/interface-wpal.php',
 
 				// f1
 				/*self::$ADMIN_DIR_NAME . '/F1/class-f1-people-data-provider.php',
@@ -239,15 +294,15 @@ class Church_Theme_Content_Integration {
 		foreach ( $this->modules as $folder => $module ) {
 			$modIncludesAlways = $module->getIncludes( 'always' );
 			foreach ( $modIncludesAlways as $includeFile ) {
-				$includes['always'][] = trailingslashit( self::$ADMIN_DIR_NAME ) . trailingslashit( $folder ) . $includeFile;
+				$includes['always'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
 			}
 			$modIncludesAdmin = $module->getIncludes( 'admin' );
 			foreach ( $modIncludesAdmin as $includeFile ) {
-				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR_NAME ) . trailingslashit( $folder ) . $includeFile;
+				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
 			}
 			$modIncludesFrontend = $module->getIncludes( 'frontend' );
 			foreach ( $modIncludesFrontend as $includeFile ) {
-				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR_NAME ) . trailingslashit( $folder ) . $includeFile;
+				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
 			}
 		}
 
@@ -300,25 +355,28 @@ class Church_Theme_Content_Integration {
 
 	}
 
-	public function setup_db() {
-		global $wpdb;
-		$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
-		$connectTableSQL = "CREATE TABLE $tableName (
-			term_id bigint(20) NOT NULL,
-			data_provider varchar(16) NOT NULL,
-			provider_group_id varchar(32) NOT NULL,
-			KEY term_id (term_id)
-		);";
+	public function build_admin_menu() {
+		add_management_page(
+			__('CTC Integration Options'),
+			__('CTC Integration'),
+			self::$SYNC_CAPABILITY,
+			'ctci-main-options',
+			array( &$this, 'show_admin_menu' )
+		);
+	}
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta($connectTableSQL);
-
-		add_option( "ctci_db_version", self::$DB_VERSION);
+	public function show_admin_menu() {
+		if ( ! current_user_can( self::$SYNC_CAPABILITY ) )  {
+			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+		}
+		echo '<div class="wrap">';
+		echo '<p>Here is where the form would go if I actually had options.</p>';
+		echo '</div>';
 	}
 
 }
 
 // Instantiate the main class
-if ( is_admin() ) {
+if ( is_admin() ) { // this if will need to go if adding functionality to anything other than admin
 	new Church_Theme_Content_Integration();
 }
