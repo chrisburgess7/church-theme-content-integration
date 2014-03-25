@@ -23,6 +23,7 @@ class Church_Theme_Content_Integration {
 	public static $DB_VERSION = '0.1';
 	public static $PLUGIN_PATH = '';
 	public static $PLUGIN_DIR = '';
+	public static $ADMIN_DIR_NAME = '';
 	public static $ADMIN_DIR = '';
 	
 	/**
@@ -40,21 +41,30 @@ class Church_Theme_Content_Integration {
 	public $includes;
 
 	/**
+	 * @var CTCI_DataProviderInterface[]
+	 */
+	private $modules;
+
+	/**
 	 * Constructor
 	 *
 	 * Add actions for methods that define constants and load includes.
 	 *
 	 */
 	public function __construct() {
+
 		// Set plugin data
-		add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
+		//add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
 
 		// init variables
 		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 1 );
 
+		// Load this plugins service provider modules
+		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 1 );
+
 		// Load language file
 		//add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 1 );
-
+		
 		// Set includes
 		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 1 );
 
@@ -100,7 +110,8 @@ class Church_Theme_Content_Integration {
 
 		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
 		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
-		self::$ADMIN_DIR = 'admin';
+		self::$ADMIN_DIR_NAME = 'admin';
+		self::$ADMIN_DIR = trailingslashit( self::$PLUGIN_DIR ) . self::$ADMIN_DIR_NAME;
 		// Plugin details
 		/*define( 'CTCI_VERSION', $this->plugin_data[ 'Version' ] ); // plugin version
 		define( 'CTCI_NAME', $this->plugin_data[ 'Name' ] ); // plugin name
@@ -116,6 +127,29 @@ class Church_Theme_Content_Integration {
 		define( 'CTCI_LANG_DIR', 'languages' ); // languages directory*/
 
 	}
+
+	public function load_modules() {
+		// add any sub-folders of admin that don't correspond to a service provider
+		$blacklist = array('.', '..');
+		$files = scandir( self::$ADMIN_DIR );
+		foreach ( $files as $file ) {
+			if ( ! in_array( $file, $blacklist ) ) {
+				$fullFilename = trailingslashit( self::$ADMIN_DIR ) . $file;
+				if ( is_dir( $fullFilename ) ) {
+					$providerClassFile = trailingslashit( $fullFilename ) . $file . '.php';
+					if ( file_exists( $providerClassFile ) ) {
+						require_once $providerClassFile;
+						$class = "CTCI_$file";
+						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
+							$obj = new $class;
+							$this->modules[ $file ] = $obj;
+						}
+					}
+				}
+			}
+		}
+	}
+
 
 	/**
 	 * Load language file
@@ -157,53 +191,67 @@ class Church_Theme_Content_Integration {
 	 *
 	 */
 	public function set_includes() {
-
-		$this->includes = apply_filters( 'ctci_includes', array(
+		$includes = array(
 
 			// Frontend or admin
-			/*'always' => array(
+			'always' => array(
 
-			),*/
+			),
 
 			// Admin only
 			'admin' => array(
 
-				self::$ADMIN_DIR . '/class-ctc-group.php',
-				self::$ADMIN_DIR . '/class-ctc-person.php',
-				self::$ADMIN_DIR . '/class-people-group.php',
-				self::$ADMIN_DIR . '/class-people-sync.php',
-				self::$ADMIN_DIR . '/class-person.php',
-				self::$ADMIN_DIR . '/class-settings-manager.php',
-				self::$ADMIN_DIR . '/class-wpal.php',
-				self::$ADMIN_DIR . '/interface-ctc-group.php',
-				self::$ADMIN_DIR . '/interface-ctc-person.php',
-				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
-				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
-				self::$ADMIN_DIR . '/interface-general-settings.php',
-				self::$ADMIN_DIR . '/interface-people-data-provider.php',
-				self::$ADMIN_DIR . '/interface-people-group.php',
-				self::$ADMIN_DIR . '/interface-person.php',
-				self::$ADMIN_DIR . '/interface-wpal.php',
+				self::$ADMIN_DIR_NAME . '/class-ctc-group.php',
+				self::$ADMIN_DIR_NAME . '/class-ctc-person.php',
+				self::$ADMIN_DIR_NAME . '/class-people-group.php',
+				self::$ADMIN_DIR_NAME . '/class-people-sync.php',
+				self::$ADMIN_DIR_NAME . '/class-person.php',
+				self::$ADMIN_DIR_NAME . '/class-settings-manager.php',
+				self::$ADMIN_DIR_NAME . '/class-wpal.php',
+				self::$ADMIN_DIR_NAME . '/interface-ctc-group.php',
+				self::$ADMIN_DIR_NAME . '/interface-ctc-person.php',
+				self::$ADMIN_DIR_NAME . '/interface-f1-api-settings.php',
+				self::$ADMIN_DIR_NAME . '/interface-f1-people-sync-settings.php',
+				self::$ADMIN_DIR_NAME . '/interface-general-settings.php',
+				self::$ADMIN_DIR_NAME . '/interface-people-data-provider.php',
+				self::$ADMIN_DIR_NAME . '/interface-people-group.php',
+				self::$ADMIN_DIR_NAME . '/interface-person.php',
+				self::$ADMIN_DIR_NAME . '/interface-wpal.php',
 
-				// f1 - todo: make this pluggable for all providers
-				self::$ADMIN_DIR . '/F1/class-f1-people-data-provider.php',
-				self::$ADMIN_DIR . '/F1/OAuth/class-f1-api-util.php',
-				self::$ADMIN_DIR . '/F1/OAuth/class-f1-app-config.php',
-				self::$ADMIN_DIR . '/F1/OAuth/class-f1-oauth-client.php',
-				self::$ADMIN_DIR . '/F1/OAuth/class-request-signer.php',
-				self::$ADMIN_DIR . '/F1/OAuth/interface-f1-oauth-client.php',
+				// f1
+				/*self::$ADMIN_DIR_NAME . '/F1/class-f1-people-data-provider.php',
+				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-f1-api-util.php',
+				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-f1-app-config.php',
+				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-f1-oauth-client.php',
+				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-request-signer.php',
+				self::$ADMIN_DIR_NAME . '/F1/OAuth/interface-f1-oauth-client.php',*/
+
 
 			),
-
 			// Frontend only
 
-			/*'frontend' => array (
+			'frontend' => array (
 
-			),*/
+			),
+		);
 
+		// add include files from modules
+		foreach ( $this->modules as $folder => $module ) {
+			$modIncludesAlways = $module->getIncludes( 'always' );
+			foreach ( $modIncludesAlways as $includeFile ) {
+				$includes['always'][] = trailingslashit( self::$ADMIN_DIR_NAME ) . trailingslashit( $folder ) . $includeFile;
+			}
+			$modIncludesAdmin = $module->getIncludes( 'admin' );
+			foreach ( $modIncludesAdmin as $includeFile ) {
+				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR_NAME ) . trailingslashit( $folder ) . $includeFile;
+			}
+			$modIncludesFrontend = $module->getIncludes( 'frontend' );
+			foreach ( $modIncludesFrontend as $includeFile ) {
+				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR_NAME ) . trailingslashit( $folder ) . $includeFile;
+			}
+		}
 
-		) );
-
+		$this->includes = apply_filters( 'ctci_includes', $includes );
 	}
 
 	/**
@@ -271,4 +319,6 @@ class Church_Theme_Content_Integration {
 }
 
 // Instantiate the main class
-new Church_Theme_Content_Integration();
+if ( is_admin() ) {
+	new Church_Theme_Content_Integration();
+}
