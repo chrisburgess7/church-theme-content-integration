@@ -31,10 +31,12 @@ interface CTCI_DataProviderInterface {
 
 	public function isProviderFor( $function );
 
-	public function setEnableFieldName( $function, $fieldName );
+	/*public function setEnableFieldName( $function, $fieldName );
 
 	public function getEnableFieldName( $function );
 
-	public function addEnableField( $function, $page, $section, $configFieldsBaseName );
+	public function addEnableField( $function, $page, $section, $configFieldsBaseName );*/
+
+	//public function showEnablePeopleSyncField();
 
 } 

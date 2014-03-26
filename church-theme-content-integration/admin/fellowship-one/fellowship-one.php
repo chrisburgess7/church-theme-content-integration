@@ -62,7 +62,7 @@ class CTCI_Fellowship_One implements CTCI_DataProviderInterface {
 		}
 	}
 
-	public function setEnableFieldName( $function, $fieldName ) {
+	/*public function setEnableFieldName( $function, $fieldName ) {
 		switch ( $function ) {
 			case Church_Theme_Content_Integration::$PROVIDER_FUNCTION_PEOPLESYNC:
 				$this->peopleSyncEnableFieldName = $fieldName;
@@ -112,5 +112,5 @@ class CTCI_Fellowship_One implements CTCI_DataProviderInterface {
 				false
 			)
 		);
-	}
+	}*/
 }

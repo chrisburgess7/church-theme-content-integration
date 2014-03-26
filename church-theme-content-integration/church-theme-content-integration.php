@@ -203,14 +203,11 @@ class Church_Theme_Content_Integration {
 					if ( file_exists( $providerClassFile ) ) {
 						require_once $providerClassFile;
 						$class = str_replace( '-', '_', $file );
+						// capitalization?
 						$class = "CTCI_$class";
 						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
 							/** @var CTCI_DataProviderInterface $obj */
 							$obj = new $class;
-							$obj->setEnableFieldName(
-								self::$PROVIDER_FUNCTION_PEOPLESYNC,
-								$this->get_function_enabled_option( $obj->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC )
-							);
 							$this->modules[ $file ] = $obj;
 						}
 					}
@@ -370,36 +367,40 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function build_admin_menu() {
-		add_management_page(
+		add_menu_page(
 			__('CTC Integration Options', self::$TEXT_DOMAIN),
 			__('CTC Integration', self::$TEXT_DOMAIN),
 			self::$RUN_SYNC_CAPABILITY,
 			'ctci-main-options',
-			array( &$this, 'show_options_home_page' )
+			array( $this, 'show_options_home_page' )
 		);
 
 		add_submenu_page(
-			'tools.php',
+			'ctci-main-options',
 			__('Church Theme Content Integration Configuration', self::$TEXT_DOMAIN),
 			__('Configuration', self::$TEXT_DOMAIN),
 			self::$CONFIG_CAPABILITY,
 			'ctci-configuration',
-			array( &$this, 'show_configuration_page')
+			array( $this, 'show_configuration_page')
 		);
+
+		/*foreach ( $this->modules as $module ) {
+			$module->addOptionsPage
+		}*/
 	}
 
 	public function show_options_home_page() {
 		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) )  {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', self::$TEXT_DOMAIN ) );
+			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
 		echo '<div class="wrap">';
-		echo '<p>Here is where the newest form would go if I actually had options.</p>';
+		echo '<p>TODO: add run buttons...</p>';
 		echo '</div>';
 	}
 
 	public function show_configuration_page() {
 		if ( ! current_user_can( self::$CONFIG_CAPABILITY ) )  {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', self::$TEXT_DOMAIN ) );
+			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
 		?>
 		<div class="wrap">
@@ -427,15 +428,41 @@ class Church_Theme_Content_Integration {
 		);
 
 		foreach ( $this->modules as $module ) {
+			// add more of these conditions for each function if added later
 			if ( $module->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
-				$module->addEnableField(
-					self::$PROVIDER_FUNCTION_PEOPLESYNC,
+				$fieldName = $this->get_function_enabled_option( $module->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC );
+				add_settings_field(
+					$fieldName,
+					__( sprintf('Enable %s People Sync', $module->getHumanReadableName() ), self::$TEXT_DOMAIN ),
+					array( $this, 'showModuleEnableField' ),
 					self::$ENABLE_OPT_PAGE,
 					self::$ENABLE_OPT_SECTION,
-					self::$CONFIG_GROUP
+					array(
+						'fieldName' => $fieldName
+					)
 				);
 			}
+			//$module->registerSettings();
 		}
+	}
+
+	public function showModuleEnableField( $args ) {
+		$optionValues = get_option( self::$CONFIG_GROUP );
+		$name = sprintf( "%s[%s]", self::$CONFIG_GROUP, $args['fieldName'] );
+		// this hidden field ensures the field is submitted even if unchecked
+		// by default forms do not submit checkboxes not checked
+		printf("<input type='hidden' name='%s' value='F' />", $name);
+		printf(
+			"<input id='%s' name='%s' type='checkbox' value='T' %s />",
+			$args['fieldName'],
+			$name,
+			checked(
+				isset( $optionValues[ $args['fieldName'] ] ) &&
+				$optionValues[ $args['fieldName'] ] === 'T',
+				true,
+				false
+			)
+		);
 	}
 
 	public function show_mod_enable_text() {
