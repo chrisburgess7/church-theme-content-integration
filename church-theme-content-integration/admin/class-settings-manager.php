@@ -9,7 +9,7 @@
 require_once 'interface-general-settings.php';
 require_once 'interface-f1-api-settings.php';
 require_once 'interface-f1-people-sync-settings.php';
-require_once dirname(__FILE__) . '/F1/OAuth/class-f1-api-keys.php';
+require_once dirname( __FILE__ ) . '/fellowship-one/OAuth/class-f1-api-keys.php';
 
 class CTCI_SettingsManager
 	implements CTCI_GeneralSettingsInterface,
@@ -148,5 +148,9 @@ class CTCI_SettingsManager
 
 	public function f1SyncPersonLinkedInURL() {
 		// TODO: Implement f1SyncPersonLinkedInURL() method.
+	}
+
+	public function f1NameFormat() {
+		// TODO: Implement f1NameFormat() method.
 	}
 }

@@ -13,8 +13,14 @@ interface CTCI_F1OAuthClientInterface {
 
 	public function authenticate();
 
+	/**
+	 * @return $this
+	 */
 	public function json();
 
+	/**
+	 * @return $this
+	 */
 	public function xml();
 
 	public function getPeopleLists();

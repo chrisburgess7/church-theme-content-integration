@@ -130,12 +130,18 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		return true;
 	}
 
+	/**
+	 * @return $this
+	 */
 	public function json() {
 		$this->format = 'json';
 		$this->formatHeader = $this->jsonFormatHeader;
 		return $this;
 	}
 
+	/**
+	 * @return $this
+	 */
 	public function xml() {
 		$this->format = 'xml';
 		$this->formatHeader = $this->xmlFormatHeader;

@@ -25,9 +25,18 @@ class Church_Theme_Content_Integration {
 	public static $PLUGIN_DIR = '';
 	public static $ADMIN_DIR = '';
 	public static $ADMIN_PATH = '';
-	public static $CONFIG_CAPABILITY = 'ctci_plugin_config';
-	public static $SYNC_CAPABILITY = 'ctci_manage_sync';
-	
+
+	public static $CONFIG_CAPABILITY = 'manage_options';
+	public static $RUN_SYNC_CAPABILITY = 'ctci_run_sync';
+
+	public static $CONFIG_GROUP = 'ctci_config_options';
+	public static $ENABLE_OPT_SECTION = 'ctci_enable_functions_section';
+	public static $ENABLE_OPT_PAGE = 'ctci_enable_functions_page';
+	public static $PROVIDER_FUNCTION_PEOPLESYNC = 'people_sync';
+
+	public static $ENABLE_OPT_DISPLAY_CALLBACK_FUNCPFX = 'enable_opt_display_';
+
+	public static $TEXT_DOMAIN = 'church-theme-content-integration';
 	/**
 	 * Plugin data from get_plugins()
 	 *
@@ -76,7 +85,10 @@ class Church_Theme_Content_Integration {
 		// Load includes
 		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 1 );
 
-		add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
+		if ( is_admin() ) {
+			add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
+			add_action( 'admin_init', array( &$this, 'register_settings' ) );
+		}
 	}
 
 	public function activation() {
@@ -105,30 +117,26 @@ class Church_Theme_Content_Integration {
 		$roles = get_editable_roles();
 		/** @var $role WP_Role */
 		foreach ($GLOBALS['wp_roles']->role_objects as $key => $role) {
-			if (isset($roles[$key]) && $role->has_cap('manage_options')){
-				$role->add_cap(self::$CONFIG_CAPABILITY);
-			}
 			if (isset($roles[$key]) && $role->has_cap('edit_others_posts')){
-				$role->add_cap(self::$SYNC_CAPABILITY);
+				$role->add_cap(self::$RUN_SYNC_CAPABILITY);
 			}
 		}
 	}
 
 	public function deactivation() {
 		$this->remove_cap();
-	} // function deactivation
+	}
 
 	// Remove the plugin-specific custom capability
 	protected function remove_cap() {
 		$roles = get_editable_roles();
 		/** @var $role WP_Role */
 		foreach ($GLOBALS['wp_roles']->role_objects as $key => $role) {
-			if (isset($roles[$key]) && $role->has_cap(self::$CONFIG_CAPABILITY))
-				$role->remove_cap(self::$CONFIG_CAPABILITY);
-			if (isset($roles[$key]) && $role->has_cap(self::$SYNC_CAPABILITY))
-				$role->remove_cap(self::$SYNC_CAPABILITY);
+			if (isset($roles[$key]) && $role->has_cap(self::$RUN_SYNC_CAPABILITY))
+				$role->remove_cap(self::$RUN_SYNC_CAPABILITY);
 		}
-	} // private function remove_cap
+	}
+
 	/**
 	 * Set plugin data
 	 *
@@ -194,9 +202,15 @@ class Church_Theme_Content_Integration {
 					$providerClassFile = trailingslashit( $fullFilename ) . $file . '.php';
 					if ( file_exists( $providerClassFile ) ) {
 						require_once $providerClassFile;
-						$class = "CTCI_$file";
+						$class = str_replace( '-', '_', $file );
+						$class = "CTCI_$class";
 						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
+							/** @var CTCI_DataProviderInterface $obj */
 							$obj = new $class;
+							$obj->setEnableFieldName(
+								self::$PROVIDER_FUNCTION_PEOPLESYNC,
+								$this->get_function_enabled_option( $obj->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC )
+							);
 							$this->modules[ $file ] = $obj;
 						}
 					}
@@ -274,12 +288,12 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-wpal.php',
 
 				// f1
-				/*self::$ADMIN_DIR_NAME . '/F1/class-f1-people-data-provider.php',
-				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-f1-api-util.php',
-				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-f1-app-config.php',
-				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-f1-oauth-client.php',
-				self::$ADMIN_DIR_NAME . '/F1/OAuth/class-request-signer.php',
-				self::$ADMIN_DIR_NAME . '/F1/OAuth/interface-f1-oauth-client.php',*/
+				/*self::$ADMIN_DIR_NAME . '/fellowship-one/class-f1-people-data-provider.php',
+				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-f1-api-util.php',
+				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-f1-app-config.php',
+				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-f1-oauth-client.php',
+				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-request-signer.php',
+				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/interface-f1-oauth-client.php',*/
 
 
 			),
@@ -357,23 +371,92 @@ class Church_Theme_Content_Integration {
 
 	public function build_admin_menu() {
 		add_management_page(
-			__('CTC Integration Options'),
-			__('CTC Integration'),
-			self::$SYNC_CAPABILITY,
+			__('CTC Integration Options', self::$TEXT_DOMAIN),
+			__('CTC Integration', self::$TEXT_DOMAIN),
+			self::$RUN_SYNC_CAPABILITY,
 			'ctci-main-options',
-			array( &$this, 'show_admin_menu' )
+			array( &$this, 'show_options_home_page' )
+		);
+
+		add_submenu_page(
+			'tools.php',
+			__('Church Theme Content Integration Configuration', self::$TEXT_DOMAIN),
+			__('Configuration', self::$TEXT_DOMAIN),
+			self::$CONFIG_CAPABILITY,
+			'ctci-configuration',
+			array( &$this, 'show_configuration_page')
 		);
 	}
 
-	public function show_admin_menu() {
-		if ( ! current_user_can( self::$SYNC_CAPABILITY ) )  {
-			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	public function show_options_home_page() {
+		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) )  {
+			wp_die( __( 'You do not have sufficient permissions to access this page.', self::$TEXT_DOMAIN ) );
 		}
 		echo '<div class="wrap">';
-		echo '<p>Here is where the form would go if I actually had options.</p>';
+		echo '<p>Here is where the newest form would go if I actually had options.</p>';
 		echo '</div>';
 	}
 
+	public function show_configuration_page() {
+		if ( ! current_user_can( self::$CONFIG_CAPABILITY ) )  {
+			wp_die( __( 'You do not have sufficient permissions to access this page.', self::$TEXT_DOMAIN ) );
+		}
+		?>
+		<div class="wrap">
+			<h2><?php _e('Church Theme Content Integration Configuration', self::$TEXT_DOMAIN) ?></h2>
+			<!--suppress HtmlUnknownTarget -->
+			<form method="post" action="options.php">
+				<?php
+				// This prints out all hidden setting fields
+				settings_fields( self::$CONFIG_GROUP );
+				do_settings_sections( self::$ENABLE_OPT_PAGE );
+				submit_button();
+				?>
+			</form>
+		</div>
+	<?php
+	}
+
+	public function register_settings() {
+		register_setting( self::$CONFIG_GROUP, self::$CONFIG_GROUP, array( $this, 'enable_options_validate' ) );
+		add_settings_section(
+			self::$ENABLE_OPT_SECTION,
+			__( 'Enable Modules', self::$TEXT_DOMAIN ),
+			array( $this, 'show_mod_enable_text'),
+			self::$ENABLE_OPT_PAGE
+		);
+
+		foreach ( $this->modules as $module ) {
+			if ( $module->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
+				$module->addEnableField(
+					self::$PROVIDER_FUNCTION_PEOPLESYNC,
+					self::$ENABLE_OPT_PAGE,
+					self::$ENABLE_OPT_SECTION,
+					self::$CONFIG_GROUP
+				);
+			}
+		}
+	}
+
+	public function show_mod_enable_text() {
+		// ...
+	}
+
+	public function enable_options_validate( $input ) {
+		// todo...
+		return $input;
+	}
+
+	/**
+	 * Return the name of the option for the enabled check box, for the given the provider folder/tag,
+	 * and the function type.
+	 * @param $providerTag
+	 * @param $function
+	 * @return string
+	 */
+	private function get_function_enabled_option( $providerTag, $function ) {
+		return "ctci_enable_{$providerTag}_$function";
+	}
 }
 
 // Instantiate the main class
