@@ -54,7 +54,7 @@ class Church_Theme_Content_Integration {
 	/**
 	 * @var CTCI_DataProviderInterface[]
 	 */
-	private $modules = array();
+	private $dataProviders = array();
 
 	/**
 	 * Constructor
@@ -208,7 +208,7 @@ class Church_Theme_Content_Integration {
 						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
 							/** @var CTCI_DataProviderInterface $obj */
 							$obj = new $class;
-							$this->modules[ $file ] = $obj;
+							$this->dataProviders[ $file ] = $obj;
 						}
 					}
 				}
@@ -302,16 +302,16 @@ class Church_Theme_Content_Integration {
 		);
 
 		// add include files from modules
-		foreach ( $this->modules as $folder => $module ) {
-			$modIncludesAlways = $module->getIncludes( 'always' );
+		foreach ( $this->dataProviders as $folder => $dataProvider ) {
+			$modIncludesAlways = $dataProvider->getIncludes( 'always' );
 			foreach ( $modIncludesAlways as $includeFile ) {
 				$includes['always'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
 			}
-			$modIncludesAdmin = $module->getIncludes( 'admin' );
+			$modIncludesAdmin = $dataProvider->getIncludes( 'admin' );
 			foreach ( $modIncludesAdmin as $includeFile ) {
 				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
 			}
-			$modIncludesFrontend = $module->getIncludes( 'frontend' );
+			$modIncludesFrontend = $dataProvider->getIncludes( 'frontend' );
 			foreach ( $modIncludesFrontend as $includeFile ) {
 				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
 			}
@@ -427,13 +427,13 @@ class Church_Theme_Content_Integration {
 			self::$ENABLE_OPT_PAGE
 		);
 
-		foreach ( $this->modules as $module ) {
+		foreach ( $this->dataProviders as $dataProvider ) {
 			// add more of these conditions for each function if added later
-			if ( $module->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
-				$fieldName = $this->get_function_enabled_option( $module->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC );
+			if ( $dataProvider->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
+				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC );
 				add_settings_field(
 					$fieldName,
-					__( sprintf('Enable %s People Sync', $module->getHumanReadableName() ), self::$TEXT_DOMAIN ),
+					__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
 					array( $this, 'showModuleEnableField' ),
 					self::$ENABLE_OPT_PAGE,
 					self::$ENABLE_OPT_SECTION,
