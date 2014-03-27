@@ -137,7 +137,11 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 			'ctci_f1_people_sync_settings',
 			'position_attribute',
 			'Position Attribute Group',
-			'displayTextField'
+			'displayTextField',
+			array(
+				'maxlength' => '50',
+				'size' => '50'
+			)
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',

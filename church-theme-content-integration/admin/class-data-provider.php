@@ -71,6 +71,9 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		if ( isset( $args['size'] ) ) {
 			$attr .= "size='" . $args['size'] . "' ";
 		}
+		if ( isset( $args['maxlength'] ) ) {
+			$attr .= "maxlength='" . $args['maxlength'] . "' ";
+		}
 		printf(
 			"<input id='%s' name='%s' type='text' value='%s' %s />",
 			$args['fieldName'],
