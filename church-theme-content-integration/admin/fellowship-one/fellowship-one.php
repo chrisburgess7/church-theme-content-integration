@@ -82,69 +82,102 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 			'API Consumer Key',
 			'displayTextField',
 			array(
+				'size' => '6'
+			)
+		);
+		$this->addSettingsField(
+			'ctci_f1_credentials',
+			'api_secret',
+			'API Consumer Secret',
+			'displayTextField',
+			array(
 				'size' => '40'
 			)
 		);
+		$this->addSettingsField(
+			'ctci_f1_credentials',
+			'username',
+			'Username',
+			'displayTextField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_credentials',
+			'password',
+			'Password',
+			'displayPasswordField'
+		);
+		$this->addSettingsSection(
+			'ctci_f1_people_sync_settings',
+			'People Sync Settings',
+			'peopleSyncSectionCallback'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_people_groups',
+			'Sync Groups?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'people_lists',
+			'People Lists to Sync',
+			'displayTextAreaField',
+			array(
+				'rows' => '10',
+				'cols' => '30'
+			)
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_position',
+			'Sync Position?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'position_attribute',
+			'Position Attribute Group',
+			'displayTextField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_phone',
+			'Sync Phone?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_email',
+			'Sync Email?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_facebook',
+			'Sync Facebook URL?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_twitter',
+			'Sync Twitter URL?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_linkedin',
+			'Sync LinkedIn URL?',
+			'displayCheckBoxField'
+		);
 	}
 
-	public function credentialsSectionCallback() {
+	public function credentialsSectionCallback() {}
 
-	}
+	public function peopleSyncSectionCallback() {}
 
 	public function validateSettings( $settings ) {
 		// todo...
 		return $settings;
 	}
 
-	/*public function setEnableFieldName( $function, $fieldName ) {
-		switch ( $function ) {
-			case Church_Theme_Content_Integration::$PROVIDER_FUNCTION_PEOPLESYNC:
-				$this->peopleSyncEnableFieldName = $fieldName;
-				break;
-		}
-	}
-
-	public function getEnableFieldName( $function ) {
-		switch ( $function ) {
-			case Church_Theme_Content_Integration::$PROVIDER_FUNCTION_PEOPLESYNC:
-				return $this->peopleSyncEnableFieldName;
-			default:
-				return null;
-		}
-	}
-
-	public function addEnableField( $function, $page, $section, $configFieldsBaseName ) {
-		$this->configFieldsBaseName = $configFieldsBaseName;
-		switch ( $function ) {
-			case Church_Theme_Content_Integration::$PROVIDER_FUNCTION_PEOPLESYNC:
-				add_settings_field(
-					$this->peopleSyncEnableFieldName,
-					sprintf( __('Enable %s People Sync', Church_Theme_Content_Integration::$TEXT_DOMAIN ), $this->getHumanReadableName() ),
-					array( $this, 'showEnablePeopleSyncField' ),
-					$page,
-					$section
-				);
-				break;
-		}
-	}
-
-	public function showEnablePeopleSyncField() {
-		if ( null === $this->configFieldsBaseName ) {
-			return;     // this has been called before addEnableField, which is incorrect
-		}
-		$optionValues = get_option( $this->configFieldsBaseName );
-		$name = sprintf( "%s[%s]", $this->configFieldsBaseName, $this->peopleSyncEnableFieldName );
-		printf("<input type='hidden' name='%s' value='F' />", $name);
-		printf(
-			"<input id='%s' name='%s' type='checkbox' value='T' %s />",
-			$this->peopleSyncEnableFieldName,
-			$name,
-			checked(
-				isset( $optionValues[ $this->peopleSyncEnableFieldName ] ) &&
-				$optionValues[ $this->peopleSyncEnableFieldName] === 'T',
-				true,
-				false
-			)
-		);
-	}*/
 }
