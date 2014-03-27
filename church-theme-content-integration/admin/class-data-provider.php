@@ -65,4 +65,19 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		);
 	}
 
+	public function displayTextField( $args = array() ) {
+		$optionValues = get_option( $this->getSettingsGroupName() );
+		$attr = '';
+		if ( isset( $args['size'] ) ) {
+			$attr .= "size='" . $args['size'] . "' ";
+		}
+		printf(
+			"<input id='%s' name='%s' type='text' value='%s' %s />",
+			$args['fieldName'],
+			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
+			$optionValues[ $args['fieldName'] ],
+			$attr
+		);
+	}
+
 } 

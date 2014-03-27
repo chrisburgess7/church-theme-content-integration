@@ -80,22 +80,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 			'ctci_f1_credentials',
 			'api_key',
 			'API Consumer Key',
-			'displayAPIConsumerKeyField'
+			'displayTextField',
+			array(
+				'size' => '40'
+			)
 		);
 	}
 
 	public function credentialsSectionCallback() {
 
-	}
-
-	public function displayAPIConsumerKeyField( $args = array() ) {
-		$optionValues = get_option( $this->getSettingsGroupName() );
-		printf(
-			"<input id='%s' name='%s' type='text' value='%s' />",
-			$args['fieldName'],
-			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
-			$optionValues[ $args['fieldName'] ]
-		);
 	}
 
 	public function validateSettings( $settings ) {
