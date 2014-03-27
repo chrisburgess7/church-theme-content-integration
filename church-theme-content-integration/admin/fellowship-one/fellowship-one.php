@@ -176,8 +176,69 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 	public function peopleSyncSectionCallback() {}
 
 	public function validateSettings( $settings ) {
-		// todo...
-		return $settings;
+		$newInput = array();
+		$newInput['api_key'] = trim( $settings['api_key'] );
+		if ( ! preg_match( '/\d{3}/', $newInput['api_key'] ) ) {
+			$newInput['api_key'] = '';
+		}
+		$newInput['api_secret'] = trim( $settings['api_secret'] );
+		if ( ! preg_match( '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i', $newInput['api_secret'] ) ) {
+			$newInput['api_secret'] = '';
+		}
+		$newInput['username'] = trim( $settings['username'] );
+		if ( ! preg_match( '/[\w]+/', $newInput['username'] ) ) {
+			$newInput['username'] = '';
+		}
+		$newInput['password'] = trim( $settings['password'] );
+		if ( ! preg_match( '/[\w-;:,.\?!@#$%\^&\*\(\)]{8,}/', $newInput['password'] ) ) {
+			$newInput['password'] = '';
+		}
+		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
+		if ( 'T' !== $newInput['sync_people_groups'] && 'F' !== $newInput['sync_people_groups'] ) {
+			$newInput['sync_people_groups'] = '';
+		}
+		$newInput['people_lists'] = trim( $settings['people_lists'] );
+		// is this needed? not sure what else to validate for
+		$lines = explode( '\r\n', $newInput['people_lists'] );
+		$changed = false;
+		for ( $i = 0; $i < count($lines); $i++) {
+			if ( strlen( $lines[ $i ] ) > 100 ) {
+				$lines[ $i ] = substr( $lines[ $i ], 0, 100 );
+				$changed = true;
+			}
+		}
+		if ( $changed ) {
+			$newInput['people_lists'] = implode( $lines );
+		}
+		$newInput['sync_position'] = trim( $settings['sync_position'] );
+		if ( 'T' !== $newInput['sync_position'] && 'F' !== $newInput['sync_position'] ) {
+			$newInput['sync_position'] = '';
+		}
+		$newInput['position_attribute'] = trim( $settings['position_attribute'] );
+		if ( strlen( $newInput['position_attribute'] ) > 50 ) {
+			$newInput['position_attribute'] = substr( $newInput['position_attribute'], 0, 50 );
+		}
+		$newInput['sync_phone'] = trim( $settings['sync_phone'] );
+		if ( 'T' !== $newInput['sync_phone'] && 'F' !== $newInput['sync_phone'] ) {
+			$newInput['sync_phone'] = '';
+		}
+		$newInput['sync_email'] = trim( $settings['sync_email'] );
+		if ( 'T' !== $newInput['sync_email'] && 'F' !== $newInput['sync_email'] ) {
+			$newInput['sync_email'] = '';
+		}
+		$newInput['sync_facebook'] = trim( $settings['sync_facebook'] );
+		if ( 'T' !== $newInput['sync_facebook'] && 'F' !== $newInput['sync_facebook'] ) {
+			$newInput['sync_facebook'] = '';
+		}
+		$newInput['sync_twitter'] = trim( $settings['sync_twitter'] );
+		if ( 'T' !== $newInput['sync_twitter'] && 'F' !== $newInput['sync_twitter'] ) {
+			$newInput['sync_twitter'] = '';
+		}
+		$newInput['sync_linkedin'] = trim( $settings['sync_linkedin'] );
+		if ( 'T' !== $newInput['sync_linkedin'] && 'F' !== $newInput['sync_linkedin'] ) {
+			$newInput['sync_linkedin'] = '';
+		}
+		return $newInput;
 	}
 
 }
