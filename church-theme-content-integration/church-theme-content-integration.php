@@ -477,9 +477,19 @@ class Church_Theme_Content_Integration {
 		// ...
 	}
 
-	public function enable_options_validate( $input ) {
-		// todo...
-		return $input;
+	public function enable_options_validate( $settings ) {
+		$newSettings = array();
+		foreach ( $this->dataProviders as $dataProvider ) {
+			// add more of these conditions for each function if added later
+			if ( $dataProvider->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
+				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC );
+				$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
+				if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
+					$newSettings[ $fieldName ] = 'F';
+				}
+			}
+		}
+		return $newSettings;
 	}
 
 	/**
