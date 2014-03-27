@@ -6,9 +6,9 @@
  * Time: 1:45 PM
  */
 
-require_once dirname( __FILE__ ) . '/../interface-data-provider.php';
+require_once dirname( __FILE__ ) . '/../class-data-provider.php';
 
-class CTCI_Fellowship_One implements CTCI_DataProviderInterface {
+class CTCI_Fellowship_One extends CTCI_DataProvider {
 
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
@@ -60,6 +60,47 @@ class CTCI_Fellowship_One implements CTCI_DataProviderInterface {
 			default:
 				return false;
 		}
+	}
+
+	protected function getSettingsGroupName() {
+		return 'ctci_f1_options';
+	}
+
+	protected function getSettingsPageName() {
+		return 'ctci_f1_options_page';
+	}
+
+	protected function registerSectionsAndFields() {
+		$this->addSettingsSection(
+			'ctci_f1_credentials',
+			'Credentials',
+			'credentialsSectionCallback'
+		);
+		$this->addSettingsField(
+			'ctci_f1_credentials',
+			'api_key',
+			'API Consumer Key',
+			'displayAPIConsumerKeyField'
+		);
+	}
+
+	public function credentialsSectionCallback() {
+
+	}
+
+	public function displayAPIConsumerKeyField( $args = array() ) {
+		$optionValues = get_option( $this->getSettingsGroupName() );
+		printf(
+			"<input id='%s' name='%s' type='text' value='%s' />",
+			$args['fieldName'],
+			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
+			$optionValues[ $args['fieldName'] ]
+		);
+	}
+
+	public function validateSettings( $settings ) {
+		// todo...
+		return $settings;
 	}
 
 	/*public function setEnableFieldName( $function, $fieldName ) {

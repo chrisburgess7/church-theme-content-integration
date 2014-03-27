@@ -31,6 +31,12 @@ interface CTCI_DataProviderInterface {
 
 	public function isProviderFor( $function );
 
+	public function registerSettings();
+
+	public function validateSettings( $settings );
+
+	public function showSettingsPage();
+
 	/*public function setEnableFieldName( $function, $fieldName );
 
 	public function getEnableFieldName( $function );

@@ -384,9 +384,16 @@ class Church_Theme_Content_Integration {
 			array( $this, 'show_configuration_page')
 		);
 
-		/*foreach ( $this->modules as $module ) {
-			$module->addOptionsPage
-		}*/
+		foreach ( $this->dataProviders as $dataProvider ) {
+			add_submenu_page(
+				'ctci-main-options',
+				__( $dataProvider->getHumanReadableName() . ' Settings', self::$TEXT_DOMAIN),
+				__( $dataProvider->getHumanReadableName(), self::$TEXT_DOMAIN),
+				self::$CONFIG_CAPABILITY,
+				'ctci-' . $dataProvider->getTag() . '-options',
+				array( $dataProvider, 'showSettingsPage' )
+			);
+		}
 	}
 
 	public function show_options_home_page() {
@@ -434,7 +441,7 @@ class Church_Theme_Content_Integration {
 				add_settings_field(
 					$fieldName,
 					__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
-					array( $this, 'showModuleEnableField' ),
+					array( $this, 'show_module_enable_field' ),
 					self::$ENABLE_OPT_PAGE,
 					self::$ENABLE_OPT_SECTION,
 					array(
@@ -442,11 +449,12 @@ class Church_Theme_Content_Integration {
 					)
 				);
 			}
-			//$module->registerSettings();
+
+			$dataProvider->registerSettings();
 		}
 	}
 
-	public function showModuleEnableField( $args ) {
+	public function show_module_enable_field( $args ) {
 		$optionValues = get_option( self::$CONFIG_GROUP );
 		$name = sprintf( "%s[%s]", self::$CONFIG_GROUP, $args['fieldName'] );
 		// this hidden field ensures the field is submitted even if unchecked
