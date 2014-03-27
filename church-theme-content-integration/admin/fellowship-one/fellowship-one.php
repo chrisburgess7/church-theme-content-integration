@@ -199,7 +199,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		}
 		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
 		if ( 'T' !== $newInput['sync_people_groups'] && 'F' !== $newInput['sync_people_groups'] ) {
-			$newInput['sync_people_groups'] = '';
+			$newInput['sync_people_groups'] = 'F';
 		}
 		$newInput['people_lists'] = trim( $settings['people_lists'] );
 		// is this needed? not sure what else to validate for
@@ -216,7 +216,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		}
 		$newInput['sync_position'] = trim( $settings['sync_position'] );
 		if ( 'T' !== $newInput['sync_position'] && 'F' !== $newInput['sync_position'] ) {
-			$newInput['sync_position'] = '';
+			$newInput['sync_position'] = 'F';
 		}
 		$newInput['position_attribute'] = trim( $settings['position_attribute'] );
 		if ( strlen( $newInput['position_attribute'] ) > 50 ) {
@@ -224,23 +224,23 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		}
 		$newInput['sync_phone'] = trim( $settings['sync_phone'] );
 		if ( 'T' !== $newInput['sync_phone'] && 'F' !== $newInput['sync_phone'] ) {
-			$newInput['sync_phone'] = '';
+			$newInput['sync_phone'] = 'F';
 		}
 		$newInput['sync_email'] = trim( $settings['sync_email'] );
 		if ( 'T' !== $newInput['sync_email'] && 'F' !== $newInput['sync_email'] ) {
-			$newInput['sync_email'] = '';
+			$newInput['sync_email'] = 'F';
 		}
 		$newInput['sync_facebook'] = trim( $settings['sync_facebook'] );
 		if ( 'T' !== $newInput['sync_facebook'] && 'F' !== $newInput['sync_facebook'] ) {
-			$newInput['sync_facebook'] = '';
+			$newInput['sync_facebook'] = 'F';
 		}
 		$newInput['sync_twitter'] = trim( $settings['sync_twitter'] );
 		if ( 'T' !== $newInput['sync_twitter'] && 'F' !== $newInput['sync_twitter'] ) {
-			$newInput['sync_twitter'] = '';
+			$newInput['sync_twitter'] = 'F';
 		}
 		$newInput['sync_linkedin'] = trim( $settings['sync_linkedin'] );
 		if ( 'T' !== $newInput['sync_linkedin'] && 'F' !== $newInput['sync_linkedin'] ) {
-			$newInput['sync_linkedin'] = '';
+			$newInput['sync_linkedin'] = 'F';
 		}
 		return $newInput;
 	}
