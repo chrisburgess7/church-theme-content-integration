@@ -32,11 +32,12 @@ class Church_Theme_Content_Integration {
 	public static $CONFIG_GROUP = 'ctci_config_options';
 	public static $ENABLE_OPT_SECTION = 'ctci_enable_functions_section';
 	public static $ENABLE_OPT_PAGE = 'ctci_enable_functions_page';
-	public static $PROVIDER_FUNCTION_PEOPLESYNC = 'people_sync';
+	/*public static $PROVIDER_FUNCTION_PEOPLESYNC = 'people_sync';*/
 
 	public static $ENABLE_OPT_DISPLAY_CALLBACK_FUNCPFX = 'enable_opt_display_';
 
 	public static $TEXT_DOMAIN = 'church-theme-content-integration';
+
 	/**
 	 * Plugin data from get_plugins()
 	 *
@@ -57,6 +58,11 @@ class Church_Theme_Content_Integration {
 	private $dataProviders = array();
 
 	/**
+	 * @var CTCI_WPALInterface
+	 */
+	private $wpal;
+
+	/**
 	 * Constructor
 	 *
 	 * Add actions for methods that define constants and load includes.
@@ -74,16 +80,22 @@ class Church_Theme_Content_Integration {
 		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 1 );
 
 		// Load this plugins service provider modules
-		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 2 );
 
 		// Load language file
 		//add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 1 );
 		
 		// Set includes
-		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 3 );
 
 		// Load includes
-		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 3 );
+
+		// Load objects
+		add_action( 'plugins_loaded', array( &$this, 'load_objects' ), 5 );
+
+		// Set up run module actions
+		add_action( 'plugins_loaded', array( &$this, 'load_run_actions' ) );
 
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
@@ -170,7 +182,6 @@ class Church_Theme_Content_Integration {
 	 * @access public
 	 */
 	public function init_plugin_variables() {
-
 		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
 		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
 		self::$ADMIN_DIR = 'admin';
@@ -267,22 +278,26 @@ class Church_Theme_Content_Integration {
 			// Admin only
 			'admin' => array(
 
-				self::$ADMIN_DIR . '/class-ctc-group.php',
-				self::$ADMIN_DIR . '/class-ctc-person.php',
-				self::$ADMIN_DIR . '/class-people-group.php',
-				self::$ADMIN_DIR . '/class-people-sync.php',
-				self::$ADMIN_DIR . '/class-person.php',
-				self::$ADMIN_DIR . '/class-settings-manager.php',
-				self::$ADMIN_DIR . '/class-wpal.php',
 				self::$ADMIN_DIR . '/interface-ctc-group.php',
 				self::$ADMIN_DIR . '/interface-ctc-person.php',
+				self::$ADMIN_DIR . '/interface-data-provider.php',
 				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
 				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
+				self::$ADMIN_DIR . '/interface-function.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
 				self::$ADMIN_DIR . '/interface-people-data-provider.php',
 				self::$ADMIN_DIR . '/interface-people-group.php',
 				self::$ADMIN_DIR . '/interface-person.php',
 				self::$ADMIN_DIR . '/interface-wpal.php',
+				self::$ADMIN_DIR . '/class-ctc-group.php',
+				self::$ADMIN_DIR . '/class-ctc-person.php',
+				self::$ADMIN_DIR . '/class-data-provider.php',
+				self::$ADMIN_DIR . '/class-module-process.php',
+				self::$ADMIN_DIR . '/class-people-group.php',
+				self::$ADMIN_DIR . '/class-people-sync.php',
+				self::$ADMIN_DIR . '/class-person.php',
+				//self::$ADMIN_DIR . '/class-settings-manager.php',
+				self::$ADMIN_DIR . '/class-wpal.php',
 
 				// f1
 				/*self::$ADMIN_DIR_NAME . '/fellowship-one/class-f1-people-data-provider.php',
@@ -366,6 +381,28 @@ class Church_Theme_Content_Integration {
 
 	}
 
+	public function load_objects() {
+		$this->wpal = new CTCI_WPAL();
+	}
+
+	public function load_run_actions() {
+		// todo: add a list of functions to scan here and elsewhere to make it easier to add them later on
+		// todo: add these to a object variable from which the show_options_page simply reads without
+		// having to repeat the logic
+		foreach ( $this->dataProviders as $dataProvider ) {
+			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
+				$process = new CTCI_ModuleProcess();
+				$process->addDataProvider( $dataProvider );
+				$peopleSync = new CTCI_PeopleSync( $this->wpal );
+				$process->addFunction( $peopleSync );
+				add_action(
+					'wp_ajax_' . $this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() ),
+					array( $process, 'run' )
+				);
+			}
+		}
+	}
+
 	public function build_admin_menu() {
 		add_menu_page(
 			__('CTC Integration Options', self::$TEXT_DOMAIN),
@@ -401,8 +438,47 @@ class Church_Theme_Content_Integration {
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
 		echo '<div class="wrap">';
-		echo '<p>TODO: add run buttons...</p>';
+		echo '<div style="width: 50%">';
+		foreach ( $this->dataProviders as $dataProvider ) {
+			echo '<div>';
+			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
+				$this->showRunButton(
+					'Run ' . $dataProvider->getHumanReadableName() . ' People Sync',
+					$this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() )
+				);
+			}
+			echo '</div>';
+		}
 		echo '</div>';
+		echo '<div style="width: 50%">';
+		echo '<textarea id="ctci_run_output"></textarea>';
+		echo '</div>';
+		echo '</div>';
+	}
+
+	protected function showRunButton( $label, $key ) {
+		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
+			<input type="hidden" name="action" value="' . $key . '">
+        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="button button-primary button-large" value="' . $label . '">
+        </form>
+        <script type="text/javascript">
+        jQuery(document).ready(function($){
+            var frm = $("#' . $key . '");
+            frm.submit(function (ev) {
+                $.ajax({
+                    type: frm.attr("method"),
+                    url: ajaxurl,
+                    data: frm.serialize(),
+                    success: function (data) {
+                        $("#ctci_run_output").html(data);
+                    }
+                });
+
+                ev.preventDefault();
+            });
+        });
+        </script>
+    ';
 	}
 
 	public function show_configuration_page() {
@@ -434,10 +510,11 @@ class Church_Theme_Content_Integration {
 			self::$ENABLE_OPT_PAGE
 		);
 
+		// for each data provider, create an enable button for each function it supports
 		foreach ( $this->dataProviders as $dataProvider ) {
 			// add more of these conditions for each function if added later
-			if ( $dataProvider->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
-				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC );
+			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
+				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
 				add_settings_field(
 					$fieldName,
 					__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
@@ -481,8 +558,8 @@ class Church_Theme_Content_Integration {
 		$newSettings = array();
 		foreach ( $this->dataProviders as $dataProvider ) {
 			// add more of these conditions for each function if added later
-			if ( $dataProvider->isProviderFor( self::$PROVIDER_FUNCTION_PEOPLESYNC ) ) {
-				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), self::$PROVIDER_FUNCTION_PEOPLESYNC );
+			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
+				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
 				$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
 				if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
 					$newSettings[ $fieldName ] = 'F';
@@ -501,6 +578,10 @@ class Church_Theme_Content_Integration {
 	 */
 	private function get_function_enabled_option( $providerTag, $function ) {
 		return "ctci_enable_{$providerTag}_$function";
+	}
+
+	private function get_run_module_key( $providerTag, $function ) {
+		return "ctci_run_{$providerTag}_$function";
 	}
 }
 

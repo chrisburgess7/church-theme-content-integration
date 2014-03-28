@@ -41,7 +41,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 			case 'admin':
 				return array(
 					'class-f1-people-data-provider.php',
-					'OAuth/class-f1-api-keys.php', // TODO: leave this??
+					//'OAuth/class-f1-api-keys.php', // TODO: leave this??
 					'OAuth/interface-f1-oauth-client.php',
 					'OAuth/class-f1-api-util.php',
 					'OAuth/class-f1-app-config.php',
@@ -50,15 +50,6 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 				);
 			default:
 				return array();
-		}
-	}
-
-	public function isProviderFor( $function ) {
-		switch ( $function ) {
-			case Church_Theme_Content_Integration::$PROVIDER_FUNCTION_PEOPLESYNC:
-				return true;
-			default:
-				return false;
 		}
 	}
 
@@ -194,7 +185,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 			$newInput['username'] = '';
 		}
 		$newInput['password'] = trim( $settings['password'] );
-		if ( ! preg_match( '/[\w-;:,.\?!@#$%\^&\*\(\)]{8,}/', $newInput['password'] ) ) {
+		if ( ! preg_match( '/[\w;:,.\?!@#$%\^&\*\(\)-]{8,}/', $newInput['password'] ) ) {
 			$newInput['password'] = '';
 		}
 		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
@@ -245,4 +236,20 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		return $newInput;
 	}
 
+	public function isProviderFor( $function ) {
+		switch ( $function ) {
+			case CTCI_PeopleSync::getTag():
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	public function getDataProviderFor( $function ) {
+		// TODO: Implement getDataProviderFor() method.
+	}
+
+	public function initDataProvider() {
+
+	}
 }

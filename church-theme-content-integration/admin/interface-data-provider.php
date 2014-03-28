@@ -29,13 +29,22 @@ interface CTCI_DataProviderInterface {
 	 */
 	public function getIncludes( $type );
 
-	public function isProviderFor( $function );
-
 	public function registerSettings();
 
 	public function validateSettings( $settings );
 
 	public function showSettingsPage();
+
+	/**
+	 * Initialise the data provider before the running of any process. Here is where you authenticate with the
+	 * service provider.
+	 * @throws CTCI_AuthenticationException
+	 */
+	public function initDataProvider();
+
+	public function isProviderFor( $function );
+
+	public function getDataProviderFor( $function );
 
 	/*public function setEnableFieldName( $function, $fieldName );
 
@@ -45,4 +54,6 @@ interface CTCI_DataProviderInterface {
 
 	//public function showEnablePeopleSyncField();
 
-} 
+}
+
+class CTCI_AuthenticationException extends Exception {}
