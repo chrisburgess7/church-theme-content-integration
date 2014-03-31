@@ -30,8 +30,8 @@ class Church_Theme_Content_Integration {
 	public static $RUN_SYNC_CAPABILITY = 'ctci_run_sync';
 
 	public static $CONFIG_GROUP = 'ctci_config_options';
-	public static $ENABLE_OPT_SECTION = 'ctci_enable_functions_section';
-	public static $ENABLE_OPT_PAGE = 'ctci_enable_functions_page';
+	public static $ENABLE_OPT_SECTION = 'ctci_enable_modules_section';
+	public static $ENABLE_OPT_PAGE = 'ctci_enable_modules_page';
 	/*public static $PROVIDER_FUNCTION_PEOPLESYNC = 'people_sync';*/
 
 	public static $ENABLE_OPT_DISPLAY_CALLBACK_FUNCPFX = 'enable_opt_display_';
@@ -285,7 +285,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-data-provider.php',
 				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
 				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
-				self::$ADMIN_DIR . '/interface-function.php',
+				self::$ADMIN_DIR . '/interface-operation.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
 				self::$ADMIN_DIR . '/interface-people-data-provider.php',
 				self::$ADMIN_DIR . '/interface-people-group.php',
@@ -394,7 +394,7 @@ class Church_Theme_Content_Integration {
 				$process = new CTCI_ModuleProcess();
 				$process->addDataProvider( $dataProvider );
 				$peopleSync = new CTCI_PeopleSync( $this->wpal );
-				$process->addFunction( $peopleSync );
+				$process->addOperation( $peopleSync );
 				$moduleKey = $this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
 				add_action(
 					'wp_ajax_' . $moduleKey,
@@ -556,7 +556,7 @@ class Church_Theme_Content_Integration {
 		foreach ( $this->dataProviders as $dataProvider ) {
 			// add more of these conditions for each function if added later
 			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
-				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
+				$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
 				add_settings_field(
 					$fieldName,
 					__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
@@ -601,7 +601,7 @@ class Church_Theme_Content_Integration {
 		foreach ( $this->dataProviders as $dataProvider ) {
 			// add more of these conditions for each function if added later
 			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
-				$fieldName = $this->get_function_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
+				$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
 				$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
 				if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
 					$newSettings[ $fieldName ] = 'F';
@@ -615,15 +615,15 @@ class Church_Theme_Content_Integration {
 	 * Return the name of the option for the enabled check box, for the given the provider folder/tag,
 	 * and the function type.
 	 * @param $providerTag
-	 * @param $function
+	 * @param $operation
 	 * @return string
 	 */
-	private function get_function_enabled_option( $providerTag, $function ) {
-		return "ctci_enable_{$providerTag}_$function";
+	private function get_operation_enabled_option( $providerTag, $operation ) {
+		return "ctci_enable_{$providerTag}_$operation";
 	}
 
-	private function get_run_module_key( $providerTag, $function ) {
-		return "ctci_run_{$providerTag}_$function";
+	private function get_run_module_key( $providerTag, $operation ) {
+		return "ctci_run_{$providerTag}_$operation";
 	}
 }
 

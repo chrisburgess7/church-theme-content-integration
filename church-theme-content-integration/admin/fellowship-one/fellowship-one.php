@@ -236,8 +236,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		return $newInput;
 	}
 
-	public function isProviderFor( $function ) {
-		switch ( $function ) {
+	public function isProviderFor( $operation ) {
+		switch ( $operation ) {
 			case CTCI_PeopleSync::getTag():
 				return true;
 			default:
@@ -245,7 +245,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		}
 	}
 
-	public function getDataProviderFor( $function ) {
+	public function getDataProviderFor( $operation ) {
 		// TODO: Implement getDataProviderFor() method.
 	}
 

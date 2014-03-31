@@ -9,16 +9,16 @@
 class CTCI_ModuleProcess {
 	/** @var CTCI_DataProviderInterface[] $dataProviders */
 	protected $dataProviders = array();
-	/** @var CTCI_FunctionInterface[]  */
-	protected $functions = array();
+	/** @var CTCI_OperationInterface[]  */
+	protected $operations = array();
 
 	public function addDataProvider( CTCI_DataProviderInterface $dataProvider ) {
 		$this->dataProviders[] = $dataProvider;
 		return $this;
 	}
 
-	public function addFunction( CTCI_FunctionInterface $function ) {
-		$this->functions[] = $function;
+	public function addOperation( CTCI_OperationInterface $operation ) {
+		$this->operations[] = $operation;
 		return $this;
 	}
 
@@ -31,11 +31,11 @@ class CTCI_ModuleProcess {
 				// todo: handle authentication errors
 			}
 			echo 'init complete' . PHP_EOL;
-			foreach ( $this->functions as $function ) {
-				$valid = $function->setDataProvider( $dataProvider );
+			foreach ( $this->operations as $operation ) {
+				$valid = $operation->setDataProvider( $dataProvider );
 				if ( $valid ) {
 					echo 'running...' . PHP_EOL;
-					$function->run();
+					$operation->run();
 				}
 			}
 		}

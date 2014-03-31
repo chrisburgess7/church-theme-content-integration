@@ -6,7 +6,7 @@
  * Time: 1:49 PM
  */
 
-interface CTCI_FunctionInterface {
+interface CTCI_OperationInterface {
 	/**
 	 * Must return a string uniquely identifying this function.
 	 * Lowercase, words separated by underscore

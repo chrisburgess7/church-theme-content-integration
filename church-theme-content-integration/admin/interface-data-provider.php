@@ -42,9 +42,9 @@ interface CTCI_DataProviderInterface {
 	 */
 	public function initDataProvider();
 
-	public function isProviderFor( $function );
+	public function isProviderFor( $operation );
 
-	public function getDataProviderFor( $function );
+	public function getDataProviderFor( $operation );
 
 	/*public function setEnableFieldName( $function, $fieldName );
 
