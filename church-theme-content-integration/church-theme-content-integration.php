@@ -57,12 +57,24 @@ class Church_Theme_Content_Integration {
 	 */
 	private $dataProviders = array();
 
-	private $operationList = array();
+	/**
+	 * @var CTCI_OperationInterface[]
+	 */
+	private $operationTypes = array();
 
 	/**
 	 * @var CTCI_WPALInterface
 	 */
 	private $wpal;
+
+	/**
+	 * @var CTCI_LoggerInterface
+	 */
+	private $logger;
+
+	private $operationList = array();
+
+	private $enableModuleFieldNames = array();
 
 	/**
 	 * Constructor
@@ -285,6 +297,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-data-provider.php',
 				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
 				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
+				self::$ADMIN_DIR . '/interface-logger.php',
 				self::$ADMIN_DIR . '/interface-operation.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
 				self::$ADMIN_DIR . '/interface-people-data-provider.php',
@@ -294,6 +307,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/class-ctc-group.php',
 				self::$ADMIN_DIR . '/class-ctc-person.php',
 				self::$ADMIN_DIR . '/class-data-provider.php',
+				self::$ADMIN_DIR . '/class-logger.php',
 				self::$ADMIN_DIR . '/class-module-process.php',
 				self::$ADMIN_DIR . '/class-people-group.php',
 				self::$ADMIN_DIR . '/class-people-sync.php',
@@ -385,22 +399,30 @@ class Church_Theme_Content_Integration {
 
 	public function load_objects() {
 		$this->wpal = new CTCI_WPAL();
+		$this->logger = new CTCI_Logger();
+		// a list of all operations currently supported
+		// need to add new ones here once implemented
+		$this->operationTypes = array(
+			new CTCI_PeopleSync( $this->wpal, $this->logger )
+		);
 	}
 
 	public function load_run_actions() {
-		// todo: add a list of functions to scan here and elsewhere to make it easier to add them later on
 		foreach ( $this->dataProviders as $dataProvider ) {
-			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
-				$process = new CTCI_ModuleProcess();
-				$process->addDataProvider( $dataProvider );
-				$peopleSync = new CTCI_PeopleSync( $this->wpal );
-				$process->addOperation( $peopleSync );
-				$moduleKey = $this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
-				add_action(
-					'wp_ajax_' . $moduleKey,
-					array( $process, 'run' )
-				);
-				$this->addModuleToOperationList( $moduleKey, $dataProvider, CTCI_PeopleSync::getHumanReadableName() );
+			foreach ( $this->operationTypes as $operation ) {
+				if ( $dataProvider->isProviderFor( $operation::getTag() ) ) {
+					$process = new CTCI_ModuleProcess( $this->logger );
+					$process->addDataProvider( $dataProvider );
+					$operationInstance = clone $operation;
+					$process->addOperation( $operationInstance );
+					$moduleKey = $this->get_run_module_key( $dataProvider->getTag(), $operation::getTag() );
+					add_action(
+						'wp_ajax_' . $moduleKey,
+						array( $process, 'run' )
+					);
+					$this->addModuleToOperationList( $moduleKey, $dataProvider, $operation::getHumanReadableName() );
+				}
+
 			}
 		}
 	}
@@ -554,19 +576,21 @@ class Church_Theme_Content_Integration {
 
 		// for each data provider, create an enable button for each function it supports
 		foreach ( $this->dataProviders as $dataProvider ) {
-			// add more of these conditions for each function if added later
-			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
-				$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
-				add_settings_field(
-					$fieldName,
-					__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
-					array( $this, 'show_module_enable_field' ),
-					self::$ENABLE_OPT_PAGE,
-					self::$ENABLE_OPT_SECTION,
-					array(
-						'fieldName' => $fieldName
-					)
-				);
+			foreach ( $this->operationTypes as $operation ) {
+				if ( $dataProvider->isProviderFor( $operation::getTag() ) ) {
+					$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
+					$this->enableModuleFieldNames[] = $fieldName;
+					add_settings_field(
+						$fieldName,
+						__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
+						array( $this, 'show_module_enable_field' ),
+						self::$ENABLE_OPT_PAGE,
+						self::$ENABLE_OPT_SECTION,
+						array(
+							'fieldName' => $fieldName
+						)
+					);
+				}
 			}
 
 			$dataProvider->registerSettings();
@@ -598,14 +622,10 @@ class Church_Theme_Content_Integration {
 
 	public function enable_options_validate( $settings ) {
 		$newSettings = array();
-		foreach ( $this->dataProviders as $dataProvider ) {
-			// add more of these conditions for each function if added later
-			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
-				$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
-				$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
-				if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
-					$newSettings[ $fieldName ] = 'F';
-				}
+		foreach ( $this->enableModuleFieldNames as $fieldName ) {
+			$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
+			if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
+				$newSettings[ $fieldName ] = 'F';
 			}
 		}
 		return $newSettings;
