@@ -460,21 +460,37 @@ class Church_Theme_Content_Integration {
 		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
+		ksort( $this->operationList );
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
-		echo '<div style="display: inline-block; width: 30%; vertical-align: top; padding: 20px 5px">';
-		foreach ( $this->dataProviders as $dataProvider ) {
-			echo '<div style="display: inline-block">';
-			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
+		echo '<div style="display: inline-block; width: 30%; vertical-align: top; margin-top: 10px">';
+		if ( isset( $this->operationList['global'] ) ) {
+			foreach ( $this->operationList['global'] as $operation ) {
+				echo '<div style="display: inline-block">';
 				$this->showRunButton(
-					'Run ' . $dataProvider->getHumanReadableName() . ' People Sync',
-					$this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() )
+					$operation['label'],
+					$operation['key']
 				);
+				echo '</div>';
 			}
-			echo '</div>';
+		}
+		foreach ( $this->operationList as $providerTag => $providerOperations ) {
+			// make sure to ignore the global operations
+			if ( 'global' !== $providerTag ) {
+				/** @noinspection PhpUndefinedMethodInspection */
+				echo '<h3>' . $providerOperations['provider']->getHumanReadableName() . '</h3>';
+				foreach ( $providerOperations['modules'] as $moduleInfo ) {
+					echo '<div style="display: inline-block">';
+					$this->showRunButton(
+						$moduleInfo['label'],
+						$moduleInfo['key']
+					);
+					echo '</div>';
+				}
+			}
 		}
 		echo '</div>';
-		echo '<div style="display: inline-block; width: 68%">';
+		echo '<div style="display: inline-block; width: 68%; margin-top: 10px">';
 		echo '<h3>Message Log</h3>';
 		echo '<div id="ctci-message-log" style="padding: 5px 10px; min-height: 100px"></div>';
 		echo '</div>';
@@ -490,12 +506,13 @@ class Church_Theme_Content_Integration {
         jQuery(document).ready(function($){
             var frm = $("#' . $key . '");
             frm.submit(function (ev) {
+                $("#ctci-message-log").html("");
                 $.ajax({
                     type: frm.attr("method"),
                     url: ajaxurl,
                     data: frm.serialize(),
                     success: function (data) {
-                        $("#ctci_run_output").html(data);
+                        $("#ctci-message-log").html(data);
                     }
                 });
 
