@@ -57,6 +57,8 @@ class Church_Theme_Content_Integration {
 	 */
 	private $dataProviders = array();
 
+	private $operationList = array();
+
 	/**
 	 * @var CTCI_WPALInterface
 	 */
@@ -387,20 +389,41 @@ class Church_Theme_Content_Integration {
 
 	public function load_run_actions() {
 		// todo: add a list of functions to scan here and elsewhere to make it easier to add them later on
-		// todo: add these to a object variable from which the show_options_page simply reads without
-		// having to repeat the logic
 		foreach ( $this->dataProviders as $dataProvider ) {
 			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
 				$process = new CTCI_ModuleProcess();
 				$process->addDataProvider( $dataProvider );
 				$peopleSync = new CTCI_PeopleSync( $this->wpal );
 				$process->addFunction( $peopleSync );
+				$moduleKey = $this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() );
 				add_action(
-					'wp_ajax_' . $this->get_run_module_key( $dataProvider->getTag(), CTCI_PeopleSync::getTag() ),
+					'wp_ajax_' . $moduleKey,
 					array( $process, 'run' )
 				);
+				$this->addModuleToOperationList( $moduleKey, $dataProvider, CTCI_PeopleSync::getHumanReadableName() );
 			}
 		}
+	}
+
+	private function addGlobalOperation( $key, $label ) {
+		$this->operationList['global'][] = array(
+			'key' => $key,
+			'label' => $label
+		);
+	}
+
+	private function addModuleToOperationList(
+		$key,
+		CTCI_DataProviderInterface $dataProvider,
+		$operationName
+	) {
+		if ( ! isset( $this->operationList[ $dataProvider->getTag() ] ) ) {
+			$this->operationList[ $dataProvider->getTag() ]['provider'] = $dataProvider;
+		}
+		$this->operationList[ $dataProvider->getTag() ]['modules'][] = array(
+			'label' => 'Run ' . $dataProvider->getHumanReadableName() . ' ' . $operationName,
+			'key' => $key
+		);
 	}
 
 	public function build_admin_menu() {
@@ -434,13 +457,14 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function show_options_home_page() {
-		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) )  {
+		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
 		echo '<div class="wrap">';
-		echo '<div style="width: 50%">';
+		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
+		echo '<div style="display: inline-block; width: 30%; vertical-align: top; padding: 20px 5px">';
 		foreach ( $this->dataProviders as $dataProvider ) {
-			echo '<div>';
+			echo '<div style="display: inline-block">';
 			if ( $dataProvider->isProviderFor( CTCI_PeopleSync::getTag() ) ) {
 				$this->showRunButton(
 					'Run ' . $dataProvider->getHumanReadableName() . ' People Sync',
@@ -450,8 +474,9 @@ class Church_Theme_Content_Integration {
 			echo '</div>';
 		}
 		echo '</div>';
-		echo '<div style="width: 50%">';
-		echo '<textarea id="ctci_run_output"></textarea>';
+		echo '<div style="display: inline-block; width: 68%">';
+		echo '<h3>Message Log</h3>';
+		echo '<div id="ctci-message-log" style="padding: 5px 10px; min-height: 100px"></div>';
 		echo '</div>';
 		echo '</div>';
 	}
