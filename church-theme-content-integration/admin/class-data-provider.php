@@ -74,11 +74,15 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		if ( isset( $args['maxlength'] ) ) {
 			$attr .= "maxlength='" . $args['maxlength'] . "' ";
 		}
+		$value = '';
+		if ( isset( $optionValues[ $args['fieldName'] ] ) ) {
+			$value = $optionValues[ $args['fieldName'] ];
+		}
 		printf(
 			"<input id='%s' name='%s' type='text' value='%s' %s />",
 			$args['fieldName'],
 			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
-			$optionValues[ $args['fieldName'] ],
+			$value,
 			$attr
 		);
 	}
