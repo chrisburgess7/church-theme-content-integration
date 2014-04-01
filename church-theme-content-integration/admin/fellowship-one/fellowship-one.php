@@ -50,6 +50,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		switch ( $type ) {
 			case 'admin':
 				return array(
+					'interface-f1-api-settings.php',
+					'interface-f1-people-sync-settings.php',
 					'class-f1-people-data-provider.php',
 					//'OAuth/class-f1-api-keys.php', // TODO: leave this??
 					'OAuth/interface-f1-oauth-client.php',
@@ -76,6 +78,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			'ctci_f1_credentials',
 			'Credentials',
 			'credentialsSectionCallback'
+		);
+		$this->addSettingsField(
+			'ctci_f1_credentials',
+			'api_url',
+			'API URL',
+			'displayTextField',
+			array(
+				'size' => '40'
+			)
 		);
 		$this->addSettingsField(
 			'ctci_f1_credentials',
@@ -182,6 +193,14 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 	public function validateSettings( $settings ) {
 		$newInput = array();
+		$newInput['api_url'] = trim( $settings['api_url'] );
+		// credit: https://gist.github.com/dperini/729294
+		if ( ! preg_match(
+			'%^(?:(?:https?|ftp)://)(?:\S+(?::\S*)?@|\d{1,3}(?:\.\d{1,3}){3}|(?:(?:[a-z\d\x{00a1}-\x{ffff}]+-?)*[a-z\d\x{00a1}-\x{ffff}]+)(?:\.(?:[a-z\d\x{00a1}-\x{ffff}]+-?)*[a-z\d\x{00a1}-\x{ffff}]+)*(?:\.[a-z\x{00a1}-\x{ffff}]{2,6}))(?::\d+)?(?:[^\s]*)?$%iu',
+			$newInput['api_url']
+		) ) {
+			$newInput['api_url'] = '';
+		}
 		$newInput['api_key'] = trim( $settings['api_key'] );
 		if ( preg_match( '/\D/', $newInput['api_key'] ) ) {
 			$newInput['api_key'] = '';
@@ -277,68 +296,11 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 	}
 
-	/**********************************
+	/******************************************************
 	 *
-	 * People data provider methods
+	 * F1APISettings methods
 	 *
-	 ***********************************/
-
-
-	public function getProviderPersonTag() {
-		return 'f1';
-	}
-
-	public function setupForPeopleSync() {
-		// TODO: Implement setupForPeopleSync() method.
-	}
-
-	/**
-	 * Must return an associative array of CTCI_PersonInterface's, with the array key being the person id
-	 * @return CTCI_PersonInterface[]
-	 */
-	public function getPeople() {
-		// TODO: Implement getPeople() method.
-	}
-
-	/**
-	 * Return the groups defined in the data provider in the form of an array, where each element is an
-	 * array containing 'id' and 'name'.
-	 * @return CTCI_PeopleGroupInterface[]
-	 */
-	public function getGroups() {
-		// TODO: Implement getGroups() method.
-	}
-
-	/**
-	 * Whether or not to sync groups from this data provider.
-	 *
-	 * @return bool
-	 */
-	public function syncGroups() {
-		// TODO: Implement syncGroups() method.
-	}
-
-	public function cleanUpAfterPeopleSync() {
-		// TODO: Implement cleanUpAfterPeopleSync() method.
-	}
-
-	/**
-	 * Returns whether or not to completely delete any groups that are no longer to be synced. If true, overrides the
-	 * default behaviour of simply unpublishing the group.
-	 * @return bool
-	 */
-	public function deleteUnattachedGroups() {
-		// TODO: Implement deleteUnattachedGroups() method.
-	}
-
-	/**
-	 * Returns whether or not to completely delete any persons that are no longer to be synced. If true, overrides the
-	 * default behaviour of simply unpublishing the person.
-	 * @return bool
-	 */
-	public function deleteUnattachedPeople() {
-		// TODO: Implement deleteUnattachedPeople() method.
-	}
+	 *******************************************************/
 
 	public function getF1ConsumerKey() {
 		// TODO: Implement getF1ConsumerKey() method.
