@@ -7,11 +7,21 @@
  */
 
 require_once dirname( __FILE__ ) . '/../class-data-provider.php';
+require_once dirname( __FILE__ ) . '/interface-f1-api-settings.php';
+require_once dirname( __FILE__ ) . '/interface-f1-people-sync-settings.php';
+require_once dirname( __FILE__ ) . '/OAuth/class-f1-oauth-client.php';
+require_once dirname( __FILE__ ) . '/class-f1-people-data-provider.php';
 
-class CTCI_Fellowship_One extends CTCI_DataProvider {
+class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISettingsInterface, CTCI_F1PeopleSyncSettingsInterface {
 
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
+
+	/**
+	 * @var CTCI_F1OAuthClientInterface
+	 */
+	protected $authClient = null;
+	protected $peopleDataProvider = null;
 
 	/**
 	 * @return string   A unique tag for this provider. Should only contain letters, numbers, or underscore.
@@ -173,19 +183,19 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 	public function validateSettings( $settings ) {
 		$newInput = array();
 		$newInput['api_key'] = trim( $settings['api_key'] );
-		if ( ! preg_match( '/\d{3}/', $newInput['api_key'] ) ) {
+		if ( preg_match( '/\D/', $newInput['api_key'] ) ) {
 			$newInput['api_key'] = '';
 		}
 		$newInput['api_secret'] = trim( $settings['api_secret'] );
-		if ( ! preg_match( '/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i', $newInput['api_secret'] ) ) {
+		if ( preg_match( '/[^0-9a-f-]/i', $newInput['api_secret'] ) ) {
 			$newInput['api_secret'] = '';
 		}
 		$newInput['username'] = trim( $settings['username'] );
-		if ( ! preg_match( '/[\w]+/', $newInput['username'] ) ) {
+		if ( ! preg_match( '/^[\w]+$/', $newInput['username'] ) ) {
 			$newInput['username'] = '';
 		}
 		$newInput['password'] = trim( $settings['password'] );
-		if ( ! preg_match( '/[\w;:,.\?!@#$%\^&\*\(\)-]{8,}/', $newInput['password'] ) ) {
+		if ( ! preg_match( '/^[\w;:,.\?!@#$%\^&\*\(\)-]+$/', $newInput['password'] ) ) {
 			$newInput['password'] = '';
 		}
 		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
@@ -194,7 +204,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		}
 		$newInput['people_lists'] = trim( $settings['people_lists'] );
 		// is this needed? not sure what else to validate for
-		$lines = explode( '\r\n', $newInput['people_lists'] );
+		$lines = explode( "\r\n", $newInput['people_lists'] );
 		$changed = false;
 		for ( $i = 0; $i < count($lines); $i++) {
 			if ( strlen( $lines[ $i ] ) > 100 ) {
@@ -203,7 +213,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 			}
 		}
 		if ( $changed ) {
-			$newInput['people_lists'] = implode( $lines );
+			$newInput['people_lists'] = implode( "\r\n", $lines );
 		}
 		$newInput['sync_position'] = trim( $settings['sync_position'] );
 		if ( 'T' !== $newInput['sync_position'] && 'F' !== $newInput['sync_position'] ) {
@@ -236,6 +246,19 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 		return $newInput;
 	}
 
+	public function initDataProvider() {
+		$this->authClient = new CTCI_F1OAuthClient( $this );
+		$this->peopleDataProvider = new CTCI_F1PeopleDataProvider( $this->authClient, $this );
+	}
+
+	public function authenticate() {
+		$success = $this->authClient->authenticate();
+		if ( ! $success) {
+			throw new CTCI_AuthenticationException( 'Could not authenticate.' );
+		}
+		return $success;
+	}
+
 	public function isProviderFor( $operation ) {
 		switch ( $operation ) {
 			case CTCI_PeopleSync::getTag():
@@ -246,10 +269,106 @@ class CTCI_Fellowship_One extends CTCI_DataProvider {
 	}
 
 	public function getDataProviderFor( $operation ) {
-		// TODO: Implement getDataProviderFor() method.
+		switch ( $operation ) {
+			case CTCI_PeopleSync::getTag():
+				return $this->peopleDataProvider;
+			default:
+				return null;
+		}
 	}
 
-	public function initDataProvider() {
+	/**********************************
+	 *
+	 * People data provider methods
+	 *
+	 ***********************************/
 
+
+	public function getProviderPersonTag() {
+		return 'f1';
+	}
+
+	public function setupForPeopleSync() {
+		// TODO: Implement setupForPeopleSync() method.
+	}
+
+	/**
+	 * Must return an associative array of CTCI_PersonInterface's, with the array key being the person id
+	 * @return CTCI_PersonInterface[]
+	 */
+	public function getPeople() {
+		// TODO: Implement getPeople() method.
+	}
+
+	/**
+	 * Return the groups defined in the data provider in the form of an array, where each element is an
+	 * array containing 'id' and 'name'.
+	 * @return CTCI_PeopleGroupInterface[]
+	 */
+	public function getGroups() {
+		// TODO: Implement getGroups() method.
+	}
+
+	/**
+	 * Whether or not to sync groups from this data provider.
+	 *
+	 * @return bool
+	 */
+	public function syncGroups() {
+		// TODO: Implement syncGroups() method.
+	}
+
+	public function cleanUpAfterPeopleSync() {
+		// TODO: Implement cleanUpAfterPeopleSync() method.
+	}
+
+	/**
+	 * Returns whether or not to completely delete any groups that are no longer to be synced. If true, overrides the
+	 * default behaviour of simply unpublishing the group.
+	 * @return bool
+	 */
+	public function deleteUnattachedGroups() {
+		// TODO: Implement deleteUnattachedGroups() method.
+	}
+
+	/**
+	 * Returns whether or not to completely delete any persons that are no longer to be synced. If true, overrides the
+	 * default behaviour of simply unpublishing the person.
+	 * @return bool
+	 */
+	public function deleteUnattachedPeople() {
+		// TODO: Implement deleteUnattachedPeople() method.
+	}
+
+	public function getF1ConsumerKey() {
+		// TODO: Implement getF1ConsumerKey() method.
+	}
+
+	public function getF1ConsumerSecret() {
+		// TODO: Implement getF1ConsumerSecret() method.
+	}
+
+	public function getF1Username() {
+		// TODO: Implement getF1Username() method.
+	}
+
+	public function getF1Password() {
+		// TODO: Implement getF1Password() method.
+	}
+
+	public function getF1ServerBaseURL() {
+		// TODO: Implement getF1ServerBaseURL() method.
+	}
+
+	public function getF1PeopleLists() {
+		// TODO: Implement getF1PeopleLists() method.
+	}
+
+	public function f1SyncGroups() {
+		// TODO: Implement f1SyncGroups() method.
+	}
+
+	public function f1NameFormat() {
+		// TODO: Implement f1NameFormat() method.
 	}
 }

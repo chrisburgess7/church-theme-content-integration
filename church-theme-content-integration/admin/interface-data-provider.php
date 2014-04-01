@@ -36,14 +36,22 @@ interface CTCI_DataProviderInterface {
 	public function showSettingsPage();
 
 	/**
-	 * Initialise the data provider before the running of any process. Here is where you authenticate with the
-	 * service provider.
-	 * @throws CTCI_AuthenticationException
+	 * Initialise the data provider at the start of any sync process.
 	 */
 	public function initDataProvider();
 
+	public function authenticate();
+
 	public function isProviderFor( $operation );
 
+	/**
+	 * When each operation is running, it calls this method to retrieve the data provider for the specific operation.
+	 * Each operation has a corresponding interface that the returned object must implement. Gets called after
+	 * initDataProvider.
+	 *
+	 * @param $operation
+	 * @return mixed
+	 */
 	public function getDataProviderFor( $operation );
 
 	/*public function setEnableFieldName( $function, $fieldName );

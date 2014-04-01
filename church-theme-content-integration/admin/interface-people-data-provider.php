@@ -33,5 +33,17 @@ interface CTCI_PeopleDataProviderInterface {
 
 	public function cleanUpAfterPeopleSync();
 
+	/**
+	 * Returns whether or not to completely delete any groups that are no longer to be synced. If true, overrides the
+	 * default behaviour of simply unpublishing the group.
+	 * @return bool
+	 */
 	public function deleteUnattachedGroups();
+
+	/**
+	 * Returns whether or not to completely delete any persons that are no longer to be synced. If true, overrides the
+	 * default behaviour of simply unpublishing the person.
+	 * @return bool
+	 */
+	public function deleteUnattachedPeople();
 } 

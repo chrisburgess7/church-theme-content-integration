@@ -35,15 +35,23 @@ class CTCI_ModuleProcess {
 		foreach ( $this->dataProviders as $dataProvider ) {
 			try {
 				$dataProvider->initDataProvider();
-			} catch ( CTCI_AuthenticationException $e ) {
-				$this->logger->error(
-					'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
-					$e->getMessage()
-				);
-				continue;
 			} catch ( Exception $e ) {
 				$this->logger->error(
 					'Init failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
+					$e->getMessage()
+				);
+				continue;
+			}
+			try {
+				if ( ! $dataProvider->authenticate() ) {
+					$this->logger->error(
+						'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. '
+					);
+					continue;
+				}
+			} catch ( Exception $e ) {
+				$this->logger->error(
+					'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
 					$e->getMessage()
 				);
 				continue;
