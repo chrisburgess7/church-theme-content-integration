@@ -76,10 +76,10 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		}
 		$value = '';
 		if ( isset( $optionValues[ $args['fieldName'] ] ) ) {
-			$value = $optionValues[ $args['fieldName'] ];
+			$value = "value='" . $optionValues[ $args['fieldName'] ] . "'";
 		}
 		printf(
-			"<input id='%s' name='%s' type='text' value='%s' %s />",
+			"<input id='%s' name='%s' type='text' %s %s />",
 			$args['fieldName'],
 			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
 			$value,
@@ -93,11 +93,15 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		if ( isset( $args['size'] ) ) {
 			$attr .= "size='" . $args['size'] . "' ";
 		}
+		$value = '';
+		if ( isset( $optionValues[ $args['fieldName'] ] ) ) {
+			$value = "value='" . $optionValues[ $args['fieldName'] ] . "'";
+		}
 		printf(
-			"<input id='%s' name='%s' type='password' value='%s' %s />",
+			"<input id='%s' name='%s' type='password' %s %s />",
 			$args['fieldName'],
 			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
-			$optionValues[ $args['fieldName'] ],
+			$value,
 			$attr
 		);
 	}
@@ -130,12 +134,16 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		if ( isset( $args['rows'] ) ) {
 			$attr .= "rows='" . $args['rows'] . "' ";
 		}
+		$value = '';
+		if ( isset( $optionValues[ $args['fieldName'] ] ) ) {
+			$value = $optionValues[ $args['fieldName'] ];
+		}
 		printf(
-			"<textarea id='%s' name='%s' value='' %s />%s</textarea>",
+			"<textarea id='%s' name='%s' %s />%s</textarea>",
 			$args['fieldName'],
 			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
 			$attr,
-			$optionValues[ $args['fieldName'] ]
+			$value
 		);
 	}
 } 
