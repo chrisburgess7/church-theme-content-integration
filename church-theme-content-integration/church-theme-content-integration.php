@@ -295,8 +295,6 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-ctc-group.php',
 				self::$ADMIN_DIR . '/interface-ctc-person.php',
 				self::$ADMIN_DIR . '/interface-data-provider.php',
-				self::$ADMIN_DIR . '/interface-f1-api-settings.php',
-				self::$ADMIN_DIR . '/interface-f1-people-sync-settings.php',
 				self::$ADMIN_DIR . '/interface-logger.php',
 				self::$ADMIN_DIR . '/interface-operation.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
