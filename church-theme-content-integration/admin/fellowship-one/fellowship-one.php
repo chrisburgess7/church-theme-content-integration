@@ -17,11 +17,51 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
 
+	protected $nameFormatOptions = array();
+
 	/**
 	 * @var CTCI_F1OAuthClientInterface
 	 */
 	protected $authClient = null;
 	protected $peopleDataProvider = null;
+
+	public function __construct() {
+		$this->nameFormatOptions = array(
+			'T. FQ M L S' => 'Mr. Johnathan "John" Edward Doe II',
+			'T. FQ L S' => 'Mr. Johnathan "John" Doe II',
+			'T. F M L S' => 'Mr. Johnathan Edward Doe II',
+			'T. F J. L S' => 'Mr. Johnathan E. Doe II',
+			'T. F L S' => 'Mr. Johnathan Doe II',
+			'T. G J. L S' => 'Mr. John E. Doe II',
+			'T. G L S' => 'Mr. John Doe II',
+			'T. I. L S' => 'Mr. J. Doe II',
+			'T. L S' => 'Mr. Doe II',
+			'T. L S, G' => 'Mr. Doe II, John',
+			'T. L S, F' => 'Mr. Doe II, Johnathan',
+			'T. L S, FQ' => 'Mr. Doe II, Johnathan "John"',
+			'FQ M L S' => 'Johnathan "John" Edward Doe II',
+			'FQ L S' => 'Johnathan "John" Doe II',
+			'F M L S' => 'Johnathan Edward Doe II',
+			'F J. L S' => 'Johnathan E. Doe II',
+			'F L S' => 'Johnathan Doe II',
+			'G J. L S' => 'John E. Doe II',
+			'G L S' => 'John Doe II',
+			'I L S' => 'J. Doe II',
+			'G K.' => 'John D.',
+			'G' => 'John',
+			'K' => 'D',
+			'K, G' => 'D, John',
+			'L' => 'Doe',
+			'L S' => 'Doe II',
+			'L S, I.' => 'Doe II, J.',
+			'L S, G' => 'Doe II, John',
+			'L S, G J.' => 'Doe II, John E.',
+			'L S, F' => 'Doe II, Johnathan',
+			'L S, F J.' => 'Doe II, Johnathan E.',
+			'L S, FQ' => 'Doe II, Johnathan "John"',
+			'L S, FQ J.' => 'Doe II, Johnathan "John" E.',
+		);
+	}
 
 	/**
 	 * @return string   A unique tag for this provider. Should only contain letters, numbers, or underscore.
@@ -125,18 +165,27 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
-			'sync_people_groups',
-			'Sync Groups?',
-			'displayCheckBoxField'
-		);
-		$this->addSettingsField(
-			'ctci_f1_people_sync_settings',
 			'people_lists',
 			'People Lists to Sync',
 			'displayTextAreaField',
 			array(
 				'rows' => '10',
 				'cols' => '30'
+			)
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'sync_people_groups',
+			'Sync Lists to Groups?',
+			'displayCheckBoxField'
+		);
+		$this->addSettingsField(
+			'ctci_f1_people_sync_settings',
+			'name_format',
+			'Name Format',
+			'displaySelectField',
+			array(
+				'options' => $this->nameFormatOptions
 			)
 		);
 		$this->addSettingsField(
@@ -217,10 +266,6 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		if ( ! preg_match( '/^[\w;:,.\?!@#$%\^&\*\(\)-]+$/', $newInput['password'] ) ) {
 			$newInput['password'] = '';
 		}
-		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
-		if ( 'T' !== $newInput['sync_people_groups'] && 'F' !== $newInput['sync_people_groups'] ) {
-			$newInput['sync_people_groups'] = 'F';
-		}
 		$newInput['people_lists'] = trim( $settings['people_lists'] );
 		// is this needed? not sure what else to validate for
 		$lines = explode( "\r\n", $newInput['people_lists'] );
@@ -233,6 +278,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 		if ( $changed ) {
 			$newInput['people_lists'] = implode( "\r\n", $lines );
+		}
+		if ( ! isset( $this->nameFormatOptions[ $settings['name_format'] ] ) ) {
+			$newInput['name_format'] = 'F L';
+		} else {
+			$newInput['name_format'] = trim( $settings['name_format'] );
+		}
+		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
+		if ( 'T' !== $newInput['sync_people_groups'] && 'F' !== $newInput['sync_people_groups'] ) {
+			$newInput['sync_people_groups'] = 'F';
 		}
 		$newInput['sync_position'] = trim( $settings['sync_position'] );
 		if ( 'T' !== $newInput['sync_position'] && 'F' !== $newInput['sync_position'] ) {

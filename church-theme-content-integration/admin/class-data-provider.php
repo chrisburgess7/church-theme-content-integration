@@ -146,4 +146,27 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 			$value
 		);
 	}
+
+	public function displaySelectField( $args = array() ) {
+		$optionValues = get_option( $this->getSettingsGroupName() );
+		$attr = '';
+		$value = '';
+		if ( isset( $optionValues[ $args['fieldName'] ] ) ) {
+			$value = $optionValues[ $args['fieldName'] ];
+		}
+		printf(
+			"<select id='%s' name='%s' %s >",
+			$args['fieldName'],
+			sprintf( "%s[%s]", $this->getSettingsGroupName(), $args['fieldName'] ),
+			$attr
+		);
+		foreach ( $args['options'] as $key => $option ) {
+			if ( $value === $key ) {
+				printf( '<option value="%s" selected>%s</option>', $key, esc_attr($option));
+			} else {
+				printf( '<option value="%s">%s</option>', $key, esc_attr($option));
+			}
+		}
+		echo '</select>';
+	}
 } 
