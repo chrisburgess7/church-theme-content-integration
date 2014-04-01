@@ -188,10 +188,10 @@ class CTCI_Person implements CTCI_PersonInterface {
 		// suffix
 		$nameFormat = str_replace( 'S', '%7$s', $nameFormat );
 
-		$name = sprintf( $nameFormat,
+		$name = trim( sprintf( $nameFormat,
 			$this->title, $this->namePrefix, $firstNameDisplay, $goesByNameDisplay, $middleNameDisplay,
 			$lastNameDisplay, $this->nameSuffix
-		);
+		) );
 		return $name;
 	}
 

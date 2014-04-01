@@ -6,14 +6,14 @@
  * Time: 5:18 PM
  */
 
-require_once dirname( __FILE__ ) . '/../../church-theme-content-integration/class-person.php';
+require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-person.php';
 
 class CTCIPersonTest extends PHPUnit_Framework_TestCase {
 	/** @var CTCI_PersonInterface */
 	protected $sut;
 
 	public function setUp() {
-		$this->sut = new CTCI_Person();
+		$this->sut = new CTCI_Person( 'f1' );
 	}
 
 	public static function getNameData() {
