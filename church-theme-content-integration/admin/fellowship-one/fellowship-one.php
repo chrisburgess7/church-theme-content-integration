@@ -14,6 +14,9 @@ require_once dirname( __FILE__ ) . '/class-f1-people-data-provider.php';
 
 class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISettingsInterface, CTCI_F1PeopleSyncSettingsInterface {
 
+	/** @var CTCI_WPALInterface */
+	protected $wpal;
+
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
 
@@ -23,7 +26,31 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	 * @var CTCI_F1OAuthClientInterface
 	 */
 	protected $authClient = null;
+
 	protected $peopleDataProvider = null;
+
+	/**
+	 * F1 API Settings
+	 */
+	protected $consumerKey;
+	protected $consumerSecret;
+	protected $username;
+	protected $password;
+	protected $serverURL;
+
+	/**
+	 * People Sync settings
+	 */
+	protected $peopleLists;
+	protected $syncPeopleGroups;
+	protected $peopleNameFormat;
+	protected $syncPersonPosition;
+	protected $personPositionAttribute;
+	protected $syncPersonPhone;
+	protected $syncPersonEmail;
+	protected $syncPersonFacebookURL;
+	protected $syncPersonTwitterURL;
+	protected $syncPersonLinkedInURL;
 
 	public function __construct() {
 		$this->nameFormatOptions = array(
@@ -63,6 +90,10 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		);
 	}
 
+	public function setWPAL( CTCI_WPALInterface $wpal ) {
+		$this->wpal = $wpal;
+	}
+
 	/**
 	 * @return string   A unique tag for this provider. Should only contain letters, numbers, or underscore.
 	 */
@@ -93,7 +124,6 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 					'interface-f1-api-settings.php',
 					'interface-f1-people-sync-settings.php',
 					'class-f1-people-data-provider.php',
-					//'OAuth/class-f1-api-keys.php', // TODO: leave this??
 					'OAuth/interface-f1-oauth-client.php',
 					'OAuth/class-f1-api-util.php',
 					'OAuth/class-f1-app-config.php',
@@ -320,14 +350,62 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	}
 
 	public function initDataProvider() {
+		if ( $this->wpal !== null ) {
+			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
+		} else {
+			$options = get_option( $this->getSettingsGroupName() );
+		}
+		if ( false === $options ) {
+			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation' );
+		}
+		$this->consumerKey = $options['api_key'];
+		$this->consumerSecret = $options['api_secret'];
+		$this->username = $options['username'];
+		$this->password = $options['password'];
+		$this->serverURL = $options['api_url'];
+		$this->peopleLists = explode( "\r\n", $options['people_lists']);
+		$this->syncPeopleGroups = $options['sync_people_groups'];
+		$this->peopleNameFormat = $options['name_format'];
+		$this->syncPersonPosition = $options['sync_position'];
+		$this->personPositionAttribute = $options['position_attribute'];
+		$this->syncPersonPhone = $options['sync_phone'];
+		$this->syncPersonEmail = $options['sync_email'];
+		$this->syncPersonFacebookURL = $options['sync_facebook'];
+		$this->syncPersonTwitterURL = $options['sync_twitter'];
+		$this->syncPersonLinkedInURL = $options['sync_linkedin'];
+
+		// NOTE: this must come AFTER setting the above, as the auth client relies on retrieving the set values
+		// in it's constructor
 		$this->authClient = new CTCI_F1OAuthClient( $this );
 		$this->peopleDataProvider = new CTCI_F1PeopleDataProvider( $this->authClient, $this );
 	}
 
 	public function authenticate() {
+		if ( empty( $this->consumerKey ) ) {
+			throw new CTCI_AuthenticationException( 'API Consumer Key setting does not have a value.' );
+		}
+		if ( empty( $this->consumerSecret ) ) {
+			throw new CTCI_AuthenticationException( 'API Consumer Secret setting does not have a value.' );
+		}
+		if ( empty( $this->username ) ) {
+			throw new CTCI_AuthenticationException( 'API Username setting does not have a value.' );
+		}
+		if ( empty( $this->password ) ) {
+			throw new CTCI_AuthenticationException( 'API Password setting does not have a value.' );
+		}
+		if ( empty( $this->serverURL ) ) {
+			throw new CTCI_AuthenticationException( 'API Server setting does not have a value.' );
+		}
 		$success = $this->authClient->authenticate();
 		if ( ! $success) {
 			throw new CTCI_AuthenticationException( 'Could not authenticate.' );
+			// T/ODO: remove
+			// *** only for debugging!!! ***
+			/*throw new CTCI_AuthenticationException(
+				sprintf( 'Could not authenticate with credentials: %s %s %s %s %s',
+					$this->serverURL, $this->consumerKey, $this->consumerSecret, $this->username, $this->password
+				)
+			);*/
 		}
 		return $success;
 	}
@@ -357,34 +435,68 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	 *******************************************************/
 
 	public function getF1ConsumerKey() {
-		// TODO: Implement getF1ConsumerKey() method.
+		return $this->consumerKey;
 	}
 
 	public function getF1ConsumerSecret() {
-		// TODO: Implement getF1ConsumerSecret() method.
+		return $this->consumerSecret;
 	}
 
 	public function getF1Username() {
-		// TODO: Implement getF1Username() method.
+		return $this->username;
 	}
 
 	public function getF1Password() {
-		// TODO: Implement getF1Password() method.
+		return $this->password;
 	}
 
 	public function getF1ServerBaseURL() {
-		// TODO: Implement getF1ServerBaseURL() method.
+		return $this->serverURL;
 	}
+
+	/******************************************************
+	 *
+	 * F1PeopleSyncSettings methods
+	 *
+	 *******************************************************/
 
 	public function getF1PeopleLists() {
-		// TODO: Implement getF1PeopleLists() method.
+		return $this->peopleLists;
 	}
 
-	public function f1SyncGroups() {
-		// TODO: Implement f1SyncGroups() method.
+	public function f1SyncPeopleGroups() {
+		return $this->syncPeopleGroups;
 	}
 
 	public function f1NameFormat() {
-		// TODO: Implement f1NameFormat() method.
+		return $this->peopleNameFormat;
+	}
+
+	public function f1SyncPersonPosition() {
+		return $this->syncPersonPosition;
+	}
+
+	public function f1PersonPositionAttribute() {
+		return $this->personPositionAttribute;
+	}
+
+	public function f1SyncPersonPhone() {
+		return $this->syncPersonPhone;
+	}
+
+	public function f1SyncPersonEmail() {
+		return $this->syncPersonEmail;
+	}
+
+	public function f1SyncPersonFacebookURL() {
+		return $this->syncPersonFacebookURL;
+	}
+
+	public function f1SyncPersonTwitterURL() {
+		return $this->syncPersonTwitterURL;
+	}
+
+	public function f1SyncPersonLinkedInURL() {
+		return $this->syncPersonLinkedInURL;
 	}
 }
