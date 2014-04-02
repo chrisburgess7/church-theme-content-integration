@@ -37,8 +37,13 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 
 	public function setDataProvider( CTCI_DataProviderInterface $dataProvider ) {
 		if ( $dataProvider->isProviderFor( self::getTag() ) ) {
-			$this->dataProvider = $dataProvider->getDataProviderFor( self::getTag() );
-			return true;
+			$dataProvider = $dataProvider->getDataProviderFor( self::getTag() );
+			if ( $dataProvider instanceof CTCI_PeopleDataProviderInterface ) {
+				$this->dataProvider = $dataProvider;
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return false;
 		}
