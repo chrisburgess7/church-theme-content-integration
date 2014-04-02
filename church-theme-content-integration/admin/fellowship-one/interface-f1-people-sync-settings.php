@@ -9,18 +9,20 @@
 interface CTCI_F1PeopleSyncSettingsInterface {
 	public function getF1PeopleLists();
 
-	public function f1SyncGroups();
+	public function f1SyncPeopleGroups();
 
 	public function f1NameFormat();
-	/*
-	 * leave this our for now, put back in once clear that current approach is correct
-		public function f1SyncPersonPhone();
 
-		public function f1SyncPersonEmail();
+	public function f1SyncPersonPosition();
+	public function f1PersonPositionAttribute();
 
-		public function f1SyncPersonFacebookURL();
+    public function f1SyncPersonPhone();
 
-		public function f1SyncPersonTwitterURL();
+	public function f1SyncPersonEmail();
 
-		public function f1SyncPersonLinkedInURL();*/
+	public function f1SyncPersonFacebookURL();
+
+	public function f1SyncPersonTwitterURL();
+
+	public function f1SyncPersonLinkedInURL();
 } 
