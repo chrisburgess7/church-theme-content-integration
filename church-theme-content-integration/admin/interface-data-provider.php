@@ -38,7 +38,7 @@ interface CTCI_DataProviderInterface {
 	/**
 	 * Initialise the data provider at the start of any sync process.
 	 */
-	public function initDataProvider();
+	public function initDataProvider( CTCI_LoggerInterface $logger );
 
 	public function authenticate();
 

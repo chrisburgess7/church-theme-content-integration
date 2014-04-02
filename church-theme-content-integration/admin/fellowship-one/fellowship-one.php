@@ -349,7 +349,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		return $newInput;
 	}
 
-	public function initDataProvider() {
+	public function initDataProvider( CTCI_LoggerInterface $logger ) {
 		if ( $this->wpal !== null ) {
 			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
 		} else {
@@ -377,7 +377,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		// NOTE: this must come AFTER setting the above, as the auth client relies on retrieving the set values
 		// in it's constructor
 		$this->authClient = new CTCI_F1OAuthClient( $this );
-		$this->peopleDataProvider = new CTCI_F1PeopleDataProvider( $this->authClient, $this );
+		$this->peopleDataProvider = new CTCI_F1PeopleDataProvider( $this->authClient, $this, $logger );
 	}
 
 	public function authenticate() {

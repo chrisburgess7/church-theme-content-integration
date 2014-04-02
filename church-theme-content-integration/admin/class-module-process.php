@@ -34,7 +34,7 @@ class CTCI_ModuleProcess {
 		//echo 'module run' . PHP_EOL;
 		foreach ( $this->dataProviders as $dataProvider ) {
 			try {
-				$dataProvider->initDataProvider();
+				$dataProvider->initDataProvider( $this->logger );
 			} catch ( Exception $e ) {
 				$this->logger->error(
 					'Init failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
@@ -65,7 +65,11 @@ class CTCI_ModuleProcess {
 						$operation->run();
 					}
 				} catch ( Exception $e ) {
-					$this->logger->error( $e->getMessage() );
+					$this->logger->error(
+						sprintf( '%s %s - %s', $dataProvider->getHumanReadableName(),
+							$operation->getHumanReadableName(), $e->getMessage()
+						)
+					);
 				}
 			}
 		}
