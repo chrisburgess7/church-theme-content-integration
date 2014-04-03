@@ -9,8 +9,6 @@
 require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/fellowship-one/OAuth/class-f1-oauth-client.php';
 require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/fellowship-one/OAuth/class-f1-api-keys.php';
 require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/fellowship-one/interface-f1-api-settings.php';
-/*require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/class-settings-manager.php';
-require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/class-wpal.php';*/
 
 class F1Credentials implements CTCI_F1APISettingsInterface {
 

@@ -310,17 +310,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/class-people-group.php',
 				self::$ADMIN_DIR . '/class-people-sync.php',
 				self::$ADMIN_DIR . '/class-person.php',
-				//self::$ADMIN_DIR . '/class-settings-manager.php',
 				self::$ADMIN_DIR . '/class-wpal.php',
-
-				// f1
-				/*self::$ADMIN_DIR_NAME . '/fellowship-one/class-f1-people-data-provider.php',
-				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-f1-api-util.php',
-				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-f1-app-config.php',
-				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-f1-oauth-client.php',
-				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/class-request-signer.php',
-				self::$ADMIN_DIR_NAME . '/fellowship-one/OAuth/interface-f1-oauth-client.php',*/
-
 
 			),
 			// Frontend only
@@ -425,6 +415,7 @@ class Church_Theme_Content_Integration {
 		}
 	}
 
+	/** @noinspection PhpUnusedPrivateMethodInspection */
 	private function addGlobalOperation( $key, $label ) {
 		$this->operationList['global'][] = array(
 			'key' => $key,
