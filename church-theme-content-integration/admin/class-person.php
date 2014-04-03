@@ -103,6 +103,7 @@ class CTCI_Person implements CTCI_PersonInterface {
 
 	public function setNameFormat( $format = 'F L' ) {
 		$this->nameFormat = $format;
+		return $this;
 	}
 
 	/**
