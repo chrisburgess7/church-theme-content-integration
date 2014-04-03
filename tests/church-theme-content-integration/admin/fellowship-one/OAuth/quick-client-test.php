@@ -62,3 +62,7 @@ $person = $client->json()->getPerson( 52037997 );
 $decodedPerson = json_decode( $person );
 
 var_dump( $person );
+
+$personComms = $client->json()->getPersonCommunications( 52037997 );
+
+var_dump( $personComms );

@@ -59,7 +59,7 @@ class CTCI_F1AppConfig {
 	public static $f1_people_search = "/v1/People/Search";
 	public static $f1_people_address = "/v1/People/{personID}/Addresses";
 	public static $f1_people_address_update = "/v1/People/{personID}/Addresses/{id}";
-	public static $f1_people_communications = "/v1/People/{id}/Communications";
+	public static $f1_people_communications = "/v1/People/{personID}/Communications";
 	public static $f1_people_communications_update = "/v1/People/{personID}/Communications/{id}";
 	public static $f1_addresstypes = "/v1/Addresses/AddressTypes";
 	public static $f1_communicationtypes = "/v1/Communications/CommunicationType";

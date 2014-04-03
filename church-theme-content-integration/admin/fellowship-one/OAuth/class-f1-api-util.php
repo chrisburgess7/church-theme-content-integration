@@ -35,8 +35,8 @@ class CTCI_F1APIUtil {
 		$parts = parse_url( $httpUrl );
 
 		$port = @$parts[ 'port' ];
-		$scheme = $parts[ 'scheme' ];
-		$host = $parts[ 'host' ];
+		$scheme = @$parts[ 'scheme' ];
+		$host = @$parts[ 'host' ];
 		$path = @$parts[ 'path' ];
 
 		$port or $port = ( $scheme == 'https' ) ? '443' : '80';

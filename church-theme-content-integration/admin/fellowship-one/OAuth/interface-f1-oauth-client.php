@@ -32,4 +32,6 @@ interface CTCI_F1OAuthClientInterface {
 	public function getPeopleListMember( $peopleListId, $memberId );
 
 	public function getPerson( $personId );
+
+	public function getPersonCommunications( $personId );
 } 

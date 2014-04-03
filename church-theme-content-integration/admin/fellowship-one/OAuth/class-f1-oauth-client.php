@@ -185,6 +185,15 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 			$this->formatHeader
 		);
 	}
+
+	public function getPersonCommunications( $personId ) {
+		$urlPath = str_replace( '{personID}', $personId, CTCI_F1AppConfig::$f1_people_communications );
+		return $this->doRequest(
+			sprintf( "%s%s", $this->baseUrl, $urlPath ),
+			$this->formatHeader
+		);
+	}
+
 	/*
 	 * Make a request using HTTP GET
 	 */
