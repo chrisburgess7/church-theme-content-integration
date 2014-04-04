@@ -467,10 +467,10 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $unattachedGroups, $actual );
 	}
 
-	public function testCreateCTCPerson() {
-		$person = new CTCI_Person( 'f1' );
+	public function testCreateAttachedCTCPerson() {
+		$personId = 270;
+		$person = new CTCI_Person( 'f1', $personId );
 		$person
-			//->setId(27)
 			->setFirstName('New')
 			->setLastName('Person')
 			->setPosition('Lead Pastor')
@@ -495,6 +495,8 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertInstanceOf( 'CTCI_CTCPersonInterface', $ctcPerson );
 		$id = $ctcPerson->id();
 		$post = get_post( $id );
+		$this->assertInstanceOf( 'WP_Post', $post );
+		$this->assertEquals( CTCI_WPAL::$ctcPersonPostType, $post->post_type );
 		$this->assertEquals( 'New Person', $post->post_title );
 		$this->assertEquals( 'New Person', $ctcPerson->getName() );
 		$this->assertEquals( 'Lead Pastor', get_post_meta( $id, CTCI_WPAL::$ctcPersonPositionMetaTag, true ) );
@@ -511,6 +513,11 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 			"http://facebook.com/newuser\nhttp://twitter.com/newuser\nhttps://linkedin.com/newuser",
 			$ctcPerson->getURLs()
 		);
+
+		// check attach record
+		$this->assertEquals( 'f1', get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderTagMetaTag, true ) );
+		$this->assertEquals( $personId, get_post_meta( $id, CTCI_WPAL::$ctcPersonProviderIdMetaTag, true ) );
+
 	}
 
 	public function testUpdateCTCPerson() {

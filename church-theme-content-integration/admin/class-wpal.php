@@ -285,19 +285,26 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	 * @throws CTCI_CouldNotCreateCTCPersonFromPersonException
 	 */
 	public function createAttachedCTCPerson( CTCI_PersonInterface $person ) {
-		$fieldsToInsert = array( 'post_status' => 'publish' );
+		$fieldsToInsert = array( 'post_status' => 'publish', 'post_type' => self::$ctcPersonPostType );
 		if ( $person->syncName() ) {
 			$fieldsToInsert['post_title'] = $person->getName();
 		}
+
 		$id = wp_insert_post( $fieldsToInsert, true );
 		if ( is_wp_error( $id ) ) {
 			throw new CTCI_CouldNotCreateCTCPersonFromPersonException( $person, $id );
 		}
+
 		add_post_meta( $id, self::$ctcPersonPositionMetaTag, $person->getPosition(), true );
 		add_post_meta( $id, self::$ctcPersonPhoneMetaTag, $person->getPhone(), true );
 		add_post_meta( $id, self::$ctcPersonEmailMetaTag, $person->getEmail(), true );
 		add_post_meta( $id, self::$ctcPersonURLSMetaTag, implode( "\n", $person->getURLs() ), true );
-		return $this->populateCTCPersonFromPost( get_post( $id ) );
+
+		$ctcPerson = $this->populateCTCPersonFromPost( get_post( $id ) );
+
+		$this->attachCTCPerson( $ctcPerson, $person );
+
+		return $ctcPerson;
 	}
 
 	/**
