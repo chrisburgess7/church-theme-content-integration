@@ -194,6 +194,14 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		);
 	}
 
+	public function getPersonAttributes( $personId ) {
+		$urlPath = str_replace( '{peopleID}', $personId, CTCI_F1AppConfig::$f1_peopleAttributes_list );
+		return $this->doRequest(
+			sprintf( "%s%s", $this->baseUrl, $urlPath ),
+			$this->formatHeader
+		);
+	}
+
 	/*
 	 * Make a request using HTTP GET
 	 */

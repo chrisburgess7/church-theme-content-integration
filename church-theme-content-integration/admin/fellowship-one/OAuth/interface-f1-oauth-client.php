@@ -34,4 +34,6 @@ interface CTCI_F1OAuthClientInterface {
 	public function getPerson( $personId );
 
 	public function getPersonCommunications( $personId );
+
+	public function getPersonAttributes( $personId );
 } 
