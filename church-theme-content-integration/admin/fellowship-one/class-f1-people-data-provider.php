@@ -128,6 +128,69 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					if ( ! empty( $personData->suffix ) ) {
 						$person->setNameSuffix( $personData->suffix );
 					}
+
+					// position attribute...
+					$attributeData = $this->authClient->getPersonAttributes( $personId );
+					$attributeData = json_decode( $attributeData );
+					if ( null === $attributeData ) {
+						throw new CTCI_JSONDecodeException;
+					}
+					$position = '';
+					foreach ( $attributeData->attributes->attribute as $attribute ) {
+						if ( $this->settings->f1SyncPersonPosition() &&
+							$attribute->attributeGroup->name === $this->settings->f1PersonPositionAttribute()
+						) {
+							$person->setSyncPosition();
+							if ( $position !== '' ) {
+								$position .= ', ';
+							}
+							$position .= $attribute->attributeGroup->attribute->name;
+						}
+					}
+					if ( $position !== '' ) {
+						$person->setPosition( $position );
+					}
+
+					// communication details...
+					$communicationsData = $this->authClient->getPersonCommunications( $personId );
+					$communicationsData = json_decode( $communicationsData );
+					if ( null === $communicationsData ) {
+						throw new CTCI_JSONDecodeException;
+					}
+					foreach ( $communicationsData->communications->communication as $communication ) {
+						if ( $this->settings->f1SyncPersonPhone() &&
+							$communication->communicationGeneralType === 'Telephone' && 'true' == $communication->preferred
+						) {
+							$person->setSyncPhone();
+							$person->setPhone( $communication->communicationValue );
+						}
+						if ( $this->settings->f1SyncPersonEmail() &&
+							$communication->communicationGeneralType === 'Email' && 'true' == $communication->preferred
+						) {
+							$person->setSyncEmail();
+							$person->setEmail( $communication->communicationValue );
+						}
+						if ( $this->settings->f1SyncPersonFacebookURL() &&
+							$communication->communicationType->name === 'Facebook'
+						) {
+							$person->setSyncFacebookURL();
+							$person->setFacebookURL( $communication->communicationValue );
+						}
+						if ( $this->settings->f1SyncPersonTwitterURL() &&
+							$communication->communicationType->name === 'Twitter'
+						) {
+							$person->setSyncTwitterURL();
+							$person->setTwitterURL( $communication->communicationValue );
+						}
+						if ( $this->settings->f1SyncPersonLinkedInURL() &&
+							$communication->communicationType->name === 'Linkedin'
+						) {
+							$person->setSyncLinkedInURL();
+							$person->setLinkedInURL( $communication->communicationValue );
+						}
+					}
+
+					// add to current group
 					$person->addGroup( $currGroup );
 					$this->people[ $person->id() ] = $person;
 				}
