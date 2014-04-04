@@ -20,9 +20,14 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	}
 
 	/**
-	 * @var CTCI_PeopleDataProviderInterface
+	 * @var CTCI_DataProviderInterface
 	 */
 	protected $dataProvider;
+
+	/**
+	 * @var CTCI_PeopleDataProviderInterface
+	 */
+	protected $peopleDataProvider;
 
 	/** @var \CTCI_WPALInterface $wpal */
 	protected $wpal;
@@ -37,9 +42,10 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 
 	public function setDataProvider( CTCI_DataProviderInterface $dataProvider ) {
 		if ( $dataProvider->isProviderFor( self::getTag() ) ) {
-			$dataProvider = $dataProvider->getDataProviderFor( self::getTag() );
-			if ( $dataProvider instanceof CTCI_PeopleDataProviderInterface ) {
+			$peopleDataProvider = $dataProvider->getDataProviderFor( self::getTag() );
+			if ( $peopleDataProvider instanceof CTCI_PeopleDataProviderInterface ) {
 				$this->dataProvider = $dataProvider;
+				$this->peopleDataProvider = $peopleDataProvider;
 				return true;
 			} else {
 				return false;
@@ -56,17 +62,19 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	public function run() {
 
 		// TODO: think through error handling
-		$this->logger->info( 'Starting People Sync' );
+		$this->logger->info( 'Starting People Sync...' );
 
-		$dataProvider = $this->dataProvider;
+		$dataProvider = $this->peopleDataProvider;
 		if ( $dataProvider === null ) {
-			return false;
+			throw new LogicException( 'Data Provider not set' );
 		}
 
+		$this->logger->info( sprintf( "Setting up %s for people sync...", $this->dataProvider->getHumanReadableName() ) );
 		$dataProvider->setupForPeopleSync();
 
 		// update the list of groups if they are being synced
 		if ( $dataProvider->syncGroups() ) {
+			$this->logger->info( 'Updating Groups...' );
 			$this->updateGroups( $dataProvider );
 		}
 
@@ -77,6 +85,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		$attachedCTCPeople = $this->wpal->getCTCPeopleAttachedViaProvider( $dataProvider->getProviderPersonTag() );
 
 		foreach ( $attachedCTCPeople as $ctcPerson ) {
+			$this->logger->info( sprintf( 'Analysing attached person: %s.', $ctcPerson->getName() ) );
 			$dpId = $this->wpal->getAttachedPersonId( $ctcPerson );
 
 			// if the CTC person is attached there should be an associated id no. for the attached record
@@ -85,16 +94,19 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			if ( $dpId === '' ) {
 				// todo: it would be better if we simply logged this issue, then continued immediately on to
 				// the next person
-				throw new CTCI_NoProviderIdForAttachedCTCPerson( $ctcPerson );
+				//throw new CTCI_NoProviderIdForAttachedCTCPerson( $ctcPerson );
+				$this->logger->warning( sprintf( 'Attach Id for person: %s could not be retrieved. Skipping person.', $ctcPerson->getName() ) );
 			}
 
 			if ( isset( $people[ $dpId ] ) ) {
+				$this->logger->info( sprintf( 'Syncing attached person: %s.', $ctcPerson->getName() ) );
 				$this->syncCTCPerson( $ctcPerson, $people[ $dpId ], $dataProvider->syncGroups() );
 				// we've just synced an attached person, so we don't need the record any more
 				unset( $people[ $dpId ] );
 			} else {
 				// this means that a CTC person with an attached record, no longer has that record in the list
 				// of people to sync, so either just delete the attach record, or delete the CTC person entirely
+				$this->logger->info( sprintf( 'Unattaching person: %s.', $ctcPerson->getName() ) );
 				$this->wpal->unattachCTCPerson( $ctcPerson );
 				if ( $dataProvider->deleteUnattachedPeople() ) {
 					$this->wpal->deleteCTCPerson( $ctcPerson );
@@ -107,6 +119,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		// now check the unattached people that we now need to sync
 		// all attached persons have been removed above
 		foreach ( $people as $person ) {
+			$this->logger->info( sprintf( 'Analysing new person: %s.', $person->getName() ) );
 
 			// attempt to attach the person from the data provider to
 			// a person record in wp db
@@ -114,9 +127,13 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			$attached = $this->attachPerson( $person );
 
 			if ( $attached instanceof CTCI_CTCPersonInterface ) {
+				$this->logger->info( sprintf( '%s has been attached to an existing person record.', $person->getName(), $this->dataProvider->getHumanReadableName() ) );
 				$this->syncCTCPerson( $attached, $person, $dataProvider->syncGroups() );
+				$this->logger->info( sprintf( '%s has been synchronized.', $person->getName() ) );
 			} else {
+				$this->logger->info( sprintf( 'Creating new record for: %s.', $person->getName() ) );
 				$this->createNewCTCPerson( $person, $dataProvider->syncGroups() );
+				$this->logger->info( 'Created.' );
 			}
 		}
 
@@ -149,7 +166,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			} else {
 				// previously attached CTC group no longer has an associated group from the provider
 				if ( $dataProvider->deleteUnattachedGroups() ) {
-					$this->wpal->deleteCTCGroup( $ctcGroup ); // Note that this also unattaches before deleting
+					$this->wpal->deleteCTCGroup( $ctcGroup ); // Note that this also detaches before deleting
 				} else {
 					$this->wpal->unattachCTCGroup( $ctcGroup );
 				}
@@ -217,6 +234,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		$unattachedCTCPeople = $this->wpal->getUnattachedCTCPeople();
 
 		foreach ( $unattachedCTCPeople as $unattachedCTCPerson ) {
+			// if email is blank?? what's the odds of a name conflict?
 			if ( $person->getEmail() === $unattachedCTCPerson->getEmail() &&
 				$person->getName() === $unattachedCTCPerson->getName()
 			) {
