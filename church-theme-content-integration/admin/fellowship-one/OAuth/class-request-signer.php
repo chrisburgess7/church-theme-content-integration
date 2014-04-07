@@ -17,12 +17,9 @@ class CTCI_RequestSigner {
 	/*
 	 * Creates the oauth_signature value to be included in the Authorization header
 	 */
-	public static function buildSignature( $consumerSecret, $tokenSecret, $httpMethod, $url, $oAuthOptions, &$debugInfo = array() ) {
-		$requestSignerDebugInfo = array();
+	public static function buildSignature( $consumerSecret, $tokenSecret, $httpMethod, $url, $oAuthOptions ) {
 
-		$base_string = CTCI_RequestSigner::getSignatureBaseString( $httpMethod, $url, $oAuthOptions, $requestSignerDebugInfo );
-		$requestSignerDebugInfo[ 'signature_base_string' ] = $base_string;
-		$debugInfo[ 'request_signer' ] = $requestSignerDebugInfo;
+		$base_string = CTCI_RequestSigner::getSignatureBaseString( $httpMethod, $url, $oAuthOptions );
 
 		$key_parts = array(
 			$consumerSecret,
@@ -43,7 +40,7 @@ class CTCI_RequestSigner {
 	 * (Basically HTTP method(GET/POST etc), the URL(scheme://host/path, doesnt include the query string), and the norlalized request parameters
 	 * each urlencoded and then concated with &.)
 	 */
-	private function getSignatureBaseString( $httpMethod, $url, $oAuthOptions, &$debugInfo ) {
+	private function getSignatureBaseString( $httpMethod, $url, $oAuthOptions ) {
 		// Get the Query String parameters. Example if the request is http://photos.example.net/photos.aspx?file=vacation.jpg&size=original
 		// then get the query string and create an array from it in form of key value pairs
 		// $qsArray     Key     Value
@@ -51,7 +48,6 @@ class CTCI_RequestSigner {
 		//              size    original
 		$parts = parse_url( $url );
 		$qsArray = array();
-		$qs = array();
 		if ( isset( $parts[ 'query' ] ) ) {
 			$qs = $parts[ 'query' ];
 			parse_str( $qs, $qsArray );
@@ -59,13 +55,6 @@ class CTCI_RequestSigner {
 		$signable_options = array_merge( $oAuthOptions, $qsArray );
 		$signable_parameters = CTCI_RequestSigner::getNormalizedRequestParameters( $signable_options );
 		$normalized_url = CTCI_F1APIUtil::getNormalizedHttpUrl( $url );
-
-		$debug = array();
-		$debug[ 'HTTP Method' ] = $httpMethod;
-		$debug[ 'Normalized Url' ] = $normalized_url;
-		$debug[ 'Signable Parameters' ] = $signable_parameters;
-		$debug[ 'Query parameters' ] = $qs;
-		$debugInfo[ 'signature_base_string_parts' ] = $debug;
 
 		$parts = array(
 			$httpMethod, // GET or POST

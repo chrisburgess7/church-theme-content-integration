@@ -71,3 +71,13 @@ var_dump( $personComms );
 $personAttr = $client->json()->getPersonAttributes( 51971576 );
 
 var_dump( $personAttr );
+
+// test error response
+$noPerson = null;
+try {
+	$noPerson = $client->json()->getPerson( 1111111111111111111111111111 );
+} catch ( CTCI_F1APIRequestException $e ) {
+	var_dump( $e );
+}
+
+var_dump( $noPerson );

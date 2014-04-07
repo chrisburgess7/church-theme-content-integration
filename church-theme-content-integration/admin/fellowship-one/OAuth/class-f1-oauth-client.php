@@ -42,12 +42,6 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	// This Header contains the link to the person associated with the access token
 	private $responseHeaders;
 
-	// An array to log the request and the response. Alos logs other things like
-	// the HTTP Code returned
-	private $logInfo;
-	// var $lineBreak = "\r\n";
-	var $lineBreak = "<br/>";
-
 	private $format = 'json';
 	private $formatHeader;
 	private $jsonFormatHeader = array( "Accept: application/json", "Content-type: application/json" );
@@ -239,7 +233,6 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		}
 
 		$oAuthHeader = array();
-		$this->logInfo = array();
 		$oAuthHeader[ ] = $this->getOAuthHeader( $httpMethod, $requestURL, $tokenType );
 
 		//register a callback function which will process the response headers
@@ -257,38 +250,23 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 
 		$httpHeaders = array_merge( $oAuthHeader, $nonOAuthHeader );
 
-		if ( CTCI_F1AppConfig::$simulateRequest ) {
-			print $this->lineBreak . "[--------------------BEGIN Simulate Request for $requestURL----------------------------]" . $this->lineBreak;
-			$requestSimulator = sprintf( "%s %s HTTP/1.1" . $this->lineBreak, $httpMethod, $relativePath );
-			foreach ( $httpHeaders as $header ) {
-				$requestSimulator .= $header . $this->lineBreak;
-			}
-
-			$requestSimulator .= $requestBody;
-			print $requestSimulator;
-			print $this->lineBreak . "[--------------------END Simulate Request----------------------------]" . $this->lineBreak;
-			print $this->lineBreak . "[--------------------BEGIN DEBUG----------------------------]" . $this->lineBreak;
-			print "<pre>" . print_r( $this->logInfo, true ) . "</pre>";
-			print $this->lineBreak . "[---------------------END DEBUG-----------------------------]" . $this->lineBreak;
-
-			return null;
-		}
-
 		curl_setopt( $this->connection, CURLOPT_URL, $requestURL );
 		curl_setopt( $this->connection, CURLOPT_HTTPHEADER, $httpHeaders );
 
 		$responseBody = curl_exec( $this->connection );
 		$info = curl_getinfo( $this->connection );
-		$this->logRequest( $responseBody, $requestBody, $info );
+
 		if ( !curl_errno( $this->connection ) ) // If there is no error
 		{
 			if ( $info[ 'http_code' ] === $successHttpCode ) {
 				return $responseBody;
 			} else {
-				return null;
+				throw new CTCI_F1APIRequestException(
+					$requestURL, $httpHeaders, $info['http_code'], $responseBody
+				);
 			}
 		} else {
-			return null;
+			throw new CTCI_CURLException( curl_errno( $this->connection ) );
 		}
 	}
 
@@ -343,40 +321,12 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		}
 
 		$oAuthHeaderValues[ "oauth_signature" ] = CTCI_RequestSigner::buildSignature(
-			$this->consumerSecret, $this->tokenSecret, $httpMethod, $requestURL, $oAuthHeaderValues, $this->logInfo
+			$this->consumerSecret, $this->tokenSecret, $httpMethod, $requestURL, $oAuthHeaderValues
 		);
 
 		$oauthHeader = $this->buildOAuthHeader( $oAuthHeaderValues );
 
 		return sprintf( "Authorization: %s", $oauthHeader );
-	}
-
-	private function logRequest( $responseBody, $requestBody = "", $transferInfo = array() ) {
-		// The request string sent
-		$requestString = curl_getinfo( $this->connection, CURLINFO_HEADER_OUT );
-
-		$debugArray = array();
-		$requestArray = array();
-		$responseArray = array();
-
-		$requestArray[ 'request_body' ] = $requestBody;
-		$requestArray[ 'CURLINFO_HEADER_OUT' ] = $requestString;
-
-		$responseArray[ 'RESPONSE_HEADERS' ] = $this->responseHeaders;
-		$responseArray[ 'response_body' ] = $responseBody;
-
-		$debugArray[ 'GET_INFO' ] = $transferInfo;
-		$debugArray[ 'request' ] = $requestArray;
-		$debugArray[ 'response' ] = $responseArray;
-
-		// $this->logInfo = $debugArray;
-		$this->logInfo = array_merge( $this->logInfo, $debugArray );
-
-		if ( CTCI_F1AppConfig::$debug ) {
-			print $this->lineBreak . "[--------------------BEGIN DEBUG----------------------------]" . $this->lineBreak;
-			print "<pre>" . print_r( $this->logInfo, true ) . "</pre>";
-			print $this->lineBreak . "[---------------------END DEBUG-----------------------------]" . $this->lineBreak;
-		}
 	}
 
 	/*
@@ -393,4 +343,50 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		$this->responseHeaders[ ] = $header;
 		return $length;
 	}
-} 
+}
+
+class CTCI_F1APIRequestException extends Exception {
+	protected $requestURL;
+	protected $requestHeaders;
+	protected $http_code;
+	protected $responseBody;
+
+	/**
+	 * @param string $requestURL
+	 * @param mixed $requestHeaders
+	 * @param int $http_code
+	 * @param string $responseBody
+	 * @param string $message
+	 * @param int $code
+	 * @param null $innerException
+	 */
+	public function __construct( $requestURL, $requestHeaders, $http_code, $responseBody, $message = '', $code = 0, $innerException = null ) {
+		parent::__construct( $message, $code, $innerException );
+		$this->requestURL = $requestURL;
+		$this->requestHeaders = $requestHeaders;
+		$this->http_code = $http_code;
+		$this->responseBody = $responseBody;
+	}
+
+	public function getRequestURL() {
+		return $this->requestURL;
+	}
+
+	public function getRequestHeaders() {
+		return $this->requestHeaders;
+	}
+
+	public function getHttpCode() {
+		return $this->http_code;
+	}
+
+	public function getResponseBody() {
+		return $this->responseBody;
+	}
+}
+
+class CTCI_CURLException extends Exception {
+	public function __construct( $errno, $message = '', $innerException = null ) {
+		parent::__construct( $message, $errno, $innerException );
+	}
+}
