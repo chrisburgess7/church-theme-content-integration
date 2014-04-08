@@ -18,8 +18,7 @@ interface CTCI_PeopleDataProviderInterface {
 	public function getPeople();
 
 	/**
-	 * Return the groups defined in the data provider in the form of an array, where each element is an
-	 * array containing 'id' and 'name'.
+	 * Must return an associative array of CTCI_PeopleGroupInterface's, with the array key being the group id
 	 * @return CTCI_PeopleGroupInterface[]
 	 */
 	public function getGroups();
