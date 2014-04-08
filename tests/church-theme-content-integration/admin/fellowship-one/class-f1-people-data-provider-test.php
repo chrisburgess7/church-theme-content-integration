@@ -476,6 +476,609 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 
 	}
 
+	public function testSetupForPeopleSync_3PeopleLists() {
+		/*
+		 * Sync groups true
+		 * 3 people lists to sync, each with 2 people in it
+		 * All sync options set to true
+		 */
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPeopleGroups')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('getF1PeopleLists')
+			->will($this->returnValue(array('Staff', 'Parish Council', 'Worship Team')));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonPosition')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1PersonPositionAttribute')
+			->will($this->returnValue('Church Position'));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonPhone')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonEmail')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonFacebookURL')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonTwitterURL')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonLinkedInURL')
+			->will($this->returnValue(true));
+
+		// build a list of 5 groups from service provider
+		$groupsJSON = $this->buildPeopleListsJSON( array(
+			array(
+				'id' => '1231',
+				'name' => 'Staff',
+				'description' => 'All full-time staff'
+			), array(
+				'id' => '1232',
+				'name' => 'Members',
+				'description' => 'All church members'
+			), array(
+				'id' => '1233',
+				'name' => 'Worship Team',
+			), array(
+				'id' => '1234',
+				'name' => 'Parish Council',
+				'description' => 'Members of the parish council, who are responsible for administrative decisions.'
+			), array(
+				'id' => '1235',
+				'name' => 'Ladies Morning Tea Group',
+			)
+		));
+		// check that the test json data is well formed
+		$this->assertNotNull( json_decode( $groupsJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPeopleLists')
+			->will($this->returnValue( $groupsJSON ));
+
+		// these are the members of the Staff people list
+		$staffMemberListJSON = $this->buildMemberListJSON( array(
+			'id' => '1231', 'name' => 'Staff'
+		), array(
+			array(
+				'id' => '12311',
+				'person-id' => '1234511',
+				'name' => 'Billy Graham'
+			), array(
+				'id' => '12312',
+				'person-id' => '1234512',
+				'name' => 'Rick Warren'
+			)
+		));
+		$worshipTeamMemberListJSON = $this->buildMemberListJSON( array(
+			'id' => '1233', 'name' => 'Worship Team'
+		), array(
+			array(
+				'id' => '12331',
+				'person-id' => '1234521',
+				'name' => 'Jimmy Hand'
+			), array(
+				'id' => '12332',
+				'person-id' => '1234522',
+				'name' => 'Amy Grant'
+			)
+		));
+		$parishCouncilMemberListJSON = $this->buildMemberListJSON( array(
+			'id' => '1234', 'name' => 'Parish Council'
+		), array(
+			array(
+				'id' => '12341',
+				'person-id' => '1234531',
+				'name' => 'John Doe'
+			), array(
+				'id' => '12342',
+				'person-id' => '1234532',
+				'name' => 'Sam Steward'
+			)
+		));
+		$this->assertNotNull( json_decode( $staffMemberListJSON ) );
+		$this->assertNotNull( json_decode( $worshipTeamMemberListJSON ) );
+		$this->assertNotNull( json_decode( $parishCouncilMemberListJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPeopleListMembers')
+			->will($this->returnValueMap( array(
+				array( '1231', $staffMemberListJSON ),
+				array( '1233', $worshipTeamMemberListJSON ),
+				array( '1234', $parishCouncilMemberListJSON ),
+			)));
+
+		// details of each person
+		$person1JSON = $this->buildPersonJSON( array(
+			'id' => '1234511',
+			'title' => 'Dr',
+			'firstName' => 'Billy',
+			'lastName' => 'Graham'
+		));
+		$this->assertNotNull( json_decode( $person1JSON ) );
+		$person2JSON = $this->buildPersonJSON( array(
+			'id' => '1234512',
+			'firstName' => 'Rick',
+			'lastName' => 'Warren'
+		));
+		$this->assertNotNull( json_decode( $person2JSON ) );
+		$person3JSON = $this->buildPersonJSON( array(
+			'id' => '1234521',
+			'firstName' => 'Jimmy',
+			'lastName' => 'Hand'
+		));
+		$this->assertNotNull( json_decode( $person3JSON ) );
+		$person4JSON = $this->buildPersonJSON( array(
+			'id' => '1234522',
+			'firstName' => 'Amy',
+			'lastName' => 'Grant'
+		));
+		$this->assertNotNull( json_decode( $person4JSON ) );
+		$person5JSON = $this->buildPersonJSON( array(
+			'id' => '1234531',
+			'title' => 'Mr',
+			'firstName' => 'Johnathan',
+			'lastName' => 'Doe',
+			'middleName' => 'Edward',
+			'goesByName' => 'John',
+			'suffix' => 'II'
+		));
+		$this->assertNotNull( json_decode( $person5JSON ) );
+		$person6JSON = $this->buildPersonJSON( array(
+			'id' => '1234532',
+			'title' => 'Mr',
+			'firstName' => 'Samuel',
+			'lastName' => 'Steward',
+			'middleName' => 'Joseph',
+			'goesByName' => 'Sam'
+		));
+		$this->assertNotNull( json_decode( $person6JSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPerson')
+			->will($this->returnValueMap(array(
+				array( 1234511, $person1JSON ), array( 1234512, $person2JSON ),
+				array( 1234521, $person3JSON ), array( 1234522, $person4JSON ),
+				array( 1234531, $person5JSON ), array( 1234532, $person6JSON ),
+				array( '1234511', $person1JSON ), array( '1234512', $person2JSON ),
+				array( '1234521', $person3JSON ), array( '1234522', $person4JSON ),
+				array( '1234531', $person5JSON ), array( '1234532', $person6JSON ),
+			)));
+
+		// add communications data for each person
+		$person1CommJSON = $this->buildCommunicationsJSON( '1234511', array(
+			array(
+				'id' => '12345111',
+				'type' => 'Home Phone',
+				'value' => '(01) 1111 1111',
+				'preferred' => true
+			),
+			array(
+				'id' => '12345112',
+				'type' => 'Email',
+				'value' => 'person1@test.com',
+				'preferred' => true
+			)
+		));
+		$this->assertNotNull( json_decode( $person1CommJSON ) );
+		$person2CommJSON = $this->buildCommunicationsJSON( '1234512', array(
+			array(
+				'id' => '12345121',
+				'type' => 'Mobile Phone',
+				'value' => '0400 111 121',
+				'preferred' => true
+			), array(
+				'id' => '12345122',
+				'type' => 'Home Email',
+				'value' => 'person2_home@test.com',
+				'preferred' => true
+			), array(
+				'id' => '12345123',
+				'type' => 'Facebook',
+				'value' => 'https://www.facebook.com/person2',
+				'preferred' => false
+			)
+		));
+		$this->assertNotNull( json_decode( $person2CommJSON ) );
+		$person3CommJSON = $this->buildCommunicationsJSON( '1234521', array(
+			array(
+				'id' => '12345211',
+				'type' => 'Mobile Phone',
+				'value' => '0400 111 211',
+				'preferred' => true
+			), array(
+				'id' => '12345212',
+				'type' => 'Work Phone',
+				'value' => '4299 1212',
+				'preferred' => false
+			), array(
+				'id' => '12345213',
+				'type' => 'Work Email',
+				'value' => 'person3_work@test.com',
+				'preferred' => true
+			), array(
+				'id' => '12345214',
+				'type' => 'Facebook',
+				'value' => 'https://www.facebook.com/person3',
+				'preferred' => false
+			), array(
+				'id' => '12345215',
+				'type' => 'Linkedin',
+				'value' => 'http://www.linkedin.com/in/person3',
+				'preferred' => false
+			), array(
+				'id' => '12345216',
+				'type' => 'Twitter',
+				'value' => 'https://twitter.com/person3',
+				'preferred' => false
+			)
+		));
+		$this->assertNotNull( json_decode( $person3CommJSON ) );
+		$person4CommJSON = $this->buildCommunicationsJSON( '1234522', array(
+			array(
+				'id' => '12345221',
+				'type' => 'Work Phone',
+				'value' => '4299 1221',
+				'preferred' => true
+			), array(
+				'id' => '12345222',
+				'type' => 'Email',
+				'value' => 'person4@test.com',
+				'preferred' => true
+			), array(
+				'id' => '12345123',
+				'type' => 'Linkedin',
+				'value' => 'https://www.linkedin.com/in/person4',
+				'preferred' => false
+			)
+		));
+		$this->assertNotNull( json_decode( $person4CommJSON ) );
+		$person5CommJSON = $this->buildCommunicationsJSON( '1234531', array(
+			array(
+				'id' => '12345311',
+				'type' => 'Home Phone',
+				'value' => '4299 1311',
+				'preferred' => false
+			), array(
+				'id' => '12345312',
+				'type' => 'Mobile Phone',
+				'value' => '0400 111 312',
+				'preferred' => true
+			), array(
+				'id' => '12345313',
+				'type' => 'Email',
+				'value' => 'person5@test.com',
+				'preferred' => true
+			), array(
+				'id' => '12345314',
+				'type' => 'Facebook',
+				'value' => 'https://www.facebook.com/person5',
+				'preferred' => false
+			), array(
+				'id' => '12345315',
+				'type' => 'Twitter',
+				'value' => 'https://twitter.com/person5',
+				'preferred' => false
+			)
+		));
+		$this->assertNotNull( json_decode( $person5CommJSON ) );
+		$person6CommJSON = $this->buildCommunicationsJSON( '1234532', array(
+			array(
+				'id' => '12345321',
+				'type' => 'Home Phone',
+				'value' => '(01) 4211 1321',
+				'preferred' => true
+			), array(
+				'id' => '12345322',
+				'type' => 'Mobile Phone',
+				'value' => '0400 111 322',
+				'preferred' => false
+			), array(
+				'id' => '12345323',
+				'type' => 'Email',
+				'value' => 'person6@test.com',
+				'preferred' => false
+			), array(
+				'id' => '12345324',
+				'type' => 'Home Email',
+				'value' => 'person6@home.com',
+				'preferred' => true
+			), array(
+				'id' => '12345325',
+				'type' => 'Facebook',
+				'value' => 'https://www.facebook.com/person6',
+				'preferred' => false
+			), array(
+				'id' => '12345326',
+				'type' => 'Linkedin',
+				'value' => 'https://www.linkedin.com/in/person6',
+				'preferred' => false
+			)
+		));
+		$this->assertNotNull( json_decode( $person6CommJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPersonCommunications')
+			->will($this->returnValueMap(array(
+				array( 1234511, $person1CommJSON ), array( 1234512, $person2CommJSON ),
+				array( 1234521, $person3CommJSON ), array( 1234522, $person4CommJSON ),
+				array( 1234531, $person5CommJSON ), array( 1234532, $person6CommJSON ),
+				array( '1234511', $person1CommJSON ), array( '1234512', $person2CommJSON ),
+				array( '1234521', $person3CommJSON ), array( '1234522', $person4CommJSON ),
+				array( '1234531', $person5CommJSON ), array( '1234532', $person6CommJSON ),
+			)));
+
+		// add attributes for position, with attribute name being 'Church Position'
+		$person1AttrJSON = $this->buildPersonAttributesJSON( '1234511', array(
+			array(
+				'id' => '12345111',
+				'group-id' => '112',
+				'group-attr-id' => '1121',
+				'group-name' => 'Not Church Position',
+				'attr-name' => 'Some other attribute'
+			), array(
+				'id' => '12345112',
+				'group-id' => '111',
+				'group-attr-id' => '1111',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Senior Minister'
+			),
+		));
+		$this->assertNotNull( json_decode( $person1AttrJSON ) );
+		$person2AttrJSON = $this->buildPersonAttributesJSON( '1234512', array(
+			array(
+				'id' => '12345121',
+				'group-id' => '111',
+				'group-attr-id' => '1112',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Assistant Minister'
+			)
+		));
+		$this->assertNotNull( json_decode( $person2AttrJSON ) );
+		$person3AttrJSON = $this->buildPersonAttributesJSON( '1234521', array(
+			array(
+				'id' => '12345211',
+				'group-id' => '111',
+				'group-attr-id' => '1113',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Worship Leader'
+			)
+		));
+		$this->assertNotNull( json_decode( $person3AttrJSON ) );
+		$person4AttrJSON = $this->buildPersonAttributesJSON( '1234522', array(
+			array(
+				'id' => '12345221',
+				'group-id' => '111',
+				'group-attr-id' => '1114',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Vocalist'
+			)
+		));
+		$this->assertNotNull( json_decode( $person4AttrJSON ) );
+		$person5AttrJSON = $this->buildPersonAttributesJSON( '1234531', array(
+			array(
+				'id' => '12345311',
+				'group-id' => '111',
+				'group-attr-id' => '1115',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Parish Councillor'
+			), array(
+				'id' => '12345321',
+				'group-id' => '211',
+				'group-attr-id' => '2111',
+				'group-name' => 'Another Attribute Group',
+				'attr-name' => 'Another Attribute'
+			)
+		));
+		$this->assertNotNull( json_decode( $person5AttrJSON ) );
+		$person6AttrJSON = $this->buildPersonAttributesJSON( '1234532', array(
+			array(
+				'id' => '12345321',
+				'group-id' => '111',
+				'group-attr-id' => '1115',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Parish Councillor'
+			)
+		));
+		$this->assertNotNull( json_decode( $person6AttrJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPersonAttributes')
+			->will($this->returnValueMap(array(
+				array( 1234511, $person1AttrJSON ), array( 1234512, $person2AttrJSON ),
+				array( 1234521, $person3AttrJSON ), array( 1234522, $person4AttrJSON ),
+				array( 1234531, $person5AttrJSON ), array( 1234532, $person6AttrJSON ),
+				array( '1234511', $person1AttrJSON ), array( '1234512', $person2AttrJSON ),
+				array( '1234521', $person3AttrJSON ), array( '1234522', $person4AttrJSON ),
+				array( '1234531', $person5AttrJSON ), array( '1234532', $person6AttrJSON ),
+			)));
+
+
+		/*********************
+		 *
+		 *      Act
+		 *
+		 *********************/
+		try {
+			$this->sutF1PeopleDataProvider->setupForPeopleSync();
+		} catch ( Exception $e ) {
+			/** @noinspection PhpUnusedLocalVariableInspection */
+			$x = 'stop';
+			throw $e;
+		}
+
+		$groups = $this->sutF1PeopleDataProvider->getGroups();
+		$people = $this->sutF1PeopleDataProvider->getPeople();
+
+		// assert groups
+		$this->assertInternalType( 'array', $groups );
+		$this->assertCount( 3, $groups );
+		// group 1
+		$this->assertArrayHasKey( 1231, $groups );
+		$group = $groups[ 1231 ];
+		$this->assertInstanceOf( 'CTCI_PeopleGroupInterface', $group );
+		$this->assertEquals( 1231, $group->id() );
+		$this->assertEquals( 'Staff', $group->getName() );
+		$this->assertEquals( 'All full-time staff', $group->getDescription() );
+		// group 2
+		$this->assertArrayHasKey( 1233, $groups );
+		$group = $groups[ 1233 ];
+		$this->assertInstanceOf( 'CTCI_PeopleGroupInterface', $group );
+		$this->assertEquals( 1233, $group->id() );
+		$this->assertEquals( 'Worship Team', $group->getName() );
+		$this->assertEmpty( $group->getDescription() );
+		// group 3
+		$this->assertArrayHasKey( 1234, $groups );
+		$group = $groups[ 1234 ];
+		$this->assertInstanceOf( 'CTCI_PeopleGroupInterface', $group );
+		$this->assertEquals( 1234, $group->id() );
+		$this->assertEquals( 'Parish Council', $group->getName() );
+		$this->assertEquals( 'Members of the parish council, who are responsible for administrative decisions.', $group->getDescription() );
+
+		$this->assertInternalType( 'array', $people );
+		$this->assertCount( 6, $people );
+		$this->assertArrayHasKey( 1234511, $people );
+		$this->assertArrayHasKey( 1234512, $people );
+		$this->assertArrayHasKey( 1234521, $people );
+		$this->assertArrayHasKey( 1234522, $people );
+		$this->assertArrayHasKey( 1234531, $people );
+		$this->assertArrayHasKey( 1234532, $people );
+
+		// assert person 1
+		$person1 = $people[1234511];
+		$this->assertInstanceOf( 'CTCI_PersonInterface', $person1 );
+		$this->assertEquals( 1234511, $person1->id() );
+		$this->assertEquals( 'Dr Billy Graham', $person1->getName( 'T F L' ) );
+		$this->assertEquals( 'Senior Minister', $person1->getPosition() );
+		$this->assertTrue( $person1->syncPosition() );
+		$this->assertEquals( '(01) 1111 1111', $person1->getPhone() );
+		$this->assertTrue( $person1->syncPhone() );
+		$this->assertEquals( 'person1@test.com', $person1->getEmail() );
+		$this->assertTrue( $person1->syncEmail() );
+		$this->assertEmpty( $person1->getURLs() );
+		$person1Groups = $person1->getGroups();
+		$this->assertCount( 1, $person1Groups );
+		$firstGroup = reset( $person1Groups );
+		$this->assertEquals( 1231, $firstGroup->id() );
+
+		// assert person 2
+		$person2 = $people[1234512];
+		$this->assertInstanceOf( 'CTCI_PersonInterface', $person2 );
+		$this->assertEquals( 1234512, $person2->id() );
+		$this->assertEquals( 'Rick Warren', $person2->getName( 'F L' ) );
+		$this->assertEquals( 'Assistant Minister', $person2->getPosition() );
+		$this->assertTrue( $person2->syncPosition() );
+		$this->assertEquals( '0400 111 121', $person2->getPhone() );
+		$this->assertTrue( $person2->syncPhone() );
+		$this->assertEquals( 'person2_home@test.com', $person2->getEmail() );
+		$this->assertTrue( $person2->syncEmail() );
+		$this->assertEquals( "https://www.facebook.com/person2", $person2->getFacebookURL() );
+		$this->assertTrue( $person2->syncFacebookURL() );
+		$this->assertEmpty( $person2->getTwitterURL() );
+		$this->assertEmpty( $person2->getLinkedInURL() );
+		$person2Groups = $person2->getGroups();
+		$this->assertCount( 1, $person2Groups );
+		$firstGroup = reset( $person2Groups );
+		$this->assertEquals( 1231, $firstGroup->id() );
+
+		// assert person 3
+		$person3 = $people[1234521];
+		$this->assertInstanceOf( 'CTCI_PersonInterface', $person3 );
+		$this->assertEquals( 1234521, $person3->id() );
+		$this->assertEquals( 'Jimmy Hand', $person3->getName( 'F L' ) );
+		$this->assertEquals( 'Worship Leader', $person3->getPosition() );
+		$this->assertTrue( $person3->syncPosition() );
+		$this->assertEquals( '0400 111 211', $person3->getPhone() );
+		$this->assertTrue( $person3->syncPhone() );
+		$this->assertEquals( 'person3_work@test.com', $person3->getEmail() );
+		$this->assertTrue( $person3->syncEmail() );
+		$this->assertEquals( "https://www.facebook.com/person3", $person3->getFacebookURL() );
+		$this->assertTrue( $person3->syncFacebookURL() );
+		$this->assertEquals( "https://twitter.com/person3", $person3->getTwitterURL() );
+		$this->assertTrue( $person3->syncTwitterURL() );
+		$this->assertEquals( "http://www.linkedin.com/in/person3", $person3->getLinkedInURL() );
+		$this->assertTrue( $person3->syncLinkedInURL() );
+		$person3Groups = $person3->getGroups();
+		$this->assertCount( 1, $person3Groups );
+		$firstGroup = reset( $person3Groups );
+		$this->assertEquals( 1233, $firstGroup->id() );
+
+		// assert person 4
+		$person4 = $people[1234522];
+		$this->assertInstanceOf( 'CTCI_PersonInterface', $person4 );
+		$this->assertEquals( 1234522, $person4->id() );
+		$this->assertEquals( 'Amy Grant', $person4->getName( 'F L' ) );
+		$this->assertEquals( 'Vocalist', $person4->getPosition() );
+		$this->assertTrue( $person4->syncPosition() );
+		$this->assertEquals( '4299 1221', $person4->getPhone() );
+		$this->assertTrue( $person4->syncPhone() );
+		$this->assertEquals( 'person4@test.com', $person4->getEmail() );
+		$this->assertTrue( $person4->syncEmail() );
+		$this->assertEmpty( $person4->getFacebookURL() );
+		$this->assertEmpty( $person4->getTwitterURL() );
+		$this->assertEquals( "https://www.linkedin.com/in/person4", $person4->getLinkedInURL() );
+		$this->assertTrue( $person4->syncLinkedInURL() );
+		$person4Groups = $person4->getGroups();
+		$this->assertCount( 1, $person4Groups );
+		$firstGroup = reset( $person4Groups );
+		$this->assertEquals( 1233, $firstGroup->id() );
+
+		// assert person 5
+		$person5 = $people[1234531];
+		$this->assertInstanceOf( 'CTCI_PersonInterface', $person5 );
+		$this->assertEquals( 1234531, $person5->id() );
+		$this->assertEquals( 'Mr Johnathan "John" Edward Doe II', $person5->getName( 'T FQ M L S' ) );
+		$this->assertEquals( 'Parish Councillor', $person5->getPosition() );
+		$this->assertTrue( $person5->syncPosition() );
+		$this->assertEquals( '0400 111 312', $person5->getPhone() );
+		$this->assertTrue( $person5->syncPhone() );
+		$this->assertEquals( 'person5@test.com', $person5->getEmail() );
+		$this->assertTrue( $person5->syncEmail() );
+		$this->assertEquals( 'https://www.facebook.com/person5', $person5->getFacebookURL() );
+		$this->assertTrue( $person5->syncFacebookURL() );
+		$this->assertEmpty( $person5->getLinkedInURL() );
+		$this->assertEquals( "https://twitter.com/person5", $person5->getTwitterURL() );
+		$this->assertTrue( $person5->syncTwitterURL() );
+		$person5Groups = $person5->getGroups();
+		$this->assertCount( 1, $person5Groups );
+		$firstGroup = reset( $person5Groups );
+		$this->assertEquals( 1234, $firstGroup->id() );
+
+		// assert person 6
+		$person6 = $people[1234532];
+		$this->assertInstanceOf( 'CTCI_PersonInterface', $person6 );
+		$this->assertEquals( 1234532, $person6->id() );
+		$this->assertEquals( 'Mr Samuel "Sam" Joseph Steward', $person6->getName( 'T FQ M L' ) );
+		$this->assertEquals( 'Parish Councillor', $person6->getPosition() );
+		$this->assertTrue( $person6->syncPosition() );
+		$this->assertEquals( '(01) 4211 1321', $person6->getPhone() );
+		$this->assertTrue( $person6->syncPhone() );
+		$this->assertEquals( 'person6@home.com', $person6->getEmail() );
+		$this->assertTrue( $person6->syncEmail() );
+		$this->assertEquals( 'https://www.facebook.com/person6', $person6->getFacebookURL() );
+		$this->assertTrue( $person6->syncFacebookURL() );
+		$this->assertEmpty( $person6->getTwitterURL() );
+		$this->assertEquals( "https://www.linkedin.com/in/person6", $person6->getLinkedInURL() );
+		$this->assertTrue( $person6->syncLinkedInURL() );
+		$person6Groups = $person6->getGroups();
+		$this->assertCount( 1, $person6Groups );
+		$firstGroup = reset( $person6Groups );
+		$this->assertEquals( 1234, $firstGroup->id() );
+
+	}
+
 	protected function buildPeopleListsJSON( $lists ) {
 		$json = '{"peopleLists":{"peopleList":[';
 		foreach ( $lists as $list ) {
