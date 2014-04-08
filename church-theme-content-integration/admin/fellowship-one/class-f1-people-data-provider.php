@@ -61,13 +61,14 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 	}
 
 	protected function retrievePeopleData() {
-		// TODO: look at handling provider errors more closely
 		$peopleListsToSync = $this->settings->getF1PeopleLists();
 		$this->authClient->json();
+
 		$peopleLists = json_decode( $this->authClient->getPeopleLists() );
 		if ( null === $peopleLists ) {
 			throw new CTCI_JSONDecodeException;
 		}
+
 		foreach ( $peopleLists->peopleLists->peopleList as $peopleList ) {
 			if ( in_array( $peopleList->name, $peopleListsToSync ) ) {
 				$this->logger->info( 'Processing List: ' . $peopleList->name );
@@ -80,7 +81,8 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					$peopleList->description
 				);
 				$this->groups[ $peopleList->{'@id'} ] = $currGroup;
-					// scan for members
+
+				// scan for members
 				$members = json_decode( $this->authClient->getPeopleListMembers( $peopleList->{'@id'} ) );
 				if ( null === $members ) {
 					throw new CTCI_JSONDecodeException;
@@ -136,8 +138,7 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					}
 
 					// position attribute...
-					$attributeData = $this->authClient->getPersonAttributes( $personId );
-					$attributeData = json_decode( $attributeData );
+					$attributeData = json_decode( $this->authClient->getPersonAttributes( $personId ) );
 					if ( null === $attributeData ) {
 						throw new CTCI_JSONDecodeException;
 					}
@@ -158,8 +159,7 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					}
 
 					// communication details...
-					$communicationsData = $this->authClient->getPersonCommunications( $personId );
-					$communicationsData = json_decode( $communicationsData );
+					$communicationsData = json_decode( $this->authClient->getPersonCommunications( $personId ) );
 					if ( null === $communicationsData ) {
 						throw new CTCI_JSONDecodeException;
 					}
