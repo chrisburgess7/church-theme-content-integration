@@ -63,8 +63,6 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 	protected function retrievePeopleData() {
 		// TODO: look at handling provider errors more closely
 		$peopleListsToSync = $this->settings->getF1PeopleLists();
-		// maintain an internal list of groups here, indexed by name for easy list searching
-		//$groupList = array();
 		$this->authClient->json();
 		$peopleLists = json_decode( $this->authClient->getPeopleLists() );
 		if ( null === $peopleLists ) {
@@ -90,12 +88,16 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 				foreach ( $members->members->member as $member ) {
 					// note, there is a member id, and a person id. We want the person id.
 					$personId = $member->person->{'@id'};
+
+					// this person might have already been added if they are a member of another
+					// people list already processed.
 					if ( isset( $this->people[ $personId ] ) ) {
-						// this person might have already been added if they are a member of another
-						// people list already processed.
-						$this->people[ $personId ]->addGroup( $currGroup );
+						if ( $this->syncGroups() ) {
+							$this->people[ $personId ]->addGroup( $currGroup );
+						}
 						continue;
 					}
+
 					$personData = $this->authClient->getPerson( $personId );
 					$personData = json_decode( $personData );
 					if ( null === $personData ) {
@@ -103,10 +105,14 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					}
 					$personData = $personData->person;
 					$person = new CTCI_Person( $this->getProviderPersonTag(), $personData->{'@id'} );
+
+					// handle setting of name format, currently this is a global setting applied to
+					// every one. Change to individual setting on each person?
 					$nameFormat = $this->settings->f1NameFormat();
 					if ( ! empty( $nameFormat ) ) {
 						$person->setNameFormat( $nameFormat );
 					}
+
 					if ( ! empty( $personData->title ) ) {
 						$person->setTitle( $personData->title );
 					}
@@ -190,8 +196,11 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 						}
 					}
 
-					// add to current group
-					$person->addGroup( $currGroup );
+					// add to current group if syncing groups
+					if ( $this->syncGroups() ) {
+						$person->addGroup( $currGroup );
+					}
+
 					$this->people[ $person->id() ] = $person;
 				}
 			}
@@ -206,8 +215,6 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 	}
 
 	/**
-	 * Return the groups defined in the data provider in the form of an array, where each element is an
-	 * array containing 'id' and 'name'.
 	 * @return CTCI_PeopleGroupInterface[]
 	 */
 	public function getGroups() {
