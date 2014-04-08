@@ -41,7 +41,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	}
 
 	public function setDataProvider( CTCI_DataProviderInterface $dataProvider ) {
-		if ( $dataProvider->isProviderFor( self::getTag() ) ) {
+		if ( $dataProvider->isDataProviderFor( self::getTag() ) ) {
 			$peopleDataProvider = $dataProvider->getDataProviderFor( self::getTag() );
 			if ( $peopleDataProvider instanceof CTCI_PeopleDataProviderInterface ) {
 				$this->dataProvider = $dataProvider;
@@ -151,7 +151,6 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	protected function updateGroups( CTCI_PeopleDataProviderInterface $dataProvider ) {
 		$groups = $dataProvider->getGroups();
 
-		// attached ctc groups not in groups list?
 		$attachedCTCGroups = $this->wpal->getCTCGroupsAttachedViaProvider( $dataProvider->getProviderPersonTag() );
 
 		// for all attached CTC groups

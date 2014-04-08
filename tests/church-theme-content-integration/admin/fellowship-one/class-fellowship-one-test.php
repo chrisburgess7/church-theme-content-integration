@@ -184,7 +184,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	 * @param bool $result
 	 */
 	public function testIsProviderFor( $tag, $result = true ) {
-		$this->assertEquals( $result, $this->sut->isProviderFor( $tag ) );
+		$this->assertEquals( $result, $this->sut->isDataProviderFor( $tag ) );
 	}
 
 	public static function getDataProviderForData() {

@@ -410,7 +410,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		return $success;
 	}
 
-	public function isProviderFor( $operation ) {
+	public function isDataProviderFor( $operation ) {
 		switch ( $operation ) {
 			case CTCI_PeopleSync::getTag():
 				return true;

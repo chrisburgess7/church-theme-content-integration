@@ -398,7 +398,7 @@ class Church_Theme_Content_Integration {
 	public function load_run_actions() {
 		foreach ( $this->dataProviders as $dataProvider ) {
 			foreach ( $this->operationTypes as $operation ) {
-				if ( $dataProvider->isProviderFor( $operation::getTag() ) ) {
+				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
 					$process = new CTCI_ModuleProcess( $this->logger );
 					$process->addDataProvider( $dataProvider );
 					$operationInstance = clone $operation;
@@ -566,7 +566,7 @@ class Church_Theme_Content_Integration {
 		// for each data provider, create an enable button for each function it supports
 		foreach ( $this->dataProviders as $dataProvider ) {
 			foreach ( $this->operationTypes as $operation ) {
-				if ( $dataProvider->isProviderFor( $operation::getTag() ) ) {
+				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
 					$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
 					$this->enableModuleFieldNames[] = $fieldName;
 					add_settings_field(

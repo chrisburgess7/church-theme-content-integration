@@ -42,7 +42,7 @@ interface CTCI_DataProviderInterface {
 
 	public function authenticate();
 
-	public function isProviderFor( $operation );
+	public function isDataProviderFor( $operation );
 
 	/**
 	 * When each operation is running, it calls this method to retrieve the data provider for the specific operation.
