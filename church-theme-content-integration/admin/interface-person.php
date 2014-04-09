@@ -56,6 +56,10 @@ interface CTCI_PersonInterface {
 	 */
 	public function setNameSuffix( $value = '' );
 
+	/**
+	 * @param string $format
+	 * @return self
+	 */
 	public function setNameFormat( $format = 'F L' );
 
 	public function getName( $format = '' );

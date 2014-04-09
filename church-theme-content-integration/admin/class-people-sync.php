@@ -62,6 +62,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	public function run() {
 
 		// TODO: think through error handling
+		// TODO: internationalisation of messages
 		$this->logger->info( 'Starting People Sync...' );
 
 		$dataProvider = $this->peopleDataProvider;
@@ -233,7 +234,8 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		$unattachedCTCPeople = $this->wpal->getUnattachedCTCPeople();
 
 		foreach ( $unattachedCTCPeople as $unattachedCTCPerson ) {
-			// if email is blank?? what's the odds of a name conflict?
+			// if email is blank?? what's the odds of a name conflict??
+			// note this will only match if the name format setting matches the name format in the existing CTC person
 			if ( $person->getEmail() === $unattachedCTCPerson->getEmail() &&
 				$person->getName() === $unattachedCTCPerson->getName()
 			) {
