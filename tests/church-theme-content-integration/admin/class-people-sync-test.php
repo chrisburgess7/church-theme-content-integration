@@ -315,6 +315,193 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 
 	}
 
+    public function testRun_4NewPeople_2NewGroups_SyncGroupsFalse() {
+        $this->peopleDataProviderMock
+            ->expects( $this->any() )
+            ->method('syncGroups')
+            ->will( $this->returnValue( false ) );
+
+        /**
+         * updateGroups
+         */
+
+        // new groups
+        $group1 = new CTCI_PeopleGroup( 'f1', 1, 'Group 1', 'desc' );
+        $group2 = new CTCI_PeopleGroup( 'f1', 2, 'Group 2', 'desc' );
+
+        $this->peopleDataProviderMock
+            ->expects( $this->never() )
+            ->method('getGroups');
+
+        // no existing CTC groups attached to the service provider
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('getCTCGroupsAttachedViaProvider');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('deleteCTCGroup');
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('unattachCTCGroup');
+
+        // 1 existing unattached group to match
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('getUnattachedCTCGroups');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('attachCTCGroup');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('updateCTCGroup');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('createAttachedCTCGroup');
+
+        /**
+         * Update people section
+         */
+
+        /** @var CTCI_PersonInterface[] $people */
+        $people = array(
+            1 => new CTCI_Person( 'f1', 1 ),
+            2 => new CTCI_Person( 'f1', 2 ),
+            3 => new CTCI_Person( 'f1', 3 ),
+            4 => new CTCI_Person( 'f1', 4 )
+        );
+        $ctcPeople = array();
+        foreach ( $people as $person ) {
+            $person
+                ->setNameFormat('F L')
+                ->setFirstName( 'Person' )
+                ->setLastName( $person->id() )
+                ->setEmail( 'person' . $person->id() . '@test.com' );
+
+            $ctcPerson = new CTCI_CTCPerson();
+            $ctcPerson->setId( $person->id() );
+            $ctcPerson->setName( $person->getName() );
+            $ctcPerson->setEmail( $person->getEmail() );
+            $ctcPeople[ $person->id() ] = $ctcPerson;
+        }
+        // and add each person to a group
+        $people['1']->addGroup( $group1 );
+        $people['2']->addGroup( $group2 );
+        $people['3']->addGroup( $group1 );
+        $people['4']->addGroup( $group2 );
+
+        $this->peopleDataProviderMock
+            ->expects( $this->once() )
+            ->method('getPeople')
+            ->will( $this->returnValue( $people ) );
+
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method('getCTCPeopleAttachedViaProvider')
+            ->with( $this->equalTo('f1') )
+            ->will( $this->returnValue( array() ) );
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method( 'unattachCTCPerson' );
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method( 'deleteCTCPerson' );
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method( 'unpublishCTCPerson' );
+
+        // person 2 we'll setup to be attached to existing
+        $ctcPersonUnrelated = new CTCI_CTCPerson();
+        $ctcPersonUnrelated->setName( 'Unrelated Person' );
+        $ctcPerson2 = $ctcPeople[2];
+        $call_getUnattachedCTCPeople = 1;
+        $this->wpalMock
+            ->expects( $this->exactly(4) )
+            ->method('getUnattachedCTCPeople')
+            ->will( $this->returnCallback( function() use ( $call_getUnattachedCTCPeople, $ctcPerson2, $ctcPersonUnrelated ) {
+                if ( $call_getUnattachedCTCPeople <= 2 ) {
+                    // return ctc person 2 as existing unattached
+                    return array( $ctcPerson2, $ctcPersonUnrelated );
+                } else {
+                    // on the remaining calls, ctc person 2 has been attached, so should no longer be returned as unattached
+                    return array( $ctcPersonUnrelated );
+                }
+            }));
+
+        // set up the one call to attach for person 2
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method( 'attachCTCPerson' )
+            ->with( $this->equalTo( $ctcPeople[2] ), $this->equalTo( $people['2'] ) )
+            ->will( $this->returnValue( true ) );
+
+        /* protected function syncCTCPerson */
+
+        // the calls for person 2 who is attached to existing CTC person
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method('updateCTCPerson')
+            ->with( $this->equalTo( $ctcPerson2 ) );
+
+        /* protected createNewCTCPerson */
+
+        // check that createAttachedCTCPerson called on both person 1 and 3
+        $expArguments_createAttachedCTCPerson = array( $people['1'], $people['3'], $people['4'] );
+        $ctcPerson1 = $ctcPeople[1];
+        $ctcPerson3 = $ctcPeople[3];
+        $ctcPerson4 = $ctcPeople[4];
+        $badArg_createAttachedCTCPerson = false;
+        $this->wpalMock
+            ->expects( $this->exactly(3) )
+            ->method('createAttachedCTCPerson')
+            ->with( $this->logicalOr(
+                $this->equalTo( $people['1'] ),
+                $this->equalTo( $people['3'] ),
+                $this->equalTo( $people['4'] )
+            ))->will( $this->returnCallback(
+                function( CTCI_PersonInterface $param ) use (
+                    &$expArguments_createAttachedCTCPerson,
+                    $ctcPerson1,
+                    $ctcPerson3,
+                    $ctcPerson4,
+                    &$badArg_createAttachedCTCPerson
+                ) {
+                    if(($key = array_search($param, $expArguments_createAttachedCTCPerson)) !== false) {
+                        unset($expArguments_createAttachedCTCPerson[$key]); // remove the param to test that all arguments are called with
+                    }
+                    // the method creates a ctc person object and returns it
+                    if ( $param->id() === 1 ) {
+                        return $ctcPerson1;
+                    } elseif ( $param->id() === 3 ) {
+                        return $ctcPerson3;
+                    } elseif ( $param->id() === 4 ) {
+                        return $ctcPerson4;
+                    } else {
+                        $badArg_createAttachedCTCPerson = true;
+                        return null;
+                    }
+                }
+            ));
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('setCTCPersonsGroups');
+
+        /**
+         * Act!
+         */
+        $this->sutPeopleSync->run();
+
+        // assert expected argument arrays are empty
+        $this->assertFalse( $badArg_createAttachedCTCPerson, 'createAttachedCTCPerson called with bad argument' );
+        $this->assertEmpty( $expArguments_createAttachedCTCPerson );
+
+    }
+
 	public function testRun_3ExistingPeople1New_2ExistingGroups_SyncGroupsTrue() {
 		$this->peopleDataProviderMock
 			->expects( $this->any() )
