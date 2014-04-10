@@ -90,13 +90,10 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			$dpId = $this->wpal->getAttachedPersonId( $ctcPerson );
 
 			// if the CTC person is attached there should be an associated id no. for the attached record
-			// in the data provider. If that is not so, something has gone wrong, so we quit before more
-			// damage is potentially done...
+			// in the data provider. If that is not so, something has gone wrong...
 			if ( $dpId === '' ) {
-				// todo: it would be better if we simply logged this issue, then continued immediately on to
-				// the next person
-				//throw new CTCI_NoProviderIdForAttachedCTCPerson( $ctcPerson );
-				$this->logger->warning( sprintf( 'Attach Id for person: %s could not be retrieved. Skipping person.', $ctcPerson->getName() ) );
+				$this->logger->warning( sprintf( 'Person %s could not be synced. Couldn\'t retrieve service provider id.', $ctcPerson->getName() ) );
+				continue;
 			}
 
 			if ( isset( $people[ $dpId ] ) ) {
