@@ -169,10 +169,10 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 			$ctcPeople[ $person->id() ] = $ctcPerson;
 		}
 		// and add each person to a group
-		$people[1]->addGroup( $group1 );
-		$people[2]->addGroup( $group2 );
-		$people[3]->addGroup( $group1 );
-		$people[4]->addGroup( $group2 );
+		$people['1']->addGroup( $group1 );
+		$people['2']->addGroup( $group2 );
+		$people['3']->addGroup( $group1 );
+		$people['4']->addGroup( $group2 );
 
 		$this->peopleDataProviderMock
 			->expects( $this->once() )
@@ -217,7 +217,7 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 		$this->wpalMock
 			->expects( $this->once() )
 			->method( 'attachCTCPerson' )
-			->with( $this->equalTo( $ctcPeople[2] ), $this->equalTo( $people[2] ) )
+			->with( $this->equalTo( $ctcPeople[2] ), $this->equalTo( $people['2'] ) )
 			->will( $this->returnValue( true ) );
 
 		/* protected function syncCTCPerson */
@@ -231,7 +231,7 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 		/* protected createNewCTCPerson */
 
 		// check that createAttachedCTCPerson called on both person 1 and 3
-		$expArguments_createAttachedCTCPerson = array( $people[1], $people[3], $people[4] );
+		$expArguments_createAttachedCTCPerson = array( $people['1'], $people['3'], $people['4'] );
 		$ctcPerson1 = $ctcPeople[1];
 		$ctcPerson3 = $ctcPeople[3];
 		$ctcPerson4 = $ctcPeople[4];
@@ -240,9 +240,9 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 			->expects( $this->exactly(3) )
 			->method('createAttachedCTCPerson')
 			->with( $this->logicalOr(
-				$this->equalTo( $people[1] ),
-				$this->equalTo( $people[3] ),
-				$this->equalTo( $people[4] )
+				$this->equalTo( $people['1'] ),
+				$this->equalTo( $people['3'] ),
+				$this->equalTo( $people['4'] )
 			))->will( $this->returnCallback(
 				function( CTCI_PersonInterface $param ) use (
 					&$expArguments_createAttachedCTCPerson,
@@ -282,10 +282,10 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 				$this->equalTo( $ctcPeople[3] ),
 				$this->equalTo( $ctcPeople[4] )
 			), $this->logicalOr(
-				$this->equalTo( $people[1]->getGroups() ),
-				$this->equalTo( $people[2]->getGroups() ),
-				$this->equalTo( $people[3]->getGroups() ),
-				$this->equalTo( $people[4]->getGroups() )
+				$this->equalTo( $people['1']->getGroups() ),
+				$this->equalTo( $people['2']->getGroups() ),
+				$this->equalTo( $people['3']->getGroups() ),
+				$this->equalTo( $people['4']->getGroups() )
 			) )->will( $this->returnCallback(
 				function( CTCI_CTCPersonInterface $param1, $param2 )
 					use ( &$expArguments_setCTCPersonsGroups, &$argumentMismatch_setCTCPersonsGroups, $people ) {
@@ -311,6 +311,226 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse( $badArg_createAttachedCTCPerson, 'createAttachedCTCPerson called with bad argument' );
 		$this->assertEmpty( $expArguments_createAttachedCTCPerson );
 		$this->assertEmpty( $expArguments_setCTCPersonsGroups );
+		$this->assertFalse( $argumentMismatch_setCTCPersonsGroups );
+
+	}
+
+	public function testRun_3ExistingPeople1New_2ExistingGroups_SyncGroupsTrue() {
+		$this->peopleDataProviderMock
+			->expects( $this->any() )
+			->method('syncGroups')
+			->will( $this->returnValue( true ) );
+
+		/**
+		 * updateGroups
+		 */
+
+		// new groups
+		$group1 = new CTCI_PeopleGroup( 'f1', 1, 'Group 1', 'desc' );
+		$group2 = new CTCI_PeopleGroup( 'f1', 2, 'Group 2', 'desc' );
+		$this->peopleDataProviderMock
+			->expects( $this->once() )
+			->method('getGroups')
+			->will( $this->returnValue( array(
+				1 => $group1,
+				2 => $group2,
+			)));
+
+		$ctcGroup1 = new CTCI_CTCGroup( 11, 'Group 1', 'desc' );
+		$ctcGroup1->setAttachedGroup( 'f1', 1 );
+		$ctcGroup2 = new CTCI_CTCGroup( 12, 'Group 2', 'desc' );
+		$ctcGroup2->setAttachedGroup( 'f1', 2 );
+
+		// both groups exist and are attached to the service provider
+		$this->wpalMock
+			->expects( $this->once() )
+			->method('getCTCGroupsAttachedViaProvider')
+			->with( 'f1' )
+			->will( $this->returnValue( array( $ctcGroup1, $ctcGroup2 ) ) );
+
+		// check the arguments called on updateCTCGroup
+		$expectedArguments_updateCTCGroup = array( $ctcGroup1, $ctcGroup2 );
+		$this->wpalMock
+			->expects( $this->exactly(2) )
+			->method('updateCTCGroup')
+			->with( $this->logicalOr( $ctcGroup1, $ctcGroup2 ), $this->logicalOr( $group1, $group2 ) )
+			->will( $this->returnCallback(
+				function( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group ) use (
+					&$expectedArguments_updateCTCGroup
+				) {
+					if(($key = array_search($ctcGroup, $expectedArguments_updateCTCGroup)) !== false) {
+						// remove the param to test that all arguments are called with
+						unset($expectedArguments_updateCTCGroup[$key]);
+					}
+					if ( ( $ctcGroup->id() !== 11 && $ctcGroup->id() !== 12 ) ||
+						( $ctcGroup->id() === 11 && $group->id() !== 1 ) ||
+						( $ctcGroup->id() === 12 && $group->id() !== 2 ) ) {
+						throw new Exception( 'updateCTCGroup called with incorrect arguments' );
+					}
+				}
+			));
+
+		$this->wpalMock
+			->expects( $this->never() )
+			->method('deleteCTCGroup');
+		$this->wpalMock
+			->expects( $this->never() )
+			->method('unattachCTCGroup');
+
+		$this->wpalMock
+			->expects( $this->never() )
+			->method('getUnattachedCTCGroups');
+
+		$this->wpalMock
+			->expects( $this->never() )
+			->method('attachCTCGroup');
+
+		$this->wpalMock
+			->expects( $this->never() )
+			->method('createAttachedCTCGroup');
+
+		/**
+		 * Update people section
+		 */
+
+		/** @var CTCI_PersonInterface[] $people */
+		$people = array(
+			'1' => new CTCI_Person( 'f1', 1 ),
+			'2' => new CTCI_Person( 'f1', 2 ),
+			'3' => new CTCI_Person( 'f1', 3 ),
+			'4' => new CTCI_Person( 'f1', 4 ) // we'll call this the new person
+		);
+		$ctcPeople = array();
+		foreach ( $people as $person ) {
+			$person
+				->setNameFormat('F L')
+				->setFirstName( 'Person' )
+				->setLastName( $person->id() )
+				->setEmail( 'person' . $person->id() . '@test.com' );
+
+			$ctcPerson = new CTCI_CTCPerson();
+			$ctcPerson->setId( $person->id() );
+			$ctcPerson->setName( $person->getName() );
+			$ctcPerson->setEmail( $person->getEmail() );
+			$ctcPeople[ $person->id() ] = $ctcPerson;
+		}
+		// and add each person to a group
+		$people['1']->addGroup( $group1 );
+		$people['2']->addGroup( $group2 );
+		$people['3']->addGroup( $group2 );
+		$people['4']->addGroup( $group1 );
+
+		$this->peopleDataProviderMock
+			->expects( $this->once() )
+			->method('getPeople')
+			->will( $this->returnValue( $people ) );
+
+		$this->wpalMock
+			->expects( $this->once() )
+			->method('getCTCPeopleAttachedViaProvider')
+			->with( $this->equalTo('f1') )
+			->will( $this->returnValue( array( $ctcPeople['1'], $ctcPeople['2'], $ctcPeople['3'] ) ) );
+
+		$this->wpalMock
+			->expects( $this->exactly(3) )
+			->method('getAttachedPersonId')
+			->will( $this->returnValueMap( array(
+				array( $ctcPeople[1], '1' ),
+				array( $ctcPeople[2], '2' ),
+				array( $ctcPeople[3], '3' ),
+			)));
+
+		// check setCTCPersonsGroups called on ctc people 1, 2, 3
+		// called in syncCTCPerson
+		$expArguments_setCTCPersonsGroups = $ctcPeople;
+		$argumentMismatch_setCTCPersonsGroups = false;
+		$this->wpalMock
+			->expects( $this->exactly(4) )
+			->method('setCTCPersonsGroups')
+			->with( $this->logicalOr(
+				$this->equalTo( $ctcPeople[1] ),
+				$this->equalTo( $ctcPeople[2] ),
+				$this->equalTo( $ctcPeople[3] ),
+				$this->equalTo( $ctcPeople[4] )
+			), $this->logicalOr(
+				$this->equalTo( $people['1']->getGroups() ),
+				$this->equalTo( $people['2']->getGroups() ),
+				$this->equalTo( $people['3']->getGroups() ),
+				$this->equalTo( $people['4']->getGroups() )
+			) )->will( $this->returnCallback(
+				function( CTCI_CTCPersonInterface $param1, $param2 ) use (
+					&$expArguments_setCTCPersonsGroups, &$argumentMismatch_setCTCPersonsGroups, $people
+				) {
+					if(($key = array_search($param1, $expArguments_setCTCPersonsGroups)) !== false) {
+						// remove the param to test that all arguments are called with
+						unset($expArguments_setCTCPersonsGroups[$key]);
+						// the second param should be the same as the groups returned from the person
+						// with the same id
+						if ( $param2 !== $people[ $param1->id() ]->getGroups() ) {
+							$argumentMismatch_setCTCPersonsGroups = true;
+						}
+					}
+					return null;
+				}
+			));
+
+		// update person called on ctc people 1, 2 and 3
+		$expArguments_updateCTCPerson = array( $ctcPeople[1], $ctcPeople[2], $ctcPeople[3] );
+		$this->wpalMock
+			->expects( $this->exactly(3) )
+			->method('updateCTCPerson')
+			->will( $this->returnCallback(
+				function( CTCI_CTCPersonInterface $param ) use ( &$expArguments_updateCTCPerson ) {
+					if(($key = array_search($param, $expArguments_updateCTCPerson)) !== false) {
+						// remove the param to test that all arguments are called with
+						unset($expArguments_updateCTCPerson[$key]);
+					}
+					return null;
+				}
+			));
+
+		// no previously attached people to deal with here...
+		$this->wpalMock
+			->expects( $this->never() )
+			->method( 'unattachCTCPerson' );
+		$this->wpalMock
+			->expects( $this->never() )
+			->method( 'deleteCTCPerson' );
+		$this->wpalMock
+			->expects( $this->never() )
+			->method( 'unpublishCTCPerson' );
+
+
+		// person 4 is new - not be attached to an existing person
+		$this->wpalMock
+			->expects( $this->once() )
+			->method('getUnattachedCTCPeople')
+			->will( $this->returnValue( array() ) );
+
+		$this->wpalMock
+			->expects( $this->never() )
+			->method( 'attachCTCPerson' );
+
+		/* protected function createNewCTCPerson */
+
+		// for person 4 who is new
+		$this->wpalMock
+			->expects( $this->once() )
+			->method('createAttachedCTCPerson')
+			->with( $this->equalTo( $people[4] ) )
+			->will( $this->returnValue( $ctcPeople[4] ) );
+
+		// the call to setCTCPersonsGroups is defined above amongst the other ones
+
+		/**
+		 * Act!
+		 */
+		$this->sutPeopleSync->run();
+
+		// assert expected argument arrays are empty
+		$this->assertEmpty( $expectedArguments_updateCTCGroup );
+		$this->assertEmpty( $expArguments_setCTCPersonsGroups );
+		$this->assertFalse( $argumentMismatch_setCTCPersonsGroups );
 
 	}
 }
