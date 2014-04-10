@@ -12,13 +12,13 @@ interface CTCI_PeopleDataProviderInterface {
 	public function setupForPeopleSync();
 
 	/**
-	 * Must return an associative array of CTCI_PersonInterface's, with the array key being the person id
+	 * Must return an associative array of CTCI_PersonInterface's, with the array key being the person id (as string)
 	 * @return CTCI_PersonInterface[]
 	 */
 	public function getPeople();
 
 	/**
-	 * Must return an associative array of CTCI_PeopleGroupInterface's, with the array key being the group id
+	 * Must return an associative array of CTCI_PeopleGroupInterface's, with the array key being the group id (as string)
 	 * @return CTCI_PeopleGroupInterface[]
 	 */
 	public function getGroups();
