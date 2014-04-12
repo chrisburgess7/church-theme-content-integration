@@ -880,5 +880,231 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
         $this->assertEmpty( $expArguments_updateCTCPerson );
 
     }
+
+    public function testRun_4AttachedPeople1RemovedUnpublished_2AttachedGroups_SyncGroupsTrue() {
+        $this->peopleDataProviderMock
+            ->expects( $this->any() )
+            ->method('syncGroups')
+            ->will( $this->returnValue( true ) );
+
+        $this->peopleDataProviderMock
+            ->expects( $this->any() )
+            ->method('deleteUnattachedPeople')
+            ->will( $this->returnValue( false ) );
+
+        /**
+         * updateGroups
+         */
+
+        // new groups
+        $group1 = new CTCI_PeopleGroup( 'f1', 1, 'Group 1', 'desc' );
+        $group2 = new CTCI_PeopleGroup( 'f1', 2, 'Group 2', 'desc' );
+        $this->peopleDataProviderMock
+            ->expects( $this->once() )
+            ->method('getGroups')
+            ->will( $this->returnValue( array(
+                1 => $group1,
+                2 => $group2,
+            )));
+
+        $ctcGroup1 = new CTCI_CTCGroup( 11, 'Group 1', 'desc' );
+        $ctcGroup1->setAttachedGroup( 'f1', 1 );
+        $ctcGroup2 = new CTCI_CTCGroup( 12, 'Group 2', 'desc' );
+        $ctcGroup2->setAttachedGroup( 'f1', 2 );
+
+        // both groups exist and are attached to the service provider
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method('getCTCGroupsAttachedViaProvider')
+            ->with( 'f1' )
+            ->will( $this->returnValue( array( $ctcGroup1, $ctcGroup2 ) ) );
+
+        // check the arguments called on updateCTCGroup
+        $expectedArguments_updateCTCGroup = array( $ctcGroup1, $ctcGroup2 );
+        $this->wpalMock
+            ->expects( $this->exactly(2) )
+            ->method('updateCTCGroup')
+            ->with( $this->logicalOr( $ctcGroup1, $ctcGroup2 ), $this->logicalOr( $group1, $group2 ) )
+            ->will( $this->returnCallback(
+                function( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group ) use (
+                    &$expectedArguments_updateCTCGroup
+                ) {
+                    if(($key = array_search($ctcGroup, $expectedArguments_updateCTCGroup)) !== false) {
+                        // remove the param to test that all arguments are called with
+                        unset($expectedArguments_updateCTCGroup[$key]);
+                    }
+                    if ( ( $ctcGroup->id() !== 11 && $ctcGroup->id() !== 12 ) ||
+                        ( $ctcGroup->id() === 11 && $group->id() !== 1 ) ||
+                        ( $ctcGroup->id() === 12 && $group->id() !== 2 ) ) {
+                        throw new Exception( 'updateCTCGroup called with incorrect arguments' );
+                    }
+                }
+            ));
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('deleteCTCGroup');
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('unattachCTCGroup');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('getUnattachedCTCGroups');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('attachCTCGroup');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('createAttachedCTCGroup');
+
+        /**
+         * Update people section
+         */
+
+        /** @var CTCI_PersonInterface[] $people */
+        $people = array(
+            '1' => new CTCI_Person( 'f1', 1 ), // this person to be removed
+            '2' => new CTCI_Person( 'f1', 2 ),
+            '3' => new CTCI_Person( 'f1', 3 ),
+            '4' => new CTCI_Person( 'f1', 4 )
+        );
+        $ctcPeople = array();
+        foreach ( $people as $person ) {
+            $person
+                ->setNameFormat('F L')
+                ->setFirstName( 'Person' )
+                ->setLastName( $person->id() )
+                ->setEmail( 'person' . $person->id() . '@test.com' );
+
+            $ctcPerson = new CTCI_CTCPerson();
+            $ctcPerson->setId( $person->id() );
+            $ctcPerson->setName( $person->getName() );
+            $ctcPerson->setEmail( $person->getEmail() );
+            $ctcPeople[ $person->id() ] = $ctcPerson;
+        }
+        // and add each person to a group
+        $people['1']->addGroup( $group1 );
+        $people['2']->addGroup( $group2 );
+        $people['3']->addGroup( $group2 );
+        $people['4']->addGroup( $group1 );
+
+        $this->peopleDataProviderMock
+            ->expects( $this->once() )
+            ->method('getPeople')
+            ->will( $this->returnValue( array(
+                // not person 1 as they have been removed
+                '2' => $people[2],
+                '3' => $people[3],
+                '4' => $people[4]
+            ) ) );
+
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method('getCTCPeopleAttachedViaProvider')
+            ->with( $this->equalTo('f1') )
+            ->will( $this->returnValue( array( $ctcPeople['1'], $ctcPeople['2'], $ctcPeople['3'], $ctcPeople['4'] ) ) );
+
+        $this->wpalMock
+            ->expects( $this->exactly(4) )
+            ->method('getAttachedPersonId')
+            ->will( $this->returnValueMap( array(
+                array( $ctcPeople[1], '1' ),
+                array( $ctcPeople[2], '2' ),
+                array( $ctcPeople[3], '3' ),
+                array( $ctcPeople[4], '4' ),
+            )));
+
+        // check setCTCPersonsGroups called on ctc people 2, 3, 4
+        // called in syncCTCPerson
+        $expArguments_setCTCPersonsGroups = array( $ctcPeople[2], $ctcPeople[3], $ctcPeople[4] );
+        $argumentMismatch_setCTCPersonsGroups = false;
+        $this->wpalMock
+            ->expects( $this->exactly(3) )
+            ->method('setCTCPersonsGroups')
+            ->with( $this->logicalOr(
+                $this->equalTo( $ctcPeople[2] ),
+                $this->equalTo( $ctcPeople[3] ),
+                $this->equalTo( $ctcPeople[4] )
+            ), $this->logicalOr(
+                $this->equalTo( $people['2']->getGroups() ),
+                $this->equalTo( $people['3']->getGroups() ),
+                $this->equalTo( $people['4']->getGroups() )
+            ) )->will( $this->returnCallback(
+                function( CTCI_CTCPersonInterface $param1, $param2 ) use (
+                    &$expArguments_setCTCPersonsGroups, &$argumentMismatch_setCTCPersonsGroups, $people
+                ) {
+                    if(($key = array_search($param1, $expArguments_setCTCPersonsGroups)) !== false) {
+                        // remove the param to test that all arguments are called with
+                        unset($expArguments_setCTCPersonsGroups[$key]);
+                        // the second param should be the same as the groups returned from the person
+                        // with the same id
+                        if ( $param2 !== $people[ $param1->id() ]->getGroups() ) {
+                            $argumentMismatch_setCTCPersonsGroups = true;
+                        }
+                    }
+                    return null;
+                }
+            ));
+
+        // update person called on ctc people 2, 3 and 4
+        $expArguments_updateCTCPerson = array( $ctcPeople[2], $ctcPeople[3], $ctcPeople[4] );
+        $this->wpalMock
+            ->expects( $this->exactly(3) )
+            ->method('updateCTCPerson')
+            ->will( $this->returnCallback(
+                function( CTCI_CTCPersonInterface $param ) use ( &$expArguments_updateCTCPerson ) {
+                    if(($key = array_search($param, $expArguments_updateCTCPerson)) !== false) {
+                        // remove the param to test that all arguments are called with
+                        unset($expArguments_updateCTCPerson[$key]);
+                    }
+                    return null;
+                }
+            ));
+
+        // now we handle the removed person 1
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method( 'unattachCTCPerson' )
+            ->with( $this->equalTo( $ctcPeople[1] ) );
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method( 'deleteCTCPerson' );
+        $this->wpalMock
+            ->expects( $this->once() )
+            ->method( 'unpublishCTCPerson' )
+            ->with( $this->equalTo( $ctcPeople[1] ) );
+
+
+        // no new people to deal with
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('getUnattachedCTCPeople');
+
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method( 'attachCTCPerson' );
+
+        /* protected function createNewCTCPerson */
+
+        // for person 4 who is new
+        $this->wpalMock
+            ->expects( $this->never() )
+            ->method('createAttachedCTCPerson');
+
+        /**
+         * Act!
+         */
+        $this->sutPeopleSync->run();
+
+        // assert expected argument arrays are empty
+        $this->assertEmpty( $expArguments_updateCTCPerson );
+        $this->assertEmpty( $expectedArguments_updateCTCGroup );
+        $this->assertEmpty( $expArguments_setCTCPersonsGroups );
+        $this->assertFalse( $argumentMismatch_setCTCPersonsGroups );
+
+    }
 }
  
