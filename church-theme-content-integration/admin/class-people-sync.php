@@ -246,14 +246,3 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	protected function syncCleanUp() {
 	}
 }
-
-class CTCI_NoProviderIdForAttachedCTCPerson extends Exception {
-	protected $ctcPerson;
-	public function __construct( CTCI_CTCPersonInterface $ctcPerson, $message = '', $code = 0, $innerException = null ) {
-		parent::__construct( $message, $code, $innerException );
-		$this->ctcPerson = $ctcPerson;
-	}
-	public function getCTCPerson() {
-		return $this->ctcPerson;
-	}
-}
