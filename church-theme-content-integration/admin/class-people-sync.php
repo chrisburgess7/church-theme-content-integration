@@ -96,19 +96,20 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			}
 
 			if ( isset( $people[ $dpId ] ) ) {
-				$this->logger->info( sprintf( 'Syncing attached person: %s.', $ctcPerson->getName() ) );
+				$this->logger->info( sprintf( 'Syncing person: %s.', $ctcPerson->getName() ) );
 				$this->syncCTCPerson( $ctcPerson, $people[ $dpId ], $dataProvider->syncGroups() );
 				// we've just synced an attached person, so we don't need the record any more
 				unset( $people[ $dpId ] );
 			} else {
 				// this means that a CTC person with an attached record, no longer has that record in the list
-				// of people to sync, so either just delete the attach record, or delete the CTC person entirely
-				$this->logger->info( sprintf( 'Unattaching person: %s.', $ctcPerson->getName() ) );
+				// of people to sync, so either unpublish or delete them
 				$this->wpal->unattachCTCPerson( $ctcPerson );
 				if ( $dataProvider->deleteUnattachedPeople() ) {
-					$this->wpal->deleteCTCPerson( $ctcPerson );
+                    $this->logger->info( sprintf( 'Deleting person: %s.', $ctcPerson->getName() ) );
+                    $this->wpal->deleteCTCPerson( $ctcPerson );
 				} else {
-					$this->wpal->unpublishCTCPerson( $ctcPerson );
+                    $this->logger->info( sprintf( 'Unpublishing person: %s.', $ctcPerson->getName() ) );
+                    $this->wpal->unpublishCTCPerson( $ctcPerson );
 				}
 			}
 		}
