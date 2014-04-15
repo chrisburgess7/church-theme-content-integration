@@ -65,4 +65,6 @@ interface CTCI_WPALInterface {
 	 */
 	public function getUnattachedCTCPeople();
 
+	public function getCurrentAdminPageURL();
+
 } 

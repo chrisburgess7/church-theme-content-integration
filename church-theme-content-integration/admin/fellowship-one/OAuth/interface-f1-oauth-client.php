@@ -7,11 +7,33 @@
  * Time: 9:10 AM
  */
 interface CTCI_F1OAuthClientInterface {
+	public function setCallbackURL( $url );
+
 	public function setUsername( $username );
 
 	public function setPassword( $password );
 
 	public function authenticate();
+
+	public function retrieveAccessToken($oauthToken, $tokenSecret);
+
+	/**
+	 * To be called when retrieving the access token from a cache (of some kind).
+	 * @param $token
+	 * @return $this
+	 */
+	public function setAccessToken( $token );
+
+	/**
+	 * To be called when retrieving the access token from a cache (of some kind).
+	 * @param $tokenSecret
+	 * @return mixed
+	 */
+	public function setAccessTokenSecret( $tokenSecret );
+
+	public function getAccessToken();
+
+	public function getAccessTokenSecret();
 
 	/**
 	 * @return $this

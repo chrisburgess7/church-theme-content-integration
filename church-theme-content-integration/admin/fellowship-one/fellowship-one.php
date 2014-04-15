@@ -32,6 +32,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	/**
 	 * F1 API Settings
 	 */
+	protected $authMode;
 	protected $consumerKey;
 	protected $consumerSecret;
 	protected $username;
@@ -105,7 +106,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	 * @return string   A human readable name for the provider.
 	 */
 	public function getHumanReadableName() {
-		return 'FellowshipOne';
+		return 'Fellowship One';
 	}
 
 	/**
@@ -144,10 +145,25 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	}
 
 	protected function registerSectionsAndFields() {
+		// TODO: Need to add internationalisation method here for these labels, so that these strings are recognised
+		// as requiring translation
+
 		$this->addSettingsSection(
 			'ctci_f1_credentials',
 			'Credentials',
 			'credentialsSectionCallback'
+		);
+		$this->addSettingsField(
+			'ctci_f1_credentials',
+			'auth_mode',
+			'Authentication Method',
+			'displaySelectField',
+			array(
+				'options' => array(
+					'3' => 'OAuth (3rd Party)',
+					'2' => 'Credentials Based (2nd Party)'
+				)
+			)
 		);
 		$this->addSettingsField(
 			'ctci_f1_credentials',
@@ -179,13 +195,13 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'username',
-			'Username',
+			'Username (2nd Party only!)',
 			'displayTextField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'password',
-			'Password',
+			'Password (2nd Party only!)',
 			'displayPasswordField'
 		);
 		$this->addSettingsSection(
@@ -272,6 +288,10 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 	public function validateSettings( $settings ) {
 		$newInput = array();
+		$newInput['auth_mode'] = trim( $settings['auth_mode'] );
+		if ( $newInput['auth_mode'] != '2' && $newInput['auth_mode'] != '3' ) {
+			$newInput['auth_mode'] = '3';
+		}
 		$newInput['api_url'] = trim( $settings['api_url'] );
 		// credit: https://gist.github.com/dperini/729294
 		if ( ! preg_match(
@@ -349,20 +369,197 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		return $newInput;
 	}
 
-	public function initDataProvider( CTCI_LoggerInterface $logger ) {
+	public function getRunButtonHandlerType() {
+		if ( $this->authMode === CTCI_F1OAuthClient::OAUTH ) {
+			return self::RUNBUTTON_CUSTOM;
+		} else {
+			return self::RUNBUTTON_AJAX;
+		}
+	}
+
+	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger ) {
+
+		$operationTag = $operation->getTag();
+		$authActionValue = "auth_f1_{$operationTag}";
+		$authName = "ctci_f1_$authActionValue";
+		$authId = $authName;
+		$authButtonTitle = __(
+			"Authenticate with " . $this->getHumanReadableName() . " (" . $operation->getHumanReadableName() . ")",
+			Church_Theme_Content_Integration::$TEXT_DOMAIN
+		);
+
+		//$syncActionValue = "sync_f1_{$operationTag}";
+		//$syncName = "ctci_$syncActionValue";
+		/*$syncId = $syncName;
+		$syncButtonTitle = __(
+			"Run " . $this->getHumanReadableName() . ' ' . $operation->getHumanReadableName(),
+			Church_Theme_Content_Integration::$TEXT_DOMAIN
+		);*/
+
+		session_start();
+
+		if ( isset( $_POST['ctci_action'] ) ) {
+			// handle any form submission for this button
+			if ( $_POST['ctci_action'] === $authActionValue ) {
+				//echo 'running auth';
+				$data = false;
+				try {
+					// if this succeeds, it redirects browser to service provider login page
+					$data = $this->authClient->authenticate();
+				} catch ( CTCI_F1APIRequestException $e ) {
+					$logger->error( sprintf(
+						'Error occurred while retrieving request tokens for authentication with the service provider. ' .
+						'HTTP Response Code: %d. Request URL: %s. Headers: %s. Response Body: %s.',
+						$e->getHttpCode(), $e->getRequestURL(), $e->getRequestHeaders(), $e->getResponseBody()
+					), $e );
+				} catch ( Exception $e ) {
+					$logger->error( 'An unexpected error occurred during authentication. Message: ' . $e->getMessage(), $e );
+				}
+				if ( ! $data ) {
+					$logger->error('Could not connect to the server (no request token)');
+					$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+				}
+			} else {
+				$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+			}
+		} elseif ( isset( $_SESSION['ctci_f1_access_token'] ) && isset( $_SESSION['ctci_f1_access_token_secret'] ) ) {
+			// already authenticated, just show sync button
+			//echo 'session var\'s set';
+			Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
+		} elseif ( isset( $_GET['oauth_token'] ) && isset( $_GET['oauth_token_secret'] ) ) {
+			//echo 'callback';
+			// callback after authenticating with service provider
+
+			// Get the "authenticated" request token here. The Service provider will append this token to the query string when
+			// redirecting the user's browser to the Callback page
+			$oauth_token = $_GET["oauth_token"];
+			// The is the token secret which you got when you requested the request_token
+			// You should get this because you appended this token secret when you got redirected to the
+			// Service Provider's login screen
+			$token_secret = $_GET["oauth_token_secret"];
+
+			$success = false;
+			try {
+				$success = $this->authClient->retrieveAccessToken($oauth_token, $token_secret);
+			} catch ( CTCI_F1APIRequestException $e ) {
+				$logger->error( sprintf(
+					'Error occurred while retrieving access tokens for authentication with the service provider. ' .
+					'HTTP Response Code: %d. Request URL: %s. Headers: %s. Response Body: %s.',
+					$e->getHttpCode(), $e->getRequestURL(), $e->getRequestHeaders(), $e->getResponseBody()
+				), $e );
+			} catch ( Exception $e ) {
+				$logger->error( 'An unexpected error occurred. Message: ' . $e->getMessage(), $e );
+			}
+
+			if ( $success ) {
+				$access_token = $this->authClient->getAccessToken();
+				$token_secret = $this->authClient->getAccessTokenSecret();
+				//print "Access token: ".$access_token.", Token Secret: ".$token_secret.'<br/>';
+				$_SESSION['ctci_f1_access_token'] = $access_token;
+				$_SESSION['ctci_f1_access_token_secret'] = $token_secret;
+
+				Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
+			} else {
+				$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+			}
+		} else {
+			//echo 'default auth';
+			$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+		}
+	}
+
+	private function showButton( $actionValue, $inputName, $inputId, $buttonTitle ) {
+		printf(
+			'<form name="%1$s" action="#" method="post" id="%1$s">
+			<input type="hidden" name="ctci_action" value="%1$s">
+            <input type="submit" name="%2$s" id="%3$s" class="button button-primary button-large" value="%4$s">',
+			$actionValue, $inputName, $inputId, $buttonTitle
+		);
+		echo '</form>';
+	}
+
+	/*private function showRunButton( $label, $key ) {
+		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
+			<input type="hidden" name="action" value="' . $key . '">
+        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="button button-primary button-large" value="' . $label . '">
+        </form>
+        <script type="text/javascript">
+        jQuery(document).ready(function($){
+            var frm = $("#' . $key . '");
+            frm.submit(function (ev) {
+                $("#ctci-message-log").html("");
+                $.ajax({
+                    type: frm.attr("method"),
+                    url: ajaxurl,
+                    data: frm.serialize(),
+                    success: function (data) {
+                        $("#ctci-message-log").html(data);
+                    }
+                });
+
+                ev.preventDefault();
+            });
+        });
+        </script>
+    ';
+	}*/
+
+	public function initOnLoad() {
 		if ( $this->wpal !== null ) {
 			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
 		} else {
 			$options = get_option( $this->getSettingsGroupName() );
 		}
 		if ( false === $options ) {
-			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation' );
+			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation on load.' );
+		}
+		if ( $options['auth_mode'] == CTCI_F1OAuthClient::CREDENTIALS ) {
+			$this->authMode = CTCI_F1OAuthClient::CREDENTIALS;
+		} else {
+			$this->authMode = CTCI_F1OAuthClient::OAUTH;
 		}
 		$this->consumerKey = $options['api_key'];
 		$this->consumerSecret = $options['api_secret'];
-		$this->username = $options['username'];
-		$this->password = $options['password'];
 		$this->serverURL = $options['api_url'];
+		if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
+			$this->username = $options['username'];
+			$this->password = $options['password'];
+		}
+		$this->authClient = new CTCI_F1OAuthClient( $this );
+
+		if ( $this->authMode == CTCI_F1OAuthClient::OAUTH ) {
+			if ( $this->wpal != null ) {
+				$this->authClient->setCallbackURL( $this->wpal->getCurrentAdminPageURL() );
+			} else {
+				$this->authClient->setCallbackURL(
+					admin_url( "admin.php?page=" . Church_Theme_Content_Integration::$RUN_PAGE )
+				);
+			}
+		}
+	}
+
+	public function initDataProviderForProcess( CTCI_LoggerInterface $logger ) {
+		if ( $this->wpal !== null ) {
+			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
+		} else {
+			$options = get_option( $this->getSettingsGroupName() );
+		}
+		if ( false === $options ) {
+			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation for module process.' );
+		}
+
+		if ( $this->authMode === CTCI_F1OAuthClient::OAUTH ) {
+			session_start();
+			if ( isset( $_SESSION['ctci_f1_access_token'] ) && isset( $_SESSION['ctci_f1_access_token_secret'] ) ) {
+				$this->authClient
+					->setAccessToken( $_SESSION['ctci_f1_access_token'] )
+					->setAccessTokenSecret( $_SESSION['ctci_f1_access_token_secret'] );
+			} else {
+				$logger->error( 'Access tokens could not be accessed from session' );
+				return false;
+			}
+		}
+
 		$this->peopleLists = explode( "\r\n", $options['people_lists']);
 		$this->syncPeopleGroups = $options['sync_people_groups'];
 		$this->peopleNameFormat = $options['name_format'];
@@ -376,38 +573,45 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 		// NOTE: this must come AFTER setting the above, as the auth client relies on retrieving the set values
 		// in it's constructor
-		$this->authClient = new CTCI_F1OAuthClient( $this );
 		$this->peopleDataProvider = new CTCI_F1PeopleDataProvider( $this->authClient, $this, $logger );
+
+		return true;
 	}
 
-	public function authenticate() {
-		if ( empty( $this->consumerKey ) ) {
-			throw new CTCI_AuthenticationException( 'API Consumer Key setting does not have a value.' );
+	public function authenticateForProcess() {
+		// this method is called during module process
+		// we only need to authenticate here if using credentials based method
+		if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
+			if ( empty( $this->consumerKey ) ) {
+				throw new CTCI_AuthenticationException( 'API Consumer Key setting does not have a value.' );
+			}
+			if ( empty( $this->consumerSecret ) ) {
+				throw new CTCI_AuthenticationException( 'API Consumer Secret setting does not have a value.' );
+			}
+			if ( empty( $this->username ) ) {
+				throw new CTCI_AuthenticationException( 'API Username setting does not have a value.' );
+			}
+			if ( empty( $this->password ) ) {
+				throw new CTCI_AuthenticationException( 'API Password setting does not have a value.' );
+			}
+			if ( empty( $this->serverURL ) ) {
+				throw new CTCI_AuthenticationException( 'API Server setting does not have a value.' );
+			}
+			$success = $this->authClient->authenticate();
+			if ( ! $success) {
+				throw new CTCI_AuthenticationException( 'Could not authenticate.' );
+				// T/ODO: remove
+				// *** only for debugging!!! ***
+				/*throw new CTCI_AuthenticationException(
+					sprintf( 'Could not authenticate with credentials: %s %s %s %s %s',
+						$this->serverURL, $this->consumerKey, $this->consumerSecret, $this->username, $this->password
+					)
+				);*/
+			}
+			return $success;
+		} else {
+			return true;
 		}
-		if ( empty( $this->consumerSecret ) ) {
-			throw new CTCI_AuthenticationException( 'API Consumer Secret setting does not have a value.' );
-		}
-		if ( empty( $this->username ) ) {
-			throw new CTCI_AuthenticationException( 'API Username setting does not have a value.' );
-		}
-		if ( empty( $this->password ) ) {
-			throw new CTCI_AuthenticationException( 'API Password setting does not have a value.' );
-		}
-		if ( empty( $this->serverURL ) ) {
-			throw new CTCI_AuthenticationException( 'API Server setting does not have a value.' );
-		}
-		$success = $this->authClient->authenticate();
-		if ( ! $success) {
-			throw new CTCI_AuthenticationException( 'Could not authenticate.' );
-			// T/ODO: remove
-			// *** only for debugging!!! ***
-			/*throw new CTCI_AuthenticationException(
-				sprintf( 'Could not authenticate with credentials: %s %s %s %s %s',
-					$this->serverURL, $this->consumerKey, $this->consumerSecret, $this->username, $this->password
-				)
-			);*/
-		}
-		return $success;
 	}
 
 	public function isDataProviderFor( $operation ) {
@@ -433,6 +637,10 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	 * F1APISettings methods
 	 *
 	 *******************************************************/
+
+	public function getAuthenticationMode() {
+		return $this->authMode;
+	}
 
 	public function getF1ConsumerKey() {
 		return $this->consumerKey;

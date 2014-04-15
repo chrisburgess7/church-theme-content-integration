@@ -20,20 +20,38 @@ require_once 'class-f1-app-config.php';
 require_once 'class-f1-api-util.php';
 
 class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
+
+	const OAUTH = 3;
+	const CREDENTIALS = 2;
+
+	const REQUEST_REQUEST_TOKEN = 0;
+	const REQUEST_ACCESS_TOKEN = 1;
+	const REQUEST_RESOURCE = 2;
+
+	protected $authMode = self::OAUTH;
+
 	private $consumerKey = null;
 	private $consumerSecret = null;
 
 	private $username;
 	private $password;
 
-	// This variable is used to store Request Token or the Access token
+	// This variable is used to the Access token
+	private $requestToken; // oauth_token
+	private $requestTokenSecret = ""; // oauth_token_secret
+
+	// This variable is used to the Access token
 	private $accessToken; // oauth_token
-	private $tokenSecret = ""; // oauth_token_secret
+	private $accessTokenSecret = ""; // oauth_token_secret
 
 	// The Base URL for the service provider
 	private $baseUrl = null;
 	private $requesttoken_path = null;
 	private $accesstoken_path = null;
+	private $auth_path = null;
+
+	// The URL to redirect to after successful authentication by the Service Provider
+	private $callbackUrl = null;
 
 	// Connection to the Host
 	private $connection;
@@ -48,6 +66,8 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	private $xmlFormatHeader = array( "Accept: application/xml", "Content-type: application/xml" );
 
 	public function __construct( CTCI_F1APISettingsInterface $settings ) {
+		$this->authMode = $settings->getAuthenticationMode();
+
 		$this->consumerKey = $settings->getF1ConsumerKey();
 		$this->consumerSecret = $settings->getF1ConsumerSecret();
 		$this->baseUrl = $settings->getF1ServerBaseURL();
@@ -55,8 +75,10 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		$this->init_curl();
 		$this->setPathsFromConfig();
 
-		$this->username = $settings->getF1Username();
-		$this->password = $settings->getF1Password();
+		if ( $this->authMode === self::CREDENTIALS ) {
+			$this->username = $settings->getF1Username();
+			$this->password = $settings->getF1Password();
+		}
 
 		$this->format = 'json';
 		$this->formatHeader = $this->jsonFormatHeader;
@@ -90,38 +112,150 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	 */
 	private function setPathsFromConfig() {
 		$this->requesttoken_path = CTCI_F1AppConfig::$requesttoken_path;
-		$this->accesstoken_path = CTCI_F1AppConfig::$accesstoken_path;
+		if ( $this->authMode === self::CREDENTIALS ) {
+			$this->accesstoken_path = CTCI_F1AppConfig::$accesstoken_path_2ndparty;
+		} else {
+			$this->accesstoken_path = CTCI_F1AppConfig::$accesstoken_path_3rdparty;
+		}
+		$this->auth_path = CTCI_F1AppConfig::$auth_path;
+	}
+
+	public function setCallbackURL( $url ) {
+		$this->callbackUrl = $url;
+		return $this;
 	}
 
 	public function setUsername( $username ) {
 		$this->username = $username;
+		return $this;
 	}
 
 	public function setPassword( $password ) {
 		$this->password = $password;
+		return $this;
 	}
 
 	public function authenticate() {
-		// To authenticate the user and get the access token, the consumer posts the credentials to the service provider
-		$requestURL = sprintf( "%s%s", $this->baseUrl, CTCI_F1AppConfig::$accesstoken_path );
-		// SET the username and password
-		$requestBody = CTCI_F1APIUtil::urlencode_rfc3986(
-			base64_encode( sprintf( "%s %s", $this->username, $this->password ) )
-		);
+		if ( $this->authMode === self::CREDENTIALS ) {
+			// To authenticate the user and get the access token, the consumer posts the credentials to the service provider
+			$requestURL = sprintf( "%s%s", $this->baseUrl, $this->accesstoken_path );
+			// SET the username and password
+			$requestBody = CTCI_F1APIUtil::urlencode_rfc3986(
+				base64_encode( sprintf( "%s %s", $this->username, $this->password ) )
+			);
+			// This is important. If we don't set this, the post will be sent using Content-Type: application/x-www-form-urlencoded (curl will do this automatically)
+			// Per OAuth specification, if the Content-Type is application/x-www-form-urlencoded, then all the post parameters also need to be part of the base signature string
+			// To override this, we need to set Content-type to something other than application/x-www-form-urlencoded
+			$getContentType = array( "Accept: application/json", "Content-type: application/json" );
+			$requestBody = $this->sendRequest( "POST", $requestURL, $getContentType, $requestBody, 200, self::REQUEST_ACCESS_TOKEN );
+			preg_match( "~oauth_token\=([^\&]+)\&oauth_token_secret\=([^\&]+)~i", $requestBody, $tokens );
+			if ( !isset( $tokens[ 1 ] ) || !isset( $tokens[ 2 ] ) ) {
+				return false;
+			}
+			$this->accessToken = $tokens[ 1 ];
+			$this->accessTokenSecret = $tokens[ 2 ];
 
-		// This is important. If we don't set this, the post will be sent using Content-Type: application/x-www-form-urlencoded (curl will do this automatically)
-		// Per OAuth specification, if the Content-Type is application/x-www-form-urlencoded, then all the post parameters also need to be part of the base signature string
-		// To override this, we need to set Content-type to something other than application/x-www-form-urlencoded
-		$getContentType = array( "Accept: application/json", "Content-type: application/json" );
-		$requestBody = $this->postRequest( $requestURL, $requestBody, $getContentType, 200 );
+			return true;
+		} elseif ( $this->authMode === self::OAUTH ) {
+			// First step is to get the Request Token (oauth_token)
+			if ( ! $this->getRequestToken() ) {
+				return false;
+			}
+			// Using the oauth_token take the user to Service Provider’s login screen.
+			// Also provide a “callback” which the url to which the service provider redirects after the credentials are authenticated at the service provider side.
+			if(CTCI_F1AppConfig::$includeRequestSecretInUrl) {
+				$parts = parse_url($this->callbackUrl);
+				$query = $parts['query'];
+				if(strlen($query)>0) {
+					$this->callbackUrl = $this->callbackUrl.'&oauth_token_secret='.$this->requestTokenSecret;
+				} else {
+					$this->callbackUrl = $this->callbackUrl.'?oauth_token_secret='.$this->requestTokenSecret;
+				}
+			}
+
+			$callbackURI = rawurlencode( $this->callbackUrl );
+
+			$authenticateURL = sprintf( "%s%s?oauth_token=%s",
+				$this->baseUrl, $this->auth_path, $this->requestToken );
+
+			if( !empty( $callbackURI ) ) {
+				$authenticateURL	.= sprintf( "&oauth_callback=%s", $callbackURI );
+			}
+
+			header( "Location: " . $authenticateURL );
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 *	Get a Request Token from the Service Provider for 3rd party auth
+	 */
+	protected function getRequestToken() {
+		$requestURL	= sprintf( "%s%s", $this->baseUrl, $this->requesttoken_path );
+
+		$requestBody	= $this->sendRequest( "POST", $requestURL,  array( 'Content-Length: 0'), "", 200, self::REQUEST_REQUEST_TOKEN );
+
 		preg_match( "~oauth_token\=([^\&]+)\&oauth_token_secret\=([^\&]+)~i", $requestBody, $tokens );
-		if ( !isset( $tokens[ 1 ] ) || !isset( $tokens[ 2 ] ) ) {
+		if( !isset( $tokens[1] ) || !isset( $tokens[2] ) ) {
 			return false;
 		}
-		$this->accessToken = $tokens[ 1 ];
-		$this->tokenSecret = $tokens[ 2 ];
+
+		$this->requestToken = $tokens[1] ;
+		$this->requestTokenSecret = $tokens[2] ;
+		if( strlen( $this->requestToken ) > 0 && strlen( $this->requestTokenSecret ) > 0 ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Get an Access Token from the Service Provider for 3rd party authentication.
+	 * @param string $oauthToken The $oauthToken authorized request token. This token
+	 *                              is returned by the service provider when the user authenticates
+	 *                              on the service provider side. Use this request token to request a Access token
+	 * @param string $tokenSecret
+	 * @return bool
+	 */
+	public function retrieveAccessToken($oauthToken, $tokenSecret) {
+
+		$this->requestToken = $oauthToken;
+		$this->requestTokenSecret = $tokenSecret;
+
+		$requestURL	= sprintf( "%s%s", $this->baseUrl, $this->accesstoken_path );
+
+		curl_setopt( $this->connection, CURLOPT_NOBODY, true );
+
+		$requestBody	= $this->sendRequest( "POST", $requestURL,  array( 'Content-Length: 0' ), "", 200, self::REQUEST_ACCESS_TOKEN );
+
+		preg_match( "~oauth_token\=([^\&]+)\&oauth_token_secret\=([^\&]+)~i", $requestBody, $tokens );
+		if( !isset( $tokens[1] ) || !isset( $tokens[2] ) ) {
+			return false;
+		}
+
+		$this->accessToken = $tokens[1];
+		$this->accessTokenSecret = $tokens[2];
 
 		return true;
+	}
+
+	public function setAccessToken( $token ) {
+		$this->accessToken = $token;
+		return $this;
+	}
+
+	public function setAccessTokenSecret( $tokenSecret ) {
+		$this->accessTokenSecret = $tokenSecret;
+		return $this;
+	}
+
+	public function getAccessToken() {
+		return $this->accessToken;
+	}
+
+	public function getAccessTokenSecret() {
+		return $this->accessTokenSecret;
 	}
 
 	/**
@@ -217,12 +351,12 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		return $this->sendRequest( "PUT", trim( $requestURL ), $nonOAuthHeader, $requestBody, $successHttpCode );
 	}
 
-	private function sendRequest( $httpMethod, $requestURL, $nonOAuthHeader = array(), $requestBody = "", $successHttpCode = 201 ) {
+	private function sendRequest( $httpMethod, $requestURL, $nonOAuthHeader = array(), $requestBody = "", $successHttpCode = 200, $requestType = self::REQUEST_RESOURCE ) {
 		// 0 = call is being made to request a requestToken
 		// 1 = call is being made to request an accessToken
 		// 2 = call is being made to request a protected resources
 
-		$tokenType = 2;
+		/*$tokenType = 2;
 		$relativePath = str_ireplace( $this->baseUrl, "", $requestURL );
 		if ( strcasecmp( $relativePath, $this->requesttoken_path ) == 0 ) {
 			$tokenType = 0;
@@ -230,10 +364,10 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 			if ( strcasecmp( $relativePath, $this->accesstoken_path ) == 0 ) {
 				$tokenType = 1;
 			}
-		}
+		}*/
 
 		$oAuthHeader = array();
-		$oAuthHeader[ ] = $this->getOAuthHeader( $httpMethod, $requestURL, $tokenType );
+		$oAuthHeader[ ] = $this->getOAuthHeader( $httpMethod, $requestURL, $requestType );
 
 		//register a callback function which will process the response headers
 		$this->responseHeaders = array();
@@ -307,7 +441,7 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	 * Returns a string of the format Authorization: <auth_string>
 	 * @param tokenType: Type of token 0==request token. > 0 Access token and other requests
 	 */
-	private function getOAuthHeader( $httpMethod, $requestURL ) {
+	private function getOAuthHeader( $httpMethod, $requestURL, $requestType ) {
 		$oAuthHeaderValues = array(
 			"oauth_consumer_key" => $this->consumerKey,
 			"oauth_nonce" => $this->getOAuthNonce(),
@@ -316,13 +450,25 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 			"oauth_version" => "1.0"
 		);
 
-		if ( strlen( $this->accessToken ) > 0 ) {
-			$oAuthHeaderValues[ "oauth_token" ] = $this->accessToken;
+		switch ( $requestType ) {
+			case self::REQUEST_ACCESS_TOKEN:
+				if ( strlen( $this->requestToken ) > 0 ) {
+					$oAuthHeaderValues[ "oauth_token" ] = $this->requestToken;
+				}
+				$oAuthHeaderValues[ "oauth_signature" ] = CTCI_RequestSigner::buildSignature(
+					$this->consumerSecret, $this->requestTokenSecret, $httpMethod, $requestURL, $oAuthHeaderValues
+				);
+				break;
+			case self::REQUEST_RESOURCE:
+			default:
+				if ( strlen( $this->accessToken ) > 0 ) {
+					$oAuthHeaderValues[ "oauth_token" ] = $this->accessToken;
+				}
+				$oAuthHeaderValues[ "oauth_signature" ] = CTCI_RequestSigner::buildSignature(
+					$this->consumerSecret, $this->accessTokenSecret, $httpMethod, $requestURL, $oAuthHeaderValues
+				);
+				break;
 		}
-
-		$oAuthHeaderValues[ "oauth_signature" ] = CTCI_RequestSigner::buildSignature(
-			$this->consumerSecret, $this->tokenSecret, $httpMethod, $requestURL, $oAuthHeaderValues
-		);
 
 		$oauthHeader = $this->buildOAuthHeader( $oAuthHeaderValues );
 
@@ -361,7 +507,12 @@ class CTCI_F1APIRequestException extends Exception {
 	 * @param null $innerException
 	 */
 	public function __construct( $requestURL, $requestHeaders, $http_code, $responseBody, $message = '', $code = 0, $innerException = null ) {
-		parent::__construct( $message, $code, $innerException );
+		parent::__construct(
+			sprintf(
+				'An error occurred attempting to send a request to the service provider. Request URL: %s, HTTP Code: %s, Response: %s',
+				$requestURL, $http_code, $responseBody
+			), $code, $innerException
+		);
 		$this->requestURL = $requestURL;
 		$this->requestHeaders = $requestHeaders;
 		$this->http_code = $http_code;
@@ -382,6 +533,12 @@ class CTCI_F1APIRequestException extends Exception {
 
 	public function getResponseBody() {
 		return $this->responseBody;
+	}
+
+	public function __toString() {
+		return sprintf( "exception '%s' with message '%s' HTTP Headers: '%s' Stack trace: %s",
+			get_class( $this ), $this->message, print_r( $this->requestHeaders, true ), $this->getTraceAsString()
+		);
 	}
 }
 

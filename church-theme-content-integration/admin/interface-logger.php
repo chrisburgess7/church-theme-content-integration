@@ -8,9 +8,10 @@
 
 interface CTCI_LoggerInterface {
 	public function clear();
+	public function includeExceptions( $include = true );
 	public function info( $message );
-	public function warning( $message );
-	public function error( $message );
+	public function warning( $message, Exception $exception = null );
+	public function error( $message, Exception $exception = null );
 	public function success( $message );
 	public function filter( $flags );
 	public function toHTML();

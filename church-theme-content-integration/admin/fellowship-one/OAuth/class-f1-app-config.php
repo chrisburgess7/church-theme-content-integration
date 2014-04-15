@@ -34,12 +34,12 @@ class CTCI_F1AppConfig {
 	// Path to request an unauthorized request token
 	public static $requesttoken_path = "/v1/Tokens/RequestToken";
 	// Path to request access token - 3rd party
-	//public static $accesstoken_path = "/v1/Tokens/AccessToken";
+	public static $accesstoken_path_3rdparty = "/v1/Tokens/AccessToken";
 	// 2nd PARTY
-	public static $accesstoken_path = "/v1/PortalUser/AccessToken";
+	public static $accesstoken_path_2ndparty = "/v1/PortalUser/AccessToken";
 	// The path consumer redirects the user to so that user can authenticate himself on the
 	// service provider side
-	//public static $auth_path = "/v1/PortalUser/Login";
+	public static $auth_path = "/v1/PortalUser/Login";
 
 	// Callback URL. This the URL to which the user's browser is redirected after the service provider
 	// validates the user's credentials

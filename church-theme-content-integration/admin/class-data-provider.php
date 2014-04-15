@@ -161,7 +161,7 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 			$attr
 		);
 		foreach ( $args['options'] as $key => $option ) {
-			if ( $value === $key ) {
+			if ( $value == $key ) {
 				printf( '<option value="%s" selected>%s</option>', $key, esc_attr($option));
 			} else {
 				printf( '<option value="%s">%s</option>', $key, esc_attr($option));

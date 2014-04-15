@@ -201,7 +201,8 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	 */
 	public function testGetDataProviderFor( $tag, $instanceof = null ) {
 		// must be called before getDataProvider
-		$this->sut->initDataProvider();
+		$logger = new CTCI_Logger();
+		$this->sut->initDataProviderForProcess( $logger );
 
 		$actual = $this->sut->getDataProviderFor( $tag );
 

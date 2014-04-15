@@ -32,9 +32,10 @@ class Church_Theme_Content_Integration {
 	public static $CONFIG_GROUP = 'ctci_config_options';
 	public static $ENABLE_OPT_SECTION = 'ctci_enable_modules_section';
 	public static $ENABLE_OPT_PAGE = 'ctci_enable_modules_page';
-	/*public static $PROVIDER_FUNCTION_PEOPLESYNC = 'people_sync';*/
 
-	public static $ENABLE_OPT_DISPLAY_CALLBACK_FUNCPFX = 'enable_opt_display_';
+	public static $RUN_PAGE = 'ctci-main-options';
+
+	//public static $ENABLE_OPT_DISPLAY_CALLBACK_FUNCPFX = 'enable_opt_display_';
 
 	public static $TEXT_DOMAIN = 'church-theme-content-integration';
 
@@ -388,11 +389,18 @@ class Church_Theme_Content_Integration {
 	public function load_objects() {
 		$this->wpal = new CTCI_WPAL();
 		$this->logger = new CTCI_Logger();
+		$options = get_option( self::$CONFIG_GROUP );
+		if ( $options['debug_mode'] === 'T' ) {
+			$this->logger->includeExceptions();
+		}
 		// a list of all operations currently supported
 		// need to add new ones here once implemented
 		$this->operationTypes = array(
 			new CTCI_PeopleSync( $this->wpal, $this->logger )
 		);
+		foreach ( $this->dataProviders as $dataProvider ) {
+			$dataProvider->initOnLoad();
+		}
 	}
 
 	public function load_run_actions() {
@@ -408,15 +416,14 @@ class Church_Theme_Content_Integration {
 						'wp_ajax_' . $moduleKey,
 						array( $process, 'run' )
 					);
-					$this->addModuleToOperationList( $moduleKey, $dataProvider, $operation::getHumanReadableName() );
+					//$this->addModuleToOperationList( $moduleKey, $dataProvider, $operation::getHumanReadableName() );
 				}
 
 			}
 		}
 	}
 
-	/** @noinspection PhpUnusedPrivateMethodInspection */
-	private function addGlobalOperation( $key, $label ) {
+	/*private function addGlobalOperation( $key, $label ) {
 		$this->operationList['global'][] = array(
 			'key' => $key,
 			'label' => $label
@@ -435,14 +442,14 @@ class Church_Theme_Content_Integration {
 			'label' => 'Run ' . $dataProvider->getHumanReadableName() . ' ' . $operationName,
 			'key' => $key
 		);
-	}
+	}*/
 
 	public function build_admin_menu() {
 		add_menu_page(
 			__('CTC Integration Options', self::$TEXT_DOMAIN),
 			__('CTC Integration', self::$TEXT_DOMAIN),
 			self::$RUN_SYNC_CAPABILITY,
-			'ctci-main-options',
+			self::$RUN_PAGE,
 			array( $this, 'show_options_home_page' )
 		);
 
@@ -475,10 +482,28 @@ class Church_Theme_Content_Integration {
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
 		echo '<div style="display: inline-block; width: 30%; vertical-align: top; margin-top: 10px">';
-		if ( isset( $this->operationList['global'] ) ) {
+		foreach ( $this->dataProviders as $dataProvider ) {
+			echo '<h3>' . $dataProvider->getHumanReadableName() . '</h3>';
+			foreach ( $this->operationTypes as $operation ) {
+				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
+					echo '<div style="display: inline-block">';
+					switch ( $dataProvider->getRunButtonHandlerType() ) {
+						case CTCI_DataProviderInterface::RUNBUTTON_CUSTOM:
+							$dataProvider->showSyncButtonFor( $operation, $this->logger );
+							break;
+						default:
+						case CTCI_DataProviderInterface::RUNBUTTON_AJAX:
+							$this->showAJAXRunButtonFor( $dataProvider, $operation );
+							break;
+					}
+					echo '</div>';
+				}
+			}
+		}
+		/*if ( isset( $this->operationList['global'] ) ) {
 			foreach ( $this->operationList['global'] as $operation ) {
 				echo '<div style="display: inline-block">';
-				$this->showRunButton(
+				$this->showAJAXRunButton(
 					$operation['label'],
 					$operation['key']
 				);
@@ -488,27 +513,29 @@ class Church_Theme_Content_Integration {
 		foreach ( $this->operationList as $providerTag => $providerOperations ) {
 			// make sure to ignore the global operations
 			if ( 'global' !== $providerTag ) {
-				/** @noinspection PhpUndefinedMethodInspection */
+				/** @noinspection PhpUndefinedMethodInspection *
 				echo '<h3>' . $providerOperations['provider']->getHumanReadableName() . '</h3>';
 				foreach ( $providerOperations['modules'] as $moduleInfo ) {
 					echo '<div style="display: inline-block">';
-					$this->showRunButton(
+					$this->showAJAXRunButton(
 						$moduleInfo['label'],
 						$moduleInfo['key']
 					);
 					echo '</div>';
 				}
 			}
-		}
+		}*/
 		echo '</div>';
 		echo '<div style="display: inline-block; width: 68%; margin-top: 10px">';
 		echo '<h3>Message Log</h3>';
-		echo '<div id="ctci-message-log" style="padding: 5px 10px; min-height: 100px"></div>';
+		echo '<div id="ctci-message-log" style="padding: 5px 10px; min-height: 100px">';
+		echo $this->logger->toHTML();
+		echo '</div>';
 		echo '</div>';
 		echo '</div>';
 	}
 
-	protected function showRunButton( $label, $key ) {
+	protected static function showAJAXRunButton( $label, $key ) {
 		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
 			<input type="hidden" name="action" value="' . $key . '">
         <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="button button-primary button-large" value="' . $label . '">
@@ -534,6 +561,13 @@ class Church_Theme_Content_Integration {
     ';
 	}
 
+	public static function showAJAXRunButtonFor( CTCI_DataProviderInterface $provider, CTCI_OperationInterface $operation ) {
+		self::showAJAXRunButton(
+			'Run ' . $provider->getHumanReadableName() . ' ' . $operation->getHumanReadableName(),
+			self::get_run_module_key( $provider->getTag(), $operation->getTag() )
+		);
+	}
+
 	public function show_configuration_page() {
 		if ( ! current_user_can( self::$CONFIG_CAPABILITY ) )  {
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
@@ -555,7 +589,7 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function register_settings() {
-		register_setting( self::$CONFIG_GROUP, self::$CONFIG_GROUP, array( $this, 'enable_options_validate' ) );
+		register_setting( self::$CONFIG_GROUP, self::$CONFIG_GROUP, array( $this, 'validate_config_options' ) );
 		add_settings_section(
 			self::$ENABLE_OPT_SECTION,
 			__( 'Enable Modules', self::$TEXT_DOMAIN ),
@@ -584,6 +618,29 @@ class Church_Theme_Content_Integration {
 
 			$dataProvider->registerSettings();
 		}
+
+		add_settings_field(
+			'debug_mode', __( 'Debug Mode', self::$TEXT_DOMAIN ), array( $this, 'show_debug_option'), self::$ENABLE_OPT_PAGE, self::$ENABLE_OPT_SECTION
+		);
+	}
+
+	public function show_debug_option() {
+		$optionValues = get_option( self::$CONFIG_GROUP );
+		$name = sprintf( "%s[%s]", self::$CONFIG_GROUP, 'debug_mode' );
+		// this hidden field ensures the field is submitted even if unchecked
+		// by default forms do not submit checkboxes not checked
+		printf("<input type='hidden' name='%s' value='F' />", $name);
+		printf(
+			"<input id='%s' name='%s' type='checkbox' value='T' %s />",
+			'debug_mode',
+			$name,
+			checked(
+				isset( $optionValues[ 'debug_mode' ] ) &&
+				$optionValues[ 'debug_mode' ] === 'T',
+				true,
+				false
+			)
+		);
 	}
 
 	public function show_module_enable_field( $args ) {
@@ -609,13 +666,17 @@ class Church_Theme_Content_Integration {
 		// ...
 	}
 
-	public function enable_options_validate( $settings ) {
+	public function validate_config_options( $settings ) {
 		$newSettings = array();
 		foreach ( $this->enableModuleFieldNames as $fieldName ) {
 			$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
 			if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
 				$newSettings[ $fieldName ] = 'F';
 			}
+		}
+		$newSettings['debug_mode'] = trim( $settings['debug_mode'] );
+		if ( $newSettings['debug_mode'] !== 'T' && $newSettings['debug_mode'] !== 'F' ) {
+			$newSettings['debug_mode'] = 'F';
 		}
 		return $newSettings;
 	}
@@ -631,7 +692,7 @@ class Church_Theme_Content_Integration {
 		return "ctci_enable_{$providerTag}_$operation";
 	}
 
-	private function get_run_module_key( $providerTag, $operation ) {
+	public static function get_run_module_key( $providerTag, $operation ) {
 		return "ctci_run_{$providerTag}_$operation";
 	}
 }

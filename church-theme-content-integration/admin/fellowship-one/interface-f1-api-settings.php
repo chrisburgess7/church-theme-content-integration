@@ -7,6 +7,8 @@
  * Time: 11:59 AM
  */
 interface CTCI_F1APISettingsInterface {
+	public function getAuthenticationMode();
+
 	public function getF1ConsumerKey();
 
 	public function getF1ConsumerSecret();

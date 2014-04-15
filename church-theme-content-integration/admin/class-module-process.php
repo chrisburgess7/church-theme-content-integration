@@ -34,16 +34,21 @@ class CTCI_ModuleProcess {
 		//echo 'module run' . PHP_EOL;
 		foreach ( $this->dataProviders as $dataProvider ) {
 			try {
-				$dataProvider->initDataProvider( $this->logger );
+				if ( ! $dataProvider->initDataProviderForProcess( $this->logger ) ) {
+					$this->logger->error(
+						'Init failed for provider ' . $dataProvider->getHumanReadableName() . '. '
+					);
+					continue;
+				}
 			} catch ( Exception $e ) {
 				$this->logger->error(
 					'Init failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
-					$e->getMessage()
+					$e->getMessage(), $e
 				);
 				continue;
 			}
 			try {
-				if ( ! $dataProvider->authenticate() ) {
+				if ( ! $dataProvider->authenticateForProcess() ) {
 					$this->logger->error(
 						'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. '
 					);
@@ -52,7 +57,7 @@ class CTCI_ModuleProcess {
 			} catch ( Exception $e ) {
 				$this->logger->error(
 					'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
-					$e->getMessage()
+					$e->getMessage(), $e
 				);
 				continue;
 			}
@@ -68,8 +73,14 @@ class CTCI_ModuleProcess {
 					$this->logger->error(
 						sprintf( '%s %s - %s', $dataProvider->getHumanReadableName(),
 							$operation->getHumanReadableName(), $e->getMessage()
-						)
+						), $e
 					);
+					// debugging...
+/*					$this->logger->error(
+						sprintf( '%s %s - Type: %s, Message: %s, File: %s, Line: %s', $dataProvider->getHumanReadableName(),
+							$operation->getHumanReadableName(), get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()
+						)
+					);*/
 				}
 			}
 		}

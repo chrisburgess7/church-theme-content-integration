@@ -19,8 +19,14 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 
 	protected $filter;
 
+	protected $outputExceptionDetails = false;
+
 	public function __construct() {
 		$this->filter = static::$INFO | static::$WARNING | static::$ERROR | static::$SUCCESS;
+	}
+
+	public function includeExceptions( $include = true ) {
+		$this->outputExceptionDetails = $include;
 	}
 
 	public function clear() {
@@ -36,18 +42,20 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 		return $this;
 	}
 
-	public function warning( $message ) {
+	public function warning( $message, Exception $exception = null ) {
 		$this->messages[] = array(
 			static::$WARNING,
-			$message
+			$message,
+			$exception
 		);
 		return $this;
 	}
 
-	public function error( $message ) {
+	public function error( $message, Exception $exception = null ) {
 		$this->messages[] = array(
 			static::$ERROR,
-			$message
+			$message,
+			$exception
 		);
 		return $this;
 	}
@@ -74,12 +82,20 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 					if ( $this->filter & static::$ERROR ) {
 						$output .= '<span style="color: red">Error:</span> ';
 						$output .= $message[1];
+						if ( $this->outputExceptionDetails && $message[2] instanceof \Exception ) {
+							$output .= ' Exception Details: ';
+							$output .= $this->getExceptionStringAsHTML( $message[2] );
+						}
 					}
 					break;
 				case static::$WARNING:
 					if ( $this->filter & static::$WARNING ) {
 						$output .= '<span style="color: orange">Warning:</span> ';
 						$output .= $message[1];
+						if ( $this->outputExceptionDetails && $message[2] instanceof \Exception ) {
+							$output .= ' Exception Details: ';
+							$output .= $this->getExceptionStringAsHTML( $message[2] );
+						}
 					}
 					break;
 				case static::$INFO:
@@ -98,5 +114,16 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 			$output .= '</p>';
 		}
 		return $output;
+	}
+
+	protected function getExceptionStringAsHTML( Exception $exception ) {
+		$str = sprintf(
+			"<br /><br />Type: %s, File: %s, Line: %s, Message: %s,<br /><br />
+			<span style=\"font-weight: bold\">Trace:</span> %s<br /><br />
+			<span style=\"font-weight: bold\">ToString:</span> %s<br /><br />",
+			get_class( $exception ), $exception->getFile(), $exception->getLine(), $exception->getMessage(),
+			$exception->getTraceAsString(), (string) $exception
+		);
+		return $str;
 	}
 }

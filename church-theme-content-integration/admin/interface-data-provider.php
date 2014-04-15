@@ -8,6 +8,9 @@
 
 interface CTCI_DataProviderInterface {
 
+	const RUNBUTTON_AJAX = 0;
+	const RUNBUTTON_CUSTOM = 1;
+
 	/**
 	 * @return string   A unique tag for this provider. Should only contain letters, numbers, or underscore.
 	 */
@@ -35,19 +38,25 @@ interface CTCI_DataProviderInterface {
 
 	public function showSettingsPage();
 
+	public function getRunButtonHandlerType();
+
+	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger );
+
+	public function initOnLoad();
+
 	/**
 	 * Initialise the data provider at the start of any sync process.
 	 */
-	public function initDataProvider( CTCI_LoggerInterface $logger );
+	public function initDataProviderForProcess( CTCI_LoggerInterface $logger );
 
-	public function authenticate();
+	public function authenticateForProcess();
 
 	public function isDataProviderFor( $operation );
 
 	/**
 	 * When each operation is running, it calls this method to retrieve the data provider for the specific operation.
 	 * Each operation has a corresponding interface that the returned object must implement. Gets called after
-	 * initDataProvider.
+	 * initDataProviderForProcess.
 	 *
 	 * @param $operation
 	 * @return mixed

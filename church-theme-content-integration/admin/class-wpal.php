@@ -38,6 +38,10 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		// TODO: Implement getOption() method.
 	}
 
+	public function getCurrentAdminPageURL() {
+		// TODO: Implement getCurrentAdminPageURL() method.
+	}
+
 	/**
 	 * @param CTCI_PeopleGroupInterface $group
 	 * @return CTCI_CTCGroup An array containing term_id and taxonomy_id
