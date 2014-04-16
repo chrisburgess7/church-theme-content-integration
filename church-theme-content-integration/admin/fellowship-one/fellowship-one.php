@@ -11,11 +11,15 @@ require_once dirname( __FILE__ ) . '/interface-f1-api-settings.php';
 require_once dirname( __FILE__ ) . '/interface-f1-people-sync-settings.php';
 require_once dirname( __FILE__ ) . '/OAuth/class-f1-oauth-client.php';
 require_once dirname( __FILE__ ) . '/class-f1-people-data-provider.php';
+require_once dirname( __FILE__ ) . '/../class-session.php';
+require_once dirname( __FILE__ ) . '/../class-wpal.php';
 
 class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISettingsInterface, CTCI_F1PeopleSyncSettingsInterface {
 
 	/** @var CTCI_WPALInterface */
 	protected $wpal;
+	/** @var CTCI_Session */
+	protected $session;
 
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
@@ -54,6 +58,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	protected $syncPersonLinkedInURL;
 
 	public function __construct() {
+		$this->session = null;
+		$this->wpal = null;
 		$this->nameFormatOptions = array(
 			'T. FQ M L S' => 'Mr. Johnathan "John" Edward Doe II',
 			'T. FQ L S' => 'Mr. Johnathan "John" Doe II',
@@ -388,15 +394,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			Church_Theme_Content_Integration::$TEXT_DOMAIN
 		);
 
-		//$syncActionValue = "sync_f1_{$operationTag}";
-		//$syncName = "ctci_$syncActionValue";
-		/*$syncId = $syncName;
-		$syncButtonTitle = __(
-			"Run " . $this->getHumanReadableName() . ' ' . $operation->getHumanReadableName(),
-			Church_Theme_Content_Integration::$TEXT_DOMAIN
-		);*/
-
-		session_start();
+		$this->session->start();
 
 		if ( isset( $_POST['ctci_action'] ) ) {
 			// handle any form submission for this button
@@ -422,7 +420,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			} else {
 				$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
 			}
-		} elseif ( isset( $_SESSION['ctci_f1_access_token'] ) && isset( $_SESSION['ctci_f1_access_token_secret'] ) ) {
+		} elseif ( $this->session->has('ctci_f1_access_token') && $this->session->has('ctci_f1_access_token_secret') ) {
 			// already authenticated, just show sync button
 			//echo 'session var\'s set';
 			Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
@@ -455,8 +453,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$access_token = $this->authClient->getAccessToken();
 				$token_secret = $this->authClient->getAccessTokenSecret();
 				//print "Access token: ".$access_token.", Token Secret: ".$token_secret.'<br/>';
-				$_SESSION['ctci_f1_access_token'] = $access_token;
-				$_SESSION['ctci_f1_access_token_secret'] = $token_secret;
+				$this->session->set( 'ctci_f1_access_token', $access_token );
+				$this->session->set( 'ctci_f1_access_token_secret', $token_secret );
 
 				Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
 			} else {
@@ -504,7 +502,9 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
     ';
 	}*/
 
-	public function initOnLoad() {
+	public function initOnLoad( CTCI_Session $session ) {
+		$this->session = $session;
+
 		if ( $this->wpal !== null ) {
 			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
 		} else {
@@ -549,11 +549,11 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 
 		if ( $this->authMode === CTCI_F1OAuthClient::OAUTH ) {
-			session_start();
-			if ( isset( $_SESSION['ctci_f1_access_token'] ) && isset( $_SESSION['ctci_f1_access_token_secret'] ) ) {
+			$this->session->start();
+			if ( $this->session->has('ctci_f1_access_token') && $this->session->has('ctci_f1_access_token_secret') ) {
 				$this->authClient
-					->setAccessToken( $_SESSION['ctci_f1_access_token'] )
-					->setAccessTokenSecret( $_SESSION['ctci_f1_access_token_secret'] );
+					->setAccessToken( $this->session->get('ctci_f1_access_token') )
+					->setAccessTokenSecret( $this->session->get('ctci_f1_access_token_secret') );
 			} else {
 				$logger->error( 'Access tokens could not be accessed from session' );
 				return false;

@@ -35,6 +35,8 @@ interface CTCI_DataProviderInterface {
 	 */
 	public function getIncludes( $type );
 
+	public function initOnLoad( CTCI_Session $session );
+
 	public function registerSettings();
 
 	public function validateSettings( $settings );
@@ -44,8 +46,6 @@ interface CTCI_DataProviderInterface {
 	public function getRunButtonHandlerType();
 
 	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger );
-
-	public function initOnLoad();
 
 	/**
 	 * Initialise the data provider at the start of any sync process.
