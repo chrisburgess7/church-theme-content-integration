@@ -78,6 +78,11 @@ class Church_Theme_Content_Integration {
 	 */
 	private $session;
 
+	/**
+	 * @var CTCI_HTTPVariablesManager
+	 */
+	private $httpVarManager;
+
 	private $operationList = array();
 
 	private $enableModuleFieldNames = array();
@@ -302,6 +307,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-ctc-person.php',
 				self::$ADMIN_DIR . '/interface-data-provider.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
+				self::$ADMIN_DIR . '/interface-http-variables-manager.php',
 				self::$ADMIN_DIR . '/interface-logger.php',
 				self::$ADMIN_DIR . '/interface-operation.php',
 				self::$ADMIN_DIR . '/interface-people-data-provider.php',
@@ -311,6 +317,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/class-ctc-group.php',
 				self::$ADMIN_DIR . '/class-ctc-person.php',
 				self::$ADMIN_DIR . '/class-data-provider.php',
+				self::$ADMIN_DIR . '/class-http-variables-manager.php',
 				self::$ADMIN_DIR . '/class-logger.php',
 				self::$ADMIN_DIR . '/class-module-process.php',
 				self::$ADMIN_DIR . '/class-people-group.php',
@@ -396,6 +403,7 @@ class Church_Theme_Content_Integration {
 		$this->wpal = new CTCI_WPAL();
 		$this->logger = new CTCI_Logger();
 		$this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
+		$this->httpVarManager = new CTCI_HTTPVariablesManager();
 		$options = get_option( self::$CONFIG_GROUP );
 		if ( $options['debug_mode'] === 'T' ) {
 			$this->logger->includeExceptions();
@@ -406,7 +414,7 @@ class Church_Theme_Content_Integration {
 			new CTCI_PeopleSync( $this->wpal, $this->logger )
 		);
 		foreach ( $this->dataProviders as $dataProvider ) {
-			$dataProvider->initOnLoad( $this->session );
+			$dataProvider->initOnLoad( $this->session, $this->httpVarManager );
 		}
 	}
 

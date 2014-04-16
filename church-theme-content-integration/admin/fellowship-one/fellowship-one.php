@@ -13,6 +13,7 @@ require_once dirname( __FILE__ ) . '/OAuth/class-f1-oauth-client.php';
 require_once dirname( __FILE__ ) . '/class-f1-people-data-provider.php';
 require_once dirname( __FILE__ ) . '/../class-session.php';
 require_once dirname( __FILE__ ) . '/../class-wpal.php';
+require_once dirname( __FILE__ ) . '/../class-http-variables-manager.php';
 
 class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISettingsInterface, CTCI_F1PeopleSyncSettingsInterface {
 
@@ -20,6 +21,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	protected $wpal;
 	/** @var CTCI_Session */
 	protected $session;
+	/** @var CTCI_HTTPVariablesManager */
+	protected $httpVarManager;
 
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
@@ -148,6 +151,43 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 	protected function getSettingsPageName() {
 		return 'ctci_f1_options_page';
+	}
+
+	public function initOnLoad( CTCI_Session $session, CTCI_HTTPVariablesManagerInterface $httpVarManager ) {
+		$this->session = $session;
+		$this->httpVarManager = $httpVarManager;
+
+		if ( $this->wpal !== null ) {
+			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
+		} else {
+			$options = get_option( $this->getSettingsGroupName() );
+		}
+		if ( false === $options ) {
+			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation on load.' );
+		}
+		if ( $options['auth_mode'] == CTCI_F1OAuthClient::CREDENTIALS ) {
+			$this->authMode = CTCI_F1OAuthClient::CREDENTIALS;
+		} else {
+			$this->authMode = CTCI_F1OAuthClient::OAUTH;
+		}
+		$this->consumerKey = $options['api_key'];
+		$this->consumerSecret = $options['api_secret'];
+		$this->serverURL = $options['api_url'];
+		if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
+			$this->username = $options['username'];
+			$this->password = $options['password'];
+		}
+		$this->authClient = new CTCI_F1OAuthClient( $this );
+
+		if ( $this->authMode == CTCI_F1OAuthClient::OAUTH ) {
+			if ( $this->wpal != null ) {
+				$this->authClient->setCallbackURL( $this->wpal->getCurrentAdminPageURL() );
+			} else {
+				$this->authClient->setCallbackURL(
+					admin_url( "admin.php?page=" . Church_Theme_Content_Integration::$RUN_PAGE )
+				);
+			}
+		}
 	}
 
 	protected function registerSectionsAndFields() {
@@ -396,9 +436,9 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 		$this->session->start();
 
-		if ( isset( $_POST['ctci_action'] ) ) {
+		if ( $this->httpVarManager->hasPostVar('ctci_action') ) {
 			// handle any form submission for this button
-			if ( $_POST['ctci_action'] === $authActionValue ) {
+			if ( $this->httpVarManager->getPostVar('ctci_action') === $authActionValue ) {
 				//echo 'running auth';
 				$data = false;
 				try {
@@ -424,17 +464,17 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			// already authenticated, just show sync button
 			//echo 'session var\'s set';
 			Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
-		} elseif ( isset( $_GET['oauth_token'] ) && isset( $_GET['oauth_token_secret'] ) ) {
+		} elseif ( $this->httpVarManager->hasGetVar('oauth_token') && $this->httpVarManager->hasGetVar('oauth_token_secret') ) {
 			//echo 'callback';
 			// callback after authenticating with service provider
 
 			// Get the "authenticated" request token here. The Service provider will append this token to the query string when
 			// redirecting the user's browser to the Callback page
-			$oauth_token = $_GET["oauth_token"];
+			$oauth_token = $this->httpVarManager->getGetVar("oauth_token");
 			// The is the token secret which you got when you requested the request_token
 			// You should get this because you appended this token secret when you got redirected to the
 			// Service Provider's login screen
-			$token_secret = $_GET["oauth_token_secret"];
+			$token_secret = $this->httpVarManager->getGetVar("oauth_token_secret");
 
 			$success = false;
 			try {
@@ -501,42 +541,6 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
         </script>
     ';
 	}*/
-
-	public function initOnLoad( CTCI_Session $session ) {
-		$this->session = $session;
-
-		if ( $this->wpal !== null ) {
-			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
-		} else {
-			$options = get_option( $this->getSettingsGroupName() );
-		}
-		if ( false === $options ) {
-			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation on load.' );
-		}
-		if ( $options['auth_mode'] == CTCI_F1OAuthClient::CREDENTIALS ) {
-			$this->authMode = CTCI_F1OAuthClient::CREDENTIALS;
-		} else {
-			$this->authMode = CTCI_F1OAuthClient::OAUTH;
-		}
-		$this->consumerKey = $options['api_key'];
-		$this->consumerSecret = $options['api_secret'];
-		$this->serverURL = $options['api_url'];
-		if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
-			$this->username = $options['username'];
-			$this->password = $options['password'];
-		}
-		$this->authClient = new CTCI_F1OAuthClient( $this );
-
-		if ( $this->authMode == CTCI_F1OAuthClient::OAUTH ) {
-			if ( $this->wpal != null ) {
-				$this->authClient->setCallbackURL( $this->wpal->getCurrentAdminPageURL() );
-			} else {
-				$this->authClient->setCallbackURL(
-					admin_url( "admin.php?page=" . Church_Theme_Content_Integration::$RUN_PAGE )
-				);
-			}
-		}
-	}
 
 	public function initDataProviderForProcess( CTCI_LoggerInterface $logger ) {
 		if ( $this->wpal !== null ) {

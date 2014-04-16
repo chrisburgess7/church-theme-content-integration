@@ -20,16 +20,22 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	/** @var PHPUnit_Framework_MockObject_MockObject */
 	protected $wpalMock;
 
+	/** @var PHPUnit_Framework_MockObject_MockObject */
+	protected $httpVarMock;
+
 	public function setUp() {
 		$this->sut = new CTCI_Fellowship_One();
 
 		$this->wpalMock = $this->getMockBuilder('CTCI_WPAL')->disableOriginalConstructor()->getMock();
-
 		$this->sut->setWPAL( $this->wpalMock );
+
 		$memSession = new CTCI_MemorySessionAdapter();
 		$memSession->set('ctci_f1_access_token', 1234567890);
 		$memSession->set('ctci_f1_access_token_secret', 1234567890);
-		$this->sut->initOnLoad( new CTCI_Session( $memSession ) );
+
+		$this->httpVarMock = $this->getMock('CTCI_HTTPVariablesManager');
+
+		$this->sut->initOnLoad( new CTCI_Session( $memSession ), $this->httpVarMock );
 
 	}
 
