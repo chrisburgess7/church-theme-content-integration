@@ -9,128 +9,164 @@
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/fellowship-one.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-people-sync.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/interface-people-data-provider.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-wpal.php';
 
 class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 	/** @var CTCI_Fellowship_One */
 	protected $sut;
 
+	/** @var PHPUnit_Framework_MockObject_MockObject */
+	protected $wpalMock;
+
 	public function setUp() {
 		$this->sut = new CTCI_Fellowship_One();
+
+		$this->wpalMock = $this->getMockBuilder('CTCI_WPAL')->disableOriginalConstructor()->getMock();
+
+		$this->sut->setWPAL( $this->wpalMock );
+		$memSession = new CTCI_MemorySessionAdapter();
+		$memSession->set('ctci_f1_access_token', 1234567890);
+		$memSession->set('ctci_f1_access_token_secret', 1234567890);
+		$this->sut->initOnLoad( new CTCI_Session( $memSession ) );
+
 	}
 
 	public static function validateSettingsData() {
 		return array(
 			'default' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_key' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'12 34', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'12 34', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_key_2' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'12c', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'12c', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_secret' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdeg-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdeg-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_username' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', '<username>', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', '<username>', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', '', 'Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', '', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_password' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', '<Pw1;:,.?!@#$%^&*()-', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', '<Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', '', 'T', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', '', 'T',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_sync_people_groups' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 't', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 't',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_people_lists_too_long' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
 					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
 					"12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901\r\nList 2",
+					"F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
 					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
 					"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\r\nList 2",
+					"F L",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_position_attribute' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','123456789012345678901234567890123456789012345678901', 'T', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','12345678901234567890123456789012345678901234567890', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 			// this essentially covers the other sync options which have the same logic
 			'bad_sync_phone' => array(
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', '<bad code>', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
 				)
 			),
 			'bad_url' => array(
-				self::buildSettingsArray( 'https:/test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', 'https:/test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
 				),
-				self::buildSettingsArray( '',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F', "List 1\r\nList 2",
+				self::buildSettingsArray( '3', '',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
 					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
 				)
 			)
@@ -138,17 +174,19 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	}
 
 	protected static function buildSettingsArray(
-		$api_url, $api_key, $api_secret, $username, $password, $sync_people_groups, $people_lists,
+		$auth_mode, $api_url, $api_key, $api_secret, $username, $password, $sync_people_groups, $people_lists, $name_format,
 		$sync_position, $position_attribute, $sync_phone, $sync_email, $sync_facebook, $sync_twitter, $sync_linkedin
 	) {
 		return array(
+			'auth_mode' => $auth_mode,
 			'api_url' => $api_url,
 			'api_key' => $api_key,
 			'api_secret' => $api_secret,
 			'username' => $username,
 			'password' => $password,
-			'sync_people_groups' => $sync_people_groups,
 			'people_lists' => $people_lists,
+			'name_format' => $name_format,
+			'sync_people_groups' => $sync_people_groups,
 			'sync_position' => $sync_position,
 			'position_attribute' => $position_attribute,
 			'sync_phone' => $sync_phone,
