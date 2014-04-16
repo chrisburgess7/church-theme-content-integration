@@ -9,7 +9,9 @@
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/class-f1-people-data-provider.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/fellowship-one.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/OAuth/class-f1-oauth-client.php';
+// required so that phpunit recognises type hinting
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/interface-operation.php';
 
 class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 
