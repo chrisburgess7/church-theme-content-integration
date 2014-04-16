@@ -1,5 +1,10 @@
 <?php
 
+require_once dirname( __FILE__ ) . '/interface-ctc-group.php';
+require_once dirname( __FILE__ ) . '/interface-ctc-person.php';
+require_once dirname( __FILE__ ) . '/interface-people-group.php';
+require_once dirname( __FILE__ ) . '/interface-person.php';
+
 /**
  * Created by PhpStorm.
  * User: Chris
