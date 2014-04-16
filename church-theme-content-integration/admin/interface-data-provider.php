@@ -6,6 +6,9 @@
  * Time: 3:50 PM
  */
 
+require_once dirname( __FILE__ ) . '/interface-logger.php';
+require_once dirname( __FILE__ ) . '/interface-operation.php';
+
 interface CTCI_DataProviderInterface {
 
 	const RUNBUTTON_AJAX = 0;
