@@ -11,6 +11,7 @@ require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integratio
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/interface-people-data-provider.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-wpal.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-html-helper.php';
 
 class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
@@ -22,6 +23,9 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 	/** @var PHPUnit_Framework_MockObject_MockObject */
 	protected $httpVarMock;
+
+	/** @var PHPUnit_Framework_MockObject_MockObject */
+	protected $htmlHelperMock;
 
 	public function setUp() {
 		$this->sut = new CTCI_Fellowship_One();
@@ -35,8 +39,14 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 		$this->httpVarMock = $this->getMock('CTCI_HTTPVariablesManager');
 
-		$this->sut->initOnLoad( new CTCI_Session( $memSession ), $this->httpVarMock );
+		$this->htmlHelperMock = $this->getMock('CTCI_HtmlHelper', array(), array( $this, 'get_run_module_key' ) );
 
+		$this->sut->initOnLoad( new CTCI_Session( $memSession ), $this->httpVarMock, $this->htmlHelperMock );
+
+	}
+
+	protected function get_run_module_key( $providerTag, $operation ) {
+		return "ctci_run_{$providerTag}_$operation";
 	}
 
 	public static function validateSettingsData() {

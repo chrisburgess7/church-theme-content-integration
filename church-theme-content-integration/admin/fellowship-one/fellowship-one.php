@@ -23,6 +23,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	protected $session;
 	/** @var CTCI_HTTPVariablesManager */
 	protected $httpVarManager;
+	/** @var CTCI_HtmlHelperInterface */
+	protected $htmlHelper;
 
 	protected $configFieldsBaseName = null;
 	protected $peopleSyncEnableFieldName;
@@ -153,9 +155,12 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		return 'ctci_f1_options_page';
 	}
 
-	public function initOnLoad( CTCI_Session $session, CTCI_HTTPVariablesManagerInterface $httpVarManager ) {
+	public function initOnLoad(
+		CTCI_Session $session, CTCI_HTTPVariablesManagerInterface $httpVarManager, CTCI_HtmlHelperInterface $htmlHelper
+	) {
 		$this->session = $session;
 		$this->httpVarManager = $httpVarManager;
+		$this->htmlHelper = $htmlHelper;
 
 		if ( $this->wpal !== null ) {
 			$options = $this->wpal->getOption( $this->getSettingsGroupName() );
@@ -455,15 +460,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				}
 				if ( ! $data ) {
 					$logger->error('Could not connect to the server (no request token)');
-					$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+					$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
 				}
 			} else {
-				$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
 			}
 		} elseif ( $this->session->has('ctci_f1_access_token') && $this->session->has('ctci_f1_access_token_secret') ) {
 			// already authenticated, just show sync button
 			//echo 'session var\'s set';
-			Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
+			$this->htmlHelper->showAJAXRunButtonFor( $this, $operation );
 		} elseif ( $this->httpVarManager->hasGetVar('oauth_token') && $this->httpVarManager->hasGetVar('oauth_token_secret') ) {
 			//echo 'callback';
 			// callback after authenticating with service provider
@@ -496,51 +501,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$this->session->set( 'ctci_f1_access_token', $access_token );
 				$this->session->set( 'ctci_f1_access_token_secret', $token_secret );
 
-				Church_Theme_Content_Integration::showAJAXRunButtonFor( $this, $operation );
+				$this->htmlHelper->showAJAXRunButtonFor( $this, $operation );
 			} else {
-				$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
 			}
 		} else {
 			//echo 'default auth';
-			$this->showButton( $authActionValue, $authName, $authId, $authButtonTitle );
+			$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
 		}
 	}
-
-	private function showButton( $actionValue, $inputName, $inputId, $buttonTitle ) {
-		printf(
-			'<form name="%1$s" action="#" method="post" id="%1$s">
-			<input type="hidden" name="ctci_action" value="%1$s">
-            <input type="submit" name="%2$s" id="%3$s" class="button button-primary button-large" value="%4$s">',
-			$actionValue, $inputName, $inputId, $buttonTitle
-		);
-		echo '</form>';
-	}
-
-	/*private function showRunButton( $label, $key ) {
-		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
-			<input type="hidden" name="action" value="' . $key . '">
-        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="button button-primary button-large" value="' . $label . '">
-        </form>
-        <script type="text/javascript">
-        jQuery(document).ready(function($){
-            var frm = $("#' . $key . '");
-            frm.submit(function (ev) {
-                $("#ctci-message-log").html("");
-                $.ajax({
-                    type: frm.attr("method"),
-                    url: ajaxurl,
-                    data: frm.serialize(),
-                    success: function (data) {
-                        $("#ctci-message-log").html(data);
-                    }
-                });
-
-                ev.preventDefault();
-            });
-        });
-        </script>
-    ';
-	}*/
 
 	public function initDataProviderForProcess( CTCI_LoggerInterface $logger ) {
 		if ( $this->wpal !== null ) {

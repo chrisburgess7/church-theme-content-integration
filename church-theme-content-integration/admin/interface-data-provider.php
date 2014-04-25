@@ -9,6 +9,7 @@
 require_once dirname( __FILE__ ) . '/interface-logger.php';
 require_once dirname( __FILE__ ) . '/interface-operation.php';
 require_once dirname( __FILE__ ) . '/interface-http-variables-manager.php';
+require_once dirname( __FILE__ ) . '/interface-html-helper.php';
 require_once dirname( __FILE__ ) . '/class-session.php';
 
 interface CTCI_DataProviderInterface {
@@ -37,7 +38,9 @@ interface CTCI_DataProviderInterface {
 	 */
 	public function getIncludes( $type );
 
-	public function initOnLoad( CTCI_Session $session, CTCI_HTTPVariablesManagerInterface $httpVarManager  );
+	public function initOnLoad(
+		CTCI_Session $session, CTCI_HTTPVariablesManagerInterface $httpVarManager, CTCI_HtmlHelperInterface $htmlHelper
+	);
 
 	public function registerSettings();
 

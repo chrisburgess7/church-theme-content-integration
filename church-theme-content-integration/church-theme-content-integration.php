@@ -83,7 +83,10 @@ class Church_Theme_Content_Integration {
 	 */
 	private $httpVarManager;
 
-	private $operationList = array();
+	/**
+	 * @var CTCI_HtmlHelperInterface
+	 */
+	private $htmlHelper;
 
 	private $enableModuleFieldNames = array();
 
@@ -239,7 +242,7 @@ class Church_Theme_Content_Integration {
 					if ( file_exists( $providerClassFile ) ) {
 						require_once $providerClassFile;
 						$class = str_replace( '-', '_', $file );
-						// capitalization?
+						// TODO: capitalization?
 						$class = "CTCI_$class";
 						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
 							/** @var CTCI_DataProviderInterface $obj */
@@ -307,6 +310,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-ctc-person.php',
 				self::$ADMIN_DIR . '/interface-data-provider.php',
 				self::$ADMIN_DIR . '/interface-general-settings.php',
+				self::$ADMIN_DIR . '/interface-html-helper.php',
 				self::$ADMIN_DIR . '/interface-http-variables-manager.php',
 				self::$ADMIN_DIR . '/interface-logger.php',
 				self::$ADMIN_DIR . '/interface-operation.php',
@@ -317,6 +321,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/class-ctc-group.php',
 				self::$ADMIN_DIR . '/class-ctc-person.php',
 				self::$ADMIN_DIR . '/class-data-provider.php',
+				self::$ADMIN_DIR . '/class-html-helper.php',
 				self::$ADMIN_DIR . '/class-http-variables-manager.php',
 				self::$ADMIN_DIR . '/class-logger.php',
 				self::$ADMIN_DIR . '/class-module-process.php',
@@ -394,9 +399,7 @@ class Church_Theme_Content_Integration {
 					require_once trailingslashit( self::$PLUGIN_PATH ) . $file;
 				}
 			}
-
 		}
-
 	}
 
 	public function load_objects() {
@@ -404,6 +407,8 @@ class Church_Theme_Content_Integration {
 		$this->logger = new CTCI_Logger();
 		$this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
 		$this->httpVarManager = new CTCI_HTTPVariablesManager();
+		$this->htmlHelper = new CTCI_HtmlHelper( array( $this, 'get_run_module_key' ) );
+
 		$options = get_option( self::$CONFIG_GROUP );
 		if ( $options['debug_mode'] === 'T' ) {
 			$this->logger->includeExceptions();
@@ -414,7 +419,7 @@ class Church_Theme_Content_Integration {
 			new CTCI_PeopleSync( $this->wpal, $this->logger )
 		);
 		foreach ( $this->dataProviders as $dataProvider ) {
-			$dataProvider->initOnLoad( $this->session, $this->httpVarManager );
+			$dataProvider->initOnLoad( $this->session, $this->httpVarManager, $this->htmlHelper );
 		}
 	}
 
@@ -431,33 +436,10 @@ class Church_Theme_Content_Integration {
 						'wp_ajax_' . $moduleKey,
 						array( $process, 'run' )
 					);
-					//$this->addModuleToOperationList( $moduleKey, $dataProvider, $operation::getHumanReadableName() );
 				}
-
 			}
 		}
 	}
-
-	/*private function addGlobalOperation( $key, $label ) {
-		$this->operationList['global'][] = array(
-			'key' => $key,
-			'label' => $label
-		);
-	}
-
-	private function addModuleToOperationList(
-		$key,
-		CTCI_DataProviderInterface $dataProvider,
-		$operationName
-	) {
-		if ( ! isset( $this->operationList[ $dataProvider->getTag() ] ) ) {
-			$this->operationList[ $dataProvider->getTag() ]['provider'] = $dataProvider;
-		}
-		$this->operationList[ $dataProvider->getTag() ]['modules'][] = array(
-			'label' => 'Run ' . $dataProvider->getHumanReadableName() . ' ' . $operationName,
-			'key' => $key
-		);
-	}*/
 
 	public function build_admin_menu() {
 		add_menu_page(
@@ -493,7 +475,6 @@ class Church_Theme_Content_Integration {
 		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
-		ksort( $this->operationList );
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
 		echo '<div style="display: inline-block; width: 30%; vertical-align: top; margin-top: 10px">';
@@ -508,38 +489,13 @@ class Church_Theme_Content_Integration {
 							break;
 						default:
 						case CTCI_DataProviderInterface::RUNBUTTON_AJAX:
-							$this->showAJAXRunButtonFor( $dataProvider, $operation );
+							$this->htmlHelper->showAJAXRunButtonFor( $dataProvider, $operation );
 							break;
 					}
 					echo '</div>';
 				}
 			}
 		}
-		/*if ( isset( $this->operationList['global'] ) ) {
-			foreach ( $this->operationList['global'] as $operation ) {
-				echo '<div style="display: inline-block">';
-				$this->showAJAXRunButton(
-					$operation['label'],
-					$operation['key']
-				);
-				echo '</div>';
-			}
-		}
-		foreach ( $this->operationList as $providerTag => $providerOperations ) {
-			// make sure to ignore the global operations
-			if ( 'global' !== $providerTag ) {
-				/** @noinspection PhpUndefinedMethodInspection *
-				echo '<h3>' . $providerOperations['provider']->getHumanReadableName() . '</h3>';
-				foreach ( $providerOperations['modules'] as $moduleInfo ) {
-					echo '<div style="display: inline-block">';
-					$this->showAJAXRunButton(
-						$moduleInfo['label'],
-						$moduleInfo['key']
-					);
-					echo '</div>';
-				}
-			}
-		}*/
 		echo '</div>';
 		echo '<div style="display: inline-block; width: 68%; margin-top: 10px">';
 		echo '<h3>Message Log</h3>';
@@ -548,39 +504,6 @@ class Church_Theme_Content_Integration {
 		echo '</div>';
 		echo '</div>';
 		echo '</div>';
-	}
-
-	protected static function showAJAXRunButton( $label, $key ) {
-		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
-			<input type="hidden" name="action" value="' . $key . '">
-        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="button button-primary button-large" value="' . $label . '">
-        </form>
-        <script type="text/javascript">
-        jQuery(document).ready(function($){
-            var frm = $("#' . $key . '");
-            frm.submit(function (ev) {
-                $("#ctci-message-log").html("");
-                $.ajax({
-                    type: frm.attr("method"),
-                    url: ajaxurl,
-                    data: frm.serialize(),
-                    success: function (data) {
-                        $("#ctci-message-log").html(data);
-                    }
-                });
-
-                ev.preventDefault();
-            });
-        });
-        </script>
-    ';
-	}
-
-	public static function showAJAXRunButtonFor( CTCI_DataProviderInterface $provider, CTCI_OperationInterface $operation ) {
-		self::showAJAXRunButton(
-			'Run ' . $provider->getHumanReadableName() . ' ' . $operation->getHumanReadableName(),
-			self::get_run_module_key( $provider->getTag(), $operation->getTag() )
-		);
 	}
 
 	public function show_configuration_page() {
