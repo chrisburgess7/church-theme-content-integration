@@ -12,6 +12,8 @@ require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integratio
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-wpal.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-html-helper.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
+//require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/church-theme-content-integration.php';
 
 class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
@@ -27,26 +29,50 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	/** @var PHPUnit_Framework_MockObject_MockObject */
 	protected $htmlHelperMock;
 
+	/** @var PHPUnit_Framework_MockObject_MockObject */
+	protected $sessionMock;
+
+	/** @var CTCI_MemorySessionAdapter */
+	protected $memSession;
+
+	/** @var PHPUnit_Framework_MockObject_MockObject */
+	protected $authClientMock;
+
+	/** @var PHPUnit_Framework_MockObject_MockObject */
+	protected $loggerMock;
+
 	public function setUp() {
 		$this->sut = new CTCI_Fellowship_One();
 
 		$this->wpalMock = $this->getMockBuilder('CTCI_WPAL')->disableOriginalConstructor()->getMock();
 		$this->sut->setWPAL( $this->wpalMock );
 
-		$memSession = new CTCI_MemorySessionAdapter();
-		$memSession->set('ctci_f1_access_token', 1234567890);
-		$memSession->set('ctci_f1_access_token_secret', 1234567890);
+		$this->memSession = new CTCI_MemorySessionAdapter();
+		// by default don't replace any method
+		$this->sessionMock = $this->getMock('CTCI_Session', null, array( $this->memSession ));
 
 		$this->httpVarMock = $this->getMock('CTCI_HTTPVariablesManager');
 
 		$this->htmlHelperMock = $this->getMock('CTCI_HtmlHelper', array(), array( $this, 'get_run_module_key' ) );
 
-		$this->sut->initOnLoad( new CTCI_Session( $memSession ), $this->httpVarMock, $this->htmlHelperMock );
-
+		$this->loggerMock = $this->getMock('CTCI_Logger');
 	}
 
 	protected function get_run_module_key( $providerTag, $operation ) {
 		return "ctci_run_{$providerTag}_$operation";
+	}
+
+	protected function sutInitOnLoad() {
+		$this->sut->initOnLoad( $this->sessionMock, $this->httpVarMock, $this->htmlHelperMock );
+	}
+
+	protected function injectOAuthClient() {
+		$this->authClientMock = $this->getMock('CTCI_F1OAuthClient', array(), array( $this->sut ) );
+		$reflect = new ReflectionObject( $this->sut );
+		$authClientProp = $reflect->getProperty( 'authClient' );
+		$authClientProp->setAccessible( true );
+		$authClientProp->setValue( $this->sut, $this->authClientMock );
+		$authClientProp->setAccessible( false );
 	}
 
 	public static function validateSettingsData() {
@@ -268,6 +294,8 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	 */
 	public function testValidateSettings( $input, $output ) {
 
+		$this->sutInitOnLoad();
+
 		$actual = $this->sut->validateSettings( $input );
 
 		$this->assertEquals( $output, $actual );
@@ -286,6 +314,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	 * @param bool $result
 	 */
 	public function testIsProviderFor( $tag, $result = true ) {
+		$this->sutInitOnLoad();
 		$this->assertEquals( $result, $this->sut->isDataProviderFor( $tag ) );
 	}
 
@@ -302,6 +331,12 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	 * @param null $instanceof
 	 */
 	public function testGetDataProviderFor( $tag, $instanceof = null ) {
+
+		$this->memSession->set('ctci_f1_access_token', 1234567890);
+		$this->memSession->set('ctci_f1_access_token_secret', 1234567890);
+
+		$this->sutInitOnLoad();
+
 		// must be called before getDataProvider
 		$logger = new CTCI_Logger();
 		$this->sut->initDataProviderForProcess( $logger );
@@ -314,5 +349,462 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			$this->assertNull( $actual );
 		}
 	}
+
+	public function testShowSyncButtonFor_AuthenticateSuccess() {
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', true),
+			)));
+
+		$this->httpVarMock->expects($this->any())
+			->method('getPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', 'auth_f1_people_sync'),
+			)));
+
+		$this->authClientMock->expects($this->once())
+			->method('authenticate')
+			->will($this->returnValue(true));
+
+		$this->loggerMock->expects( $this->never() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+	}
+
+	public function testShowSyncButtonFor_AuthenticateFailure() {
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', true),
+			)));
+
+		$this->httpVarMock->expects($this->any())
+			->method('getPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', 'auth_f1_people_sync'),
+			)));
+
+		$this->authClientMock->expects($this->once())
+			->method('authenticate')
+			->will( $this->returnValue( false ) );
+
+		$this->loggerMock->expects( $this->once() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+	}
+
+	public function testShowSyncButtonFor_AuthenticateException() {
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', true),
+			)));
+
+		$this->httpVarMock->expects($this->any())
+			->method('getPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', 'auth_f1_people_sync'),
+			)));
+
+		$exception = new CTCI_F1APIRequestException('url', array('headers'), 404, 'body');
+
+		$this->authClientMock->expects($this->once())
+			->method('authenticate')
+			->will( $this->throwException( $exception ) );
+
+		$this->loggerMock->expects( $this->atLeastOnce() )
+			->method( 'error' )
+			->with( $this->isType('string'), $this->logicalOr( $this->equalTo( $exception ), $this->isNull() ) );
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+	}
+
+	public function testShowSyncButtonFor_AuthenticateForOtherOperation() {
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', true),
+			)));
+
+		$this->httpVarMock->expects($this->any())
+			->method('getPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', 'auth_f1_not_people_sync'),
+			)));
+
+		$this->authClientMock->expects($this->never())
+			->method('authenticate');
+
+		$this->loggerMock->expects( $this->never() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+	}
+
+	public function testShowSyncButtonFor_AuthenticatedInSession() {
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', false),
+			)));
+
+		$this->authClientMock->expects($this->never())
+			->method('authenticate');
+
+		$this->memSession->set('ctci_f1_access_token', 1234567890);
+		$this->memSession->set('ctci_f1_access_token_secret', 1234567890);
+
+		$this->loggerMock->expects( $this->never() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+	}
+
+	public function testShowSyncButtonFor_AuthenticateCallback() {
+
+		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', false),
+			)));
+
+		$this->authClientMock->expects($this->never())
+			->method('authenticate');
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', true ),
+				array( 'oauth_token_secret', true )
+			)));
+
+		$oauth_token = 1234567890;
+		$oauth_token_secret = 12345678901234567890;
+
+		$this->httpVarMock->expects($this->any())
+			->method('getGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', $oauth_token ),
+				array( 'oauth_token_secret', $oauth_token_secret )
+			)));
+
+		$this->authClientMock->expects( $this->once() )
+			->method( 'retrieveAccessToken' )
+			->with( $this->equalTo( $oauth_token ), $this->equalTo( $oauth_token_secret ) )
+			->will( $this->returnValue( true ) );
+
+		$access_token = '1234567890';
+		$access_token_secret = '12345678-abcd-0123-abcdef12345678';
+
+		$this->authClientMock->expects( $this->once() )
+			->method( 'getAccessToken' )
+			->will( $this->returnValue( $access_token ) );
+
+		$this->authClientMock->expects( $this->once() )
+			->method( 'getAccessTokenSecret' )
+			->will( $this->returnValue( $access_token_secret ) );
+
+		$accessTokenSet = false;
+		$accessTokenSecretSet = false;
+		$this->sessionMock->expects( $this->exactly(2) )
+			->method( 'set' )
+			->will( $this->returnCallback(
+				function( $arg1, $arg2 ) use ($access_token, &$accessTokenSet, $access_token_secret, &$accessTokenSecretSet ) {
+					if ( $arg1 === 'ctci_f1_access_token' && $arg2 === $access_token ) {
+						$accessTokenSet = true;
+						return null;
+					}
+					if ( $arg1 === 'ctci_f1_access_token_secret' && $arg2 === $access_token_secret ) {
+						$accessTokenSecretSet = true;
+						return null;
+					}
+					return null;
+			}));
+
+		$this->loggerMock->expects( $this->never() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+
+		$this->assertTrue( $accessTokenSet, "access token not set" );
+		$this->assertTrue( $accessTokenSecretSet, "access token secret not set" );
+	}
+
+	public function testShowSyncButtonFor_AuthenticateCallback_AccessTokenError() {
+
+		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', false),
+			)));
+
+		$this->authClientMock->expects($this->never())
+			->method('authenticate');
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', true ),
+				array( 'oauth_token_secret', true )
+			)));
+
+		$oauth_token = 1234567890;
+		$oauth_token_secret = 12345678901234567890;
+
+		$this->httpVarMock->expects($this->any())
+			->method('getGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', $oauth_token ),
+				array( 'oauth_token_secret', $oauth_token_secret )
+			)));
+
+		$this->authClientMock->expects( $this->once() )
+			->method( 'retrieveAccessToken' )
+			->with( $this->equalTo( $oauth_token ), $this->equalTo( $oauth_token_secret ) )
+			->will( $this->returnValue( false ) );
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'getAccessToken' );
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'getAccessTokenSecret' );
+
+		$this->sessionMock->expects( $this->never() )
+			->method( 'set' );
+
+		$this->loggerMock->expects( $this->never() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+
+	}
+
+	public function testShowSyncButtonFor_AuthenticateCallback_AccessTokenException() {
+
+		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', false),
+			)));
+
+		$this->authClientMock->expects($this->never())
+			->method('authenticate');
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', true ),
+				array( 'oauth_token_secret', true )
+			)));
+
+		$oauth_token = 1234567890;
+		$oauth_token_secret = 12345678901234567890;
+
+		$this->httpVarMock->expects($this->any())
+			->method('getGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', $oauth_token ),
+				array( 'oauth_token_secret', $oauth_token_secret )
+			)));
+
+		$exception = new CTCI_F1APIRequestException('url', array('headers'), 404, 'body' );
+
+		$this->authClientMock->expects( $this->once() )
+			->method( 'retrieveAccessToken' )
+			->with( $this->equalTo( $oauth_token ), $this->equalTo( $oauth_token_secret ) )
+			->will( $this->throwException( $exception ) );
+
+		$this->loggerMock->expects( $this->once() )
+			->method( 'error' )
+			->with( $this->isType('string'), $this->equalTo( $exception ) );
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'getAccessToken' );
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'getAccessTokenSecret' );
+
+		$this->sessionMock->expects( $this->never() )
+			->method( 'set' );
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+
+	}
+
+	public function testShowSyncButtonFor_Default() {
+
+		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+
+		$this->sutInitOnLoad();
+
+		$this->injectOAuthClient();
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasPostVar')
+			->will($this->returnValueMap(array(
+				array('ctci_action', false),
+			)));
+
+		$this->authClientMock->expects($this->never())
+			->method('authenticate');
+
+		$this->httpVarMock->expects($this->any())
+			->method('hasGetVar')
+			->will( $this->returnValueMap(array(
+				array( 'oauth_token', false ),
+				array( 'oauth_token_secret', false )
+			)));
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'retrieveAccessToken' );
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'getAccessToken' );
+
+		$this->authClientMock->expects( $this->never() )
+			->method( 'getAccessTokenSecret' );
+
+		$this->sessionMock->expects( $this->never() )
+			->method( 'set' );
+
+		$this->loggerMock->expects( $this->never() )
+			->method( 'error' );
+
+		$this->htmlHelperMock->expects($this->once())
+			->method('showActionButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButton');
+
+		$this->htmlHelperMock->expects($this->never())
+			->method('showAJAXRunButtonFor');
+
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+
+	}
 }
- 
+
+// some global dependencies that need to be defined
+function __( $arg ) { return $arg; }
+
+class Church_Theme_Content_Integration {
+	public static $TEXT_DOMAIN = 'church-theme-content-integration';
+}
