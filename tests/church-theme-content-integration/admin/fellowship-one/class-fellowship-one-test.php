@@ -53,6 +53,42 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
+			'good_auth_mode' => array(
+				self::buildSettingsArray( '2', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				),
+				self::buildSettingsArray( '2', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				)
+			),
+			'bad_auth_mode' => array(
+				self::buildSettingsArray( 'a', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				),
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				)
+			),
+			'bad_url' => array(
+				self::buildSettingsArray( '2', 'https:/test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
+				),
+				self::buildSettingsArray( '2', '',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
+				)
+			),
 			'bad_key' => array(
 				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
 					'12 34', '12345678-1234-1234-123456789012', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
@@ -113,6 +149,30 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
+			'good_alt_name_format' => array(
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "T. FQ M L S",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				),
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "T. FQ M L S",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				)
+			),
+			'bad_name_format' => array(
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "<F L>",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				),
+				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
+					"List 1\r\nList 2", "F L",
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
+				)
+			),
 			'bad_sync_people_groups' => array(
 				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
 					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 't',
@@ -164,18 +224,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
 				)
 			),
-			'bad_url' => array(
-				self::buildSettingsArray( '3', 'https:/test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
-					"List 1\r\nList 2", "F L",
-					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
-				),
-				self::buildSettingsArray( '3', '',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
-					"List 1\r\nList 2", "F L",
-					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
-				)
-			)
 		);
 	}
 
