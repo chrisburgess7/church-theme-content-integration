@@ -88,7 +88,9 @@ class Church_Theme_Content_Integration {
 	 */
 	private $htmlHelper;
 
-	private $enableModuleFieldNames = array();
+	private $enableModuleFields = array();
+
+	private $settings = array();
 
 	/**
 	 * Constructor
@@ -120,7 +122,10 @@ class Church_Theme_Content_Integration {
 		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 3 );
 
 		// Load objects
-		add_action( 'plugins_loaded', array( &$this, 'load_objects' ), 5 );
+		add_action( 'plugins_loaded', array( &$this, 'load_objects' ), 4 );
+
+		// init objects
+		add_action( 'plugins_loaded', array( &$this, 'init_objects' ), 5 );
 
 		// Set up run module actions
 		add_action( 'plugins_loaded', array( &$this, 'load_run_actions' ) );
@@ -134,6 +139,7 @@ class Church_Theme_Content_Integration {
 	public function activation() {
 		$this->setup_db();
 		$this->add_capabilities();
+		$this->load_default_settings();
 	}
 
 	// TODO: add a delete action for removing this table
@@ -161,6 +167,55 @@ class Church_Theme_Content_Integration {
 				$role->add_cap(self::$RUN_SYNC_CAPABILITY);
 			}
 		}
+	}
+
+	protected function load_default_settings() {
+		$this->init_plugin_variables();
+		$this->load_modules();
+		$this->set_includes();
+		$this->load_includes();
+		$this->load_objects();
+		$this->load_global_settings();
+
+		$option = get_option( self::$CONFIG_GROUP );
+		if ( ! is_array( $option ) ) {
+			$defaults = array();
+			foreach ( $this->enableModuleFields as $setting ) {
+				$defaults[ $setting[0] ] = $setting[3];
+			}
+			foreach ( $this->settings as $setting ) {
+				$defaults[ $setting[0] ] = $setting[3];
+			}
+			add_option( self::$CONFIG_GROUP, $defaults );
+		}
+
+		foreach ( $this->dataProviders as $dataProvider ) {
+			$dataProvider->loadDefaultSettings();
+		}
+	}
+
+	protected function load_global_settings() {
+		// for each data provider, create an enable button for each function it supports
+		foreach ( $this->dataProviders as $dataProvider ) {
+			foreach ( $this->operationTypes as $operation ) {
+				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
+					$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
+					$this->enableModuleFields[] = array(
+						$fieldName,
+						__( sprintf('Enable %s %s', $dataProvider->getHumanReadableName(), $operation->getHumanReadableName() ),
+							self::$TEXT_DOMAIN
+						),
+						array( $this, 'show_module_enable_field' ),
+						'T'
+					);
+				}
+			}
+		}
+
+		// add any further global settings to this list, and it should get updated throughout
+		$this->settings = array(
+			array( 'debug_mode', __( 'Debug Mode', self::$TEXT_DOMAIN ), array( $this, 'show_debug_option'), 'F' )
+		);
 	}
 
 	public function deactivation() {
@@ -403,21 +458,29 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function load_objects() {
-		$this->wpal = new CTCI_WPAL();
-		$this->logger = new CTCI_Logger();
+		if ( ! is_object( $this->wpal ) ) {
+			$this->wpal = new CTCI_WPAL();
+		}
+		if ( ! is_object( $this->logger ) ) {
+			$this->logger = new CTCI_Logger();
+		}
 		$this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
 		$this->httpVarManager = new CTCI_HTTPVariablesManager();
 		$this->htmlHelper = new CTCI_HtmlHelper( array( $this, 'get_run_module_key' ) );
 
-		$options = get_option( self::$CONFIG_GROUP );
-		if ( $options['debug_mode'] === 'T' ) {
-			$this->logger->includeExceptions();
-		}
 		// a list of all operations currently supported
 		// need to add new ones here once implemented
 		$this->operationTypes = array(
 			new CTCI_PeopleSync( $this->wpal, $this->logger )
 		);
+	}
+
+	public function init_objects() {
+		$options = get_option( self::$CONFIG_GROUP );
+		if ( $options['debug_mode'] === 'T' ) {
+			$this->logger->includeExceptions();
+		}
+
 		foreach ( $this->dataProviders as $dataProvider ) {
 			$dataProvider->initOnLoad( $this->session, $this->httpVarManager, $this->htmlHelper );
 		}
@@ -527,6 +590,9 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function register_settings() {
+
+		$this->load_global_settings();
+
 		register_setting( self::$CONFIG_GROUP, self::$CONFIG_GROUP, array( $this, 'validate_config_options' ) );
 		add_settings_section(
 			self::$ENABLE_OPT_SECTION,
@@ -536,30 +602,25 @@ class Church_Theme_Content_Integration {
 		);
 
 		// for each data provider, create an enable button for each function it supports
-		foreach ( $this->dataProviders as $dataProvider ) {
-			foreach ( $this->operationTypes as $operation ) {
-				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
-					$fieldName = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
-					$this->enableModuleFieldNames[] = $fieldName;
-					add_settings_field(
-						$fieldName,
-						__( sprintf('Enable %s People Sync', $dataProvider->getHumanReadableName() ), self::$TEXT_DOMAIN ),
-						array( $this, 'show_module_enable_field' ),
-						self::$ENABLE_OPT_PAGE,
-						self::$ENABLE_OPT_SECTION,
-						array(
-							'fieldName' => $fieldName
-						)
-					);
-				}
-			}
+		foreach ( $this->enableModuleFields as $enableModField ) {
+			add_settings_field(
+				$enableModField[0], $enableModField[1], $enableModField[2],
+				self::$ENABLE_OPT_PAGE,
+				self::$ENABLE_OPT_SECTION,
+				array(
+					'fieldName' => $enableModField[0]
+				)
+			);
+		}
 
+		foreach ( $this->dataProviders as $dataProvider ) {
 			$dataProvider->registerSettings();
 		}
 
-		add_settings_field(
-			'debug_mode', __( 'Debug Mode', self::$TEXT_DOMAIN ), array( $this, 'show_debug_option'), self::$ENABLE_OPT_PAGE, self::$ENABLE_OPT_SECTION
-		);
+		foreach ( $this->settings as $settings ) {
+			add_settings_field( $settings[0], $settings[1], $settings[2], self::$ENABLE_OPT_PAGE, self::$ENABLE_OPT_SECTION );
+		}
+
 	}
 
 	public function show_debug_option() {
@@ -606,7 +667,8 @@ class Church_Theme_Content_Integration {
 
 	public function validate_config_options( $settings ) {
 		$newSettings = array();
-		foreach ( $this->enableModuleFieldNames as $fieldName ) {
+		foreach ( $this->enableModuleFields as $field ) {
+			$fieldName = $field[0];
 			$newSettings[ $fieldName ] = trim( $settings[ $fieldName ] );
 			if ( 'T' !== $newSettings[ $fieldName ] && 'F' !== $newSettings[ $fieldName ] ) {
 				$newSettings[ $fieldName ] = 'F';

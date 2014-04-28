@@ -337,6 +337,31 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 	public function peopleSyncSectionCallback() {}
 
+	public function loadDefaultSettings() {
+		$option = get_option( $this->getSettingsGroupName() );
+
+		if ( ! is_array( $option ) ) {
+			add_option( $this->getSettingsGroupName(), array(
+				'auth_mode' => '3',
+				'api_url' => '',
+				'api_key' => '',
+				'api_secret' => '',
+				'username' => '',
+				'password' => '',
+				'people_lists' => '',
+				'sync_people_groups' => 'T',
+				'name_format' => 'F L S',
+				'sync_position' => 'F',
+				'position_attribute' => '',
+				'sync_phone' => 'T',
+				'sync_email' => 'T',
+				'sync_facebook' => 'T',
+				'sync_twitter' => 'T',
+				'sync_linkedin' => 'T',
+			));
+		}
+	}
+
 	public function validateSettings( $settings ) {
 		$newInput = array();
 		$newInput['auth_mode'] = trim( $settings['auth_mode'] );
@@ -381,7 +406,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			$newInput['people_lists'] = implode( "\r\n", $lines );
 		}
 		if ( ! isset( $this->nameFormatOptions[ $settings['name_format'] ] ) ) {
-			$newInput['name_format'] = 'F L';
+			$newInput['name_format'] = 'F L S';
 		} else {
 			$newInput['name_format'] = trim( $settings['name_format'] );
 		}

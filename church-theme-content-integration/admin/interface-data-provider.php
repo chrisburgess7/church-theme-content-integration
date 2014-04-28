@@ -44,6 +44,8 @@ interface CTCI_DataProviderInterface {
 
 	public function registerSettings();
 
+	public function loadDefaultSettings();
+
 	public function validateSettings( $settings );
 
 	public function showSettingsPage();
