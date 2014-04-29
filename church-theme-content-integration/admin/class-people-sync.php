@@ -188,10 +188,6 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		}
 	}
 
-	/*protected function getCTCPerson( $providerTag, $personId ) {
-		return false;
-	}*/
-
 	protected function syncCTCPerson( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person, $syncGroups ) {
 		if ( $syncGroups ) {
 			$this->wpal->setCTCPersonsGroups( $ctcPerson, $person->getGroups() );
@@ -220,12 +216,6 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		}
 		$this->wpal->updateCTCPerson( $ctcPerson );
 	}
-
-	/*protected function syncCTCPersonsGroups( CTCI_CTCPersonInterface $ctcPerson, CTCI_PersonInterface $person ) {
-		// replaces all existing terms i.e. groups, with the new ones
-		//wp_set_object_terms($ctcPerson->ID, $person->getGroups(), CTCI_Config::$ctcPersonGroupTaxonomy);
-
-	}*/
 
 	protected function attachPerson( CTCI_PersonInterface $person ) {
 		$unattachedCTCPeople = $this->wpal->getUnattachedCTCPeople();

@@ -22,18 +22,6 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public static $ctcPersonProviderTagMetaTag = '_ctci_person_provider_tag';
 	public static $ctcPersonProviderIdMetaTag = '_ctci_person_provider_id';
 
-	/*public static $ctcGroupConnectProviderTagField = 'data_provider';
-	public static $ctcGroupConnectTermIDField = 'term_id';
-	public static $ctcGroupConnectGroupIDField = 'provider_group_id';*/
-
-	/*public static function makePersonAttachValueString( $providerTag, $providerId ) {
-		return $providerTag . ':' . $providerId;
-	}
-
-	public static function extractPersonAttachValuesFromString( $value ) {
-		return explode( ':', $value);
-	}*/
-
 	public function getOption( $option ) {
 		// TODO: Implement getOption() method.
 	}
