@@ -23,11 +23,11 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public static $ctcPersonProviderIdMetaTag = '_ctci_person_provider_id';
 
 	public function getOption( $option ) {
-		// TODO: Implement getOption() method.
+		return get_option( $option );
 	}
 
 	public function getCurrentAdminPageURL() {
-		// TODO: Implement getCurrentAdminPageURL() method.
+		return admin_url( "admin.php?page=" . Church_Theme_Content_Integration::$RUN_PAGE );
 	}
 
 	/**
