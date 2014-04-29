@@ -168,7 +168,14 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			$options = get_option( $this->getSettingsGroupName() );
 		}
 		if ( false === $options ) {
-			throw new Exception( 'Options for ' . $this->getHumanReadableName() . ' could not be retrieved during initialisation on load.' );
+			$this->authMode = $this->getDefaultSetting('auth_mode');
+			$this->consumerKey = $this->getDefaultSetting('api_key');
+			$this->consumerSecret = $this->getDefaultSetting('api_secret');
+			$this->serverURL = $this->getDefaultSetting('api_url');
+			if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
+				$this->username = $this->getDefaultSetting('username');
+				$this->password = $this->getDefaultSetting('password');
+			}
 		}
 		if ( $options['auth_mode'] == CTCI_F1OAuthClient::CREDENTIALS ) {
 			$this->authMode = CTCI_F1OAuthClient::CREDENTIALS;
@@ -342,23 +349,45 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 		if ( ! is_array( $option ) ) {
 			add_option( $this->getSettingsGroupName(), array(
-				'auth_mode' => '3',
-				'api_url' => '',
-				'api_key' => '',
-				'api_secret' => '',
-				'username' => '',
-				'password' => '',
-				'people_lists' => '',
-				'sync_people_groups' => 'T',
-				'name_format' => 'F L S',
-				'sync_position' => 'F',
-				'position_attribute' => '',
-				'sync_phone' => 'T',
-				'sync_email' => 'T',
-				'sync_facebook' => 'T',
-				'sync_twitter' => 'T',
-				'sync_linkedin' => 'T',
+				'auth_mode' => $this->getDefaultSetting('auth_mode'),
+				'api_url' => $this->getDefaultSetting( 'api_url' ),
+				'api_key' => $this->getDefaultSetting( 'api_key' ),
+				'api_secret' => $this->getDefaultSetting( 'api_secret' ),
+				'username' => $this->getDefaultSetting( 'username' ),
+				'password' => $this->getDefaultSetting( 'password' ),
+				'people_lists' => $this->getDefaultSetting( 'people_lists' ),
+				'sync_people_groups' => $this->getDefaultSetting( 'sync_people_groups' ),
+				'name_format' => $this->getDefaultSetting( 'name_format' ),
+				'sync_position' => $this->getDefaultSetting( 'sync_position' ),
+				'position_attribute' => $this->getDefaultSetting( 'position_attribute' ),
+				'sync_phone' => $this->getDefaultSetting( 'sync_phone' ),
+				'sync_email' => $this->getDefaultSetting( 'sync_email' ),
+				'sync_facebook' => $this->getDefaultSetting( 'sync_facebook' ),
+				'sync_twitter' => $this->getDefaultSetting( 'sync_twitter' ),
+				'sync_linkedin' => $this->getDefaultSetting( 'sync_linkedin' ),
 			));
+		}
+	}
+
+	protected function getDefaultSetting( $setting ) {
+		switch( $setting ) {
+			case 'auth_mode': return '3';
+			case 'api_url': return '';
+			case 'api_key': return '';
+			case 'api_secret': return '';
+			case 'username': return '';
+			case 'password': return '';
+			case 'people_lists': return '';
+			case 'sync_people_groups': return 'T';
+			case 'name_format': return 'F L S';
+			case 'sync_position': return 'F';
+			case 'position_attribute': return '';
+			case 'sync_phone': return 'T';
+			case 'sync_email': return 'T';
+			case 'sync_facebook': return 'T';
+			case 'sync_twitter': return 'T';
+			case 'sync_linkedin': return 'T';
+			default: return null;
 		}
 	}
 
@@ -366,7 +395,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$newInput = array();
 		$newInput['auth_mode'] = trim( $settings['auth_mode'] );
 		if ( $newInput['auth_mode'] != '2' && $newInput['auth_mode'] != '3' ) {
-			$newInput['auth_mode'] = '3';
+			$newInput['auth_mode'] = $this->getDefaultSetting('auth_mode');
 		}
 		$newInput['api_url'] = trim( $settings['api_url'] );
 		// credit: https://gist.github.com/dperini/729294
@@ -374,23 +403,23 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			'%^(?:(?:https?|ftp)://)(?:\S+(?::\S*)?@|\d{1,3}(?:\.\d{1,3}){3}|(?:(?:[a-z\d\x{00a1}-\x{ffff}]+-?)*[a-z\d\x{00a1}-\x{ffff}]+)(?:\.(?:[a-z\d\x{00a1}-\x{ffff}]+-?)*[a-z\d\x{00a1}-\x{ffff}]+)*(?:\.[a-z\x{00a1}-\x{ffff}]{2,6}))(?::\d+)?(?:[^\s]*)?$%iu',
 			$newInput['api_url']
 		) ) {
-			$newInput['api_url'] = '';
+			$newInput['api_url'] = $this->getDefaultSetting('api_url');
 		}
 		$newInput['api_key'] = trim( $settings['api_key'] );
 		if ( preg_match( '/\D/', $newInput['api_key'] ) ) {
-			$newInput['api_key'] = '';
+			$newInput['api_key'] = $this->getDefaultSetting('api_key');
 		}
 		$newInput['api_secret'] = trim( $settings['api_secret'] );
 		if ( preg_match( '/[^0-9a-f-]/i', $newInput['api_secret'] ) ) {
-			$newInput['api_secret'] = '';
+			$newInput['api_secret'] = $this->getDefaultSetting('api_secret');
 		}
 		$newInput['username'] = trim( $settings['username'] );
 		if ( ! preg_match( '/^[\w]+$/', $newInput['username'] ) ) {
-			$newInput['username'] = '';
+			$newInput['username'] = $this->getDefaultSetting('username');
 		}
 		$newInput['password'] = trim( $settings['password'] );
 		if ( ! preg_match( '/^[\w;:,.\?!@#$%\^&\*\(\)-]+$/', $newInput['password'] ) ) {
-			$newInput['password'] = '';
+			$newInput['password'] = $this->getDefaultSetting('password');
 		}
 		$newInput['people_lists'] = trim( $settings['people_lists'] );
 		// is this needed? not sure what else to validate for
@@ -406,17 +435,17 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			$newInput['people_lists'] = implode( "\r\n", $lines );
 		}
 		if ( ! isset( $this->nameFormatOptions[ $settings['name_format'] ] ) ) {
-			$newInput['name_format'] = 'F L S';
+			$newInput['name_format'] = $this->getDefaultSetting('name_format');
 		} else {
 			$newInput['name_format'] = trim( $settings['name_format'] );
 		}
 		$newInput['sync_people_groups'] = trim( $settings['sync_people_groups'] );
 		if ( 'T' !== $newInput['sync_people_groups'] && 'F' !== $newInput['sync_people_groups'] ) {
-			$newInput['sync_people_groups'] = 'F';
+			$newInput['sync_people_groups'] = $this->getDefaultSetting('sync_people_groups');
 		}
 		$newInput['sync_position'] = trim( $settings['sync_position'] );
 		if ( 'T' !== $newInput['sync_position'] && 'F' !== $newInput['sync_position'] ) {
-			$newInput['sync_position'] = 'F';
+			$newInput['sync_position'] = $this->getDefaultSetting('sync_position');
 		}
 		$newInput['position_attribute'] = trim( $settings['position_attribute'] );
 		if ( strlen( $newInput['position_attribute'] ) > 50 ) {
@@ -424,23 +453,23 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 		$newInput['sync_phone'] = trim( $settings['sync_phone'] );
 		if ( 'T' !== $newInput['sync_phone'] && 'F' !== $newInput['sync_phone'] ) {
-			$newInput['sync_phone'] = 'F';
+			$newInput['sync_phone'] = $this->getDefaultSetting('sync_phone');
 		}
 		$newInput['sync_email'] = trim( $settings['sync_email'] );
 		if ( 'T' !== $newInput['sync_email'] && 'F' !== $newInput['sync_email'] ) {
-			$newInput['sync_email'] = 'F';
+			$newInput['sync_email'] = $this->getDefaultSetting('sync_email');
 		}
 		$newInput['sync_facebook'] = trim( $settings['sync_facebook'] );
 		if ( 'T' !== $newInput['sync_facebook'] && 'F' !== $newInput['sync_facebook'] ) {
-			$newInput['sync_facebook'] = 'F';
+			$newInput['sync_facebook'] = $this->getDefaultSetting('sync_facebook');
 		}
 		$newInput['sync_twitter'] = trim( $settings['sync_twitter'] );
 		if ( 'T' !== $newInput['sync_twitter'] && 'F' !== $newInput['sync_twitter'] ) {
-			$newInput['sync_twitter'] = 'F';
+			$newInput['sync_twitter'] = $this->getDefaultSetting('sync_twitter');
 		}
 		$newInput['sync_linkedin'] = trim( $settings['sync_linkedin'] );
 		if ( 'T' !== $newInput['sync_linkedin'] && 'F' !== $newInput['sync_linkedin'] ) {
-			$newInput['sync_linkedin'] = 'F';
+			$newInput['sync_linkedin'] = $this->getDefaultSetting('sync_linkedin');
 		}
 		return $newInput;
 	}
