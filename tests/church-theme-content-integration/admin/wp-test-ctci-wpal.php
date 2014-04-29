@@ -16,6 +16,10 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->sut = new CTCI_WPAL();
 	}
 
+	public function testPluginActive() {
+		$this->assertTrue( is_plugin_active('church-theme-content-integration/church-theme-content-integration.php') );
+	}
+
 	public function testCreateCTCGroup() {
 		$group = new CTCI_PeopleGroup('f1', '12345', 'My group', 'My group description');
 
@@ -797,6 +801,29 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertTrue( isset( $ccbPeople[ $id[2] ] ) );
 		$this->assertEquals( $ccbPeople[ $id[2] ]->id(), $id[2] );
 		$this->assertEquals( $ccbPeople[ $id[2] ]->getName(), 'Test Person 3' );
+
+	}
+
+	public function testGetCTCPeopleAttachedViaProvider_MoreThan5People() {
+		// the get_posts method by default only returns 5 posts
+		// we'll test that we are getting all of them here
+
+		$posts = array();
+		for ( $i = 0; $i < 10; $i++ ) {
+			$posts[$i] = wp_insert_post( array(
+				'post_title' => 'Test Person ' . $i,
+				'post_type' => CTCI_WPAL::$ctcPersonPostType,
+			));
+			// quick check that the create post looks ok
+			$this->assertTrue( is_int($posts[$i]) && $posts[$i] > 0);
+			// add an attach record
+			update_post_meta( $posts[$i], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+			update_post_meta( $posts[$i], CTCI_WPAL::$ctcPersonProviderIdMetaTag, '1234' . $i );
+		}
+
+		$people = $this->sut->getCTCPeopleAttachedViaProvider('f1');
+
+		$this->assertCount( 10, $people );
 
 	}
 
