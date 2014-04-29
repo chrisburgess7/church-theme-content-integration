@@ -17,12 +17,17 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 
 	protected $messages = array();
 
+	protected $hasWarnings = false;
+	protected $hasErrors = false;
+
 	protected $filter;
 
 	protected $outputExceptionDetails = false;
 
 	public function __construct() {
 		$this->filter = static::$INFO | static::$WARNING | static::$ERROR | static::$SUCCESS;
+		$this->hasErrors = false;
+		$this->hasWarnings = false;
 	}
 
 	public function includeExceptions( $include = true ) {
@@ -31,6 +36,8 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 
 	public function clear() {
 		$this->messages = array();
+		$this->hasErrors = false;
+		$this->hasWarnings = false;
 		return $this;
 	}
 
@@ -48,6 +55,7 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 			$message,
 			$exception
 		);
+		$this->hasWarnings = true;
 		return $this;
 	}
 
@@ -57,6 +65,7 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 			$message,
 			$exception
 		);
+		$this->hasErrors = true;
 		return $this;
 	}
 
@@ -125,5 +134,13 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 			$exception->getTraceAsString(), (string) $exception
 		);
 		return $str;
+	}
+
+	public function hasWarnings() {
+		return $this->hasWarnings;
+	}
+
+	public function hasErrors() {
+		return $this->hasErrors;
 	}
 }

@@ -68,6 +68,15 @@ class CTCI_ModuleProcess {
 					if ( $valid ) {
 						//echo 'running...' . PHP_EOL;
 						$operation->run();
+
+						if ( ! $this->logger->hasErrors() ) {
+							$procName = $dataProvider->getHumanReadableName() . ' ' . $operation->getHumanReadableName();
+							if ( ! $this->logger->hasWarnings() ) {
+								$this->logger->success( $procName . ' complete.' );
+							} else {
+								$this->logger->warning( $procName . ' has finished with warnings.' );
+							}
+						}
 					}
 				} catch ( Exception $e ) {
 					$this->logger->error(
