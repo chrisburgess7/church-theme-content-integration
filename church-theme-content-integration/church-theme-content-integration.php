@@ -538,6 +538,7 @@ class Church_Theme_Content_Integration {
 		if ( ! current_user_can( self::$RUN_SYNC_CAPABILITY ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 		}
+		$configOptions = get_option( self::$CONFIG_GROUP );
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
 		echo '<div style="display: inline-block; width: 30%; vertical-align: top; margin-top: 10px">';
@@ -545,14 +546,19 @@ class Church_Theme_Content_Integration {
 			echo '<h3>' . $dataProvider->getHumanReadableName() . '</h3>';
 			foreach ( $this->operationTypes as $operation ) {
 				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
+					$enabledOpt = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
+					$enabled = false;
+					if ( isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
+						$enabled = true;
+					}
 					echo '<div style="display: inline-block">';
 					switch ( $dataProvider->getRunButtonHandlerType() ) {
 						case CTCI_DataProviderInterface::RUNBUTTON_CUSTOM:
-							$dataProvider->showSyncButtonFor( $operation, $this->logger );
+							$dataProvider->showSyncButtonFor( $operation, $this->logger, $enabled );
 							break;
 						default:
 						case CTCI_DataProviderInterface::RUNBUTTON_AJAX:
-							$this->htmlHelper->showAJAXRunButtonFor( $dataProvider, $operation );
+							$this->htmlHelper->showAJAXRunButtonFor( $dataProvider, $operation, $enabled );
 							break;
 					}
 					echo '</div>';

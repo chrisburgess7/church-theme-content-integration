@@ -52,7 +52,7 @@ interface CTCI_DataProviderInterface {
 
 	public function getRunButtonHandlerType();
 
-	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger );
+	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger, $enabled = true );
 
 	/**
 	 * Initialise the data provider at the start of any sync process.

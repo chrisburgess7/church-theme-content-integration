@@ -482,7 +482,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 	}
 
-	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger ) {
+	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger, $enabled = true ) {
 
 		$operationTag = $operation->getTag();
 		$authActionValue = "auth_f1_{$operationTag}";
@@ -514,15 +514,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				}
 				if ( ! $data ) {
 					$logger->error('Could not connect to the server (no request token)');
-					$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
+					$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
 				}
 			} else {
-				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
+				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
 			}
 		} elseif ( $this->session->has('ctci_f1_access_token') && $this->session->has('ctci_f1_access_token_secret') ) {
 			// already authenticated, just show sync button
 			//echo 'session var\'s set';
-			$this->htmlHelper->showAJAXRunButtonFor( $this, $operation );
+			$this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
 		} elseif ( $this->httpVarManager->hasGetVar('oauth_token') && $this->httpVarManager->hasGetVar('oauth_token_secret') ) {
 			//echo 'callback';
 			// callback after authenticating with service provider
@@ -555,13 +555,13 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$this->session->set( 'ctci_f1_access_token', $access_token );
 				$this->session->set( 'ctci_f1_access_token_secret', $token_secret );
 
-				$this->htmlHelper->showAJAXRunButtonFor( $this, $operation );
+				$this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
 			} else {
-				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
+				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
 			}
 		} else {
 			//echo 'default auth';
-			$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle );
+			$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
 		}
 	}
 
