@@ -17,24 +17,33 @@ class CTCI_HtmlHelper implements CTCI_HtmlHelperInterface {
 	}
 
 	public function showAJAXRunButton( $label, $key, $enabled = true ) {
+		$classes = '';
 		$attr = '';
 		if ( ! $enabled ) {
 			$attr .= 'disabled';
+		} else {
+			$classes .= 'ctci-enabled ';
 		}
+		$classes .= 'button button-primary button-large';
 		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
 			<input type="hidden" name="action" value="' . $key . '">
-        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="button button-primary button-large" value="' . $label . '" ' . $attr . '>
+        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="' . $classes . '" value="' . $label . '" ' . $attr . '>
         </form>
         <script type="text/javascript">
         jQuery(document).ready(function($){
+            $("#ctci-run-page-loading").hide();
             var frm = $("#' . $key . '");
             frm.submit(function (ev) {
                 $("#ctci-message-log").html("");
+                $("input.ctci-enabled").prop("disabled", true);
+                $("#ctci-run-page-loading").show();
                 $.ajax({
                     type: frm.attr("method"),
                     url: ajaxurl,
                     data: frm.serialize(),
                     success: function (data) {
+                        $("input.ctci-enabled").prop("disabled", false);
+                        $("#ctci-run-page-loading").hide();
                         $("#ctci-message-log").html(data);
                     }
                 });
@@ -55,15 +64,19 @@ class CTCI_HtmlHelper implements CTCI_HtmlHelperInterface {
 	}
 
 	public function showActionButton( $actionValue, $inputName, $inputId, $buttonTitle, $enabled = true ) {
+		$classes = '';
 		$attr = '';
 		if ( ! $enabled ) {
 			$attr .= 'disabled';
+		} else {
+			$classes .= 'ctci-enabled ';
 		}
+		$classes .= 'button button-primary button-large';
 		printf(
 			'<form name="%1$s" action="#" method="post" id="%1$s">
 			<input type="hidden" name="ctci_action" value="%1$s">
-            <input type="submit" name="%2$s" id="%3$s" class="button button-primary button-large" value="%4$s" %5$s>',
-			$actionValue, $inputName, $inputId, $buttonTitle, $attr
+            <input type="submit" name="%2$s" id="%3$s" class="%5$s" value="%4$s" %6$s>',
+			$actionValue, $inputName, $inputId, $buttonTitle, $classes, $attr
 		);
 		echo '</form>';
 	}

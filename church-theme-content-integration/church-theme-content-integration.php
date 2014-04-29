@@ -133,6 +133,7 @@ class Church_Theme_Content_Integration {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
 			add_action( 'admin_init', array( &$this, 'register_settings' ) );
+			add_action( 'admin_enqueue_scripts', array( &$this, 'enqueue_scripts' ) );
 		}
 	}
 
@@ -504,6 +505,11 @@ class Church_Theme_Content_Integration {
 		}
 	}
 
+	public function enqueue_scripts() {
+		wp_register_style( 'ctci-style', plugins_url( '/admin/css/style.css', __FILE__ ), array(), '0.1', 'all' );
+		wp_enqueue_style( 'ctci-style' );
+	}
+
 	public function build_admin_menu() {
 		add_menu_page(
 			__('CTC Integration Options', self::$TEXT_DOMAIN),
@@ -541,7 +547,8 @@ class Church_Theme_Content_Integration {
 		$configOptions = get_option( self::$CONFIG_GROUP );
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
-		echo '<div style="display: inline-block; width: 30%; vertical-align: top; margin-top: 10px">';
+		echo '<div id="ctci-run-page">';
+		echo '<div id="ctci-run-page-loading"></div>';
 		foreach ( $this->dataProviders as $dataProvider ) {
 			echo '<h3>' . $dataProvider->getHumanReadableName() . '</h3>';
 			foreach ( $this->operationTypes as $operation ) {
@@ -551,7 +558,7 @@ class Church_Theme_Content_Integration {
 					if ( isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
 						$enabled = true;
 					}
-					echo '<div style="display: inline-block">';
+					echo '<div class="ctci-run-button">';
 					switch ( $dataProvider->getRunButtonHandlerType() ) {
 						case CTCI_DataProviderInterface::RUNBUTTON_CUSTOM:
 							$dataProvider->showSyncButtonFor( $operation, $this->logger, $enabled );
@@ -566,9 +573,9 @@ class Church_Theme_Content_Integration {
 			}
 		}
 		echo '</div>';
-		echo '<div style="display: inline-block; width: 68%; margin-top: 10px">';
+		echo '<div id="ctci-run-messages">';
 		echo '<h3>Message Log</h3>';
-		echo '<div id="ctci-message-log" style="padding: 5px 10px; min-height: 100px">';
+		echo '<div id="ctci-message-log">';
 		echo $this->logger->toHTML();
 		echo '</div>';
 		echo '</div>';
