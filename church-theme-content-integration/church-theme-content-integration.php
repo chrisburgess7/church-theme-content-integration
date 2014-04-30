@@ -223,9 +223,21 @@ class Church_Theme_Content_Integration {
 	public function system_checks() {
 		if ( ! $this->isCTCActive() ) {
 			printf(
-				'<div class="error"><p>%s</p></div>',
-				__( 'Church Theme Content Integration: The Church Theme Content plugin from churchthemes.com
-					must be installed and activated before Church Theme Content Integration can be used.',
+				'<div class="error"><p>%s: %s <a href="http://churchthemes.com">churchthemes.com</a> %s</p></div>',
+				__( 'Church Theme Content Integration', self::$TEXT_DOMAIN),
+				__( 'The Church Theme Content plugin from', self::$TEXT_DOMAIN),
+				__( 'must be installed and activated before Church Theme Content Integration can be used.',
+					self::$TEXT_DOMAIN
+				)
+			);
+		}
+		if ( ! $this->curlAvailable() ) {
+			printf(
+				'<div class="error"><p>%s: %s <a href="http://www.php.net/manual/en/book.curl.php">%s</a> %s</p></div>',
+				__( 'Church Theme Content Integration', self::$TEXT_DOMAIN),
+				__( 'This plugin requires that the', self::$TEXT_DOMAIN),
+				__( 'PHP curl library', self::$TEXT_DOMAIN),
+				__( 'be installed on your web server.',
 					self::$TEXT_DOMAIN
 				)
 			);
@@ -234,6 +246,10 @@ class Church_Theme_Content_Integration {
 
 	protected function isCTCActive() {
 		return is_plugin_active( 'church-theme-content/church-theme-content.php' );
+	}
+
+	protected function curlAvailable() {
+		return extension_loaded( 'curl' );
 	}
 
 	public function deactivation() {
@@ -574,7 +590,7 @@ class Church_Theme_Content_Integration {
 				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
 					$enabledOpt = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
 					$enabled = false;
-					if ( $this->isCTCActive() && isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
+					if ( $this->isCTCActive() && $this->curlAvailable() && isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
 						$enabled = true;
 					}
 					echo '<div class="ctci-run-button">';

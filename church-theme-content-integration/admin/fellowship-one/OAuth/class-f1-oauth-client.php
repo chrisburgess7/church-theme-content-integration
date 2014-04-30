@@ -54,7 +54,7 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	private $callbackUrl = null;
 
 	// Connection to the Host
-	private $connection;
+	private $connection = null;
 	// Array. The response Headers. This will be used ONLY when the consumer requests an access token.
 	// Along with the access token, the response header includes Content-Location header.
 	// This Header contains the link to the person associated with the access token
@@ -72,7 +72,7 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		$this->consumerSecret = $settings->getF1ConsumerSecret();
 		$this->baseUrl = $settings->getF1ServerBaseURL();
 
-		$this->init_curl();
+		//$this->init_curl_if_needed();
 		$this->setPathsFromConfig();
 
 		if ( $this->authMode === self::CREDENTIALS ) {
@@ -87,24 +87,26 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	/*
 	 * Initialize the libCurl library functions
 	 */
-	private function init_curl() {
-		// Create a connection
-		$this->connection = curl_init();
+	private function init_curl_if_needed() {
+		if ( $this->connection === null ) {
+			// Create a connection
+			$this->connection = curl_init();
 
-		// Initialize the CURL Connection
+			// Initialize the CURL Connection
 
-		// Important. if the CURLOPT_RETURNTRANSFER  option is set, curl_exec it will return the result on success, FALSE on failure.
-		curl_setopt( $this->connection, CURLOPT_RETURNTRANSFER, true );
-		// The CURLOPT_HEADER option sets whether or not the server response header should be returned
-		curl_setopt( $this->connection, CURLOPT_HEADER, false );
-		// track request information. it allows the user to retrieve the request sent
-		// by cURL to the server. This is very handy and necessary when trying to analyze the full content
-		// of the client to server communication. You use
-		// curl_getinfo($ch, CURLINFO_HEADER_OUT) to retrieve the request as a string
-		curl_setopt( $this->connection, CURLINFO_HEADER_OUT, true );
-		// Verifies if the remote server has a valid certificate. Set this to false in case the remote server
-		// has invalid certificate
-		curl_setopt( $this->connection, CURLOPT_SSL_VERIFYPEER, false );
+			// Important. if the CURLOPT_RETURNTRANSFER  option is set, curl_exec it will return the result on success, FALSE on failure.
+			curl_setopt( $this->connection, CURLOPT_RETURNTRANSFER, true );
+			// The CURLOPT_HEADER option sets whether or not the server response header should be returned
+			curl_setopt( $this->connection, CURLOPT_HEADER, false );
+			// track request information. it allows the user to retrieve the request sent
+			// by cURL to the server. This is very handy and necessary when trying to analyze the full content
+			// of the client to server communication. You use
+			// curl_getinfo($ch, CURLINFO_HEADER_OUT) to retrieve the request as a string
+			curl_setopt( $this->connection, CURLINFO_HEADER_OUT, true );
+			// Verifies if the remote server has a valid certificate. Set this to false in case the remote server
+			// has invalid certificate
+			curl_setopt( $this->connection, CURLOPT_SSL_VERIFYPEER, false );
+		}
 	}
 
 	/*
@@ -219,6 +221,8 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 	 * @return bool
 	 */
 	public function retrieveAccessToken($oauthToken, $tokenSecret) {
+
+		$this->init_curl_if_needed();
 
 		$this->requestToken = $oauthToken;
 		$this->requestTokenSecret = $tokenSecret;
@@ -365,6 +369,8 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 				$tokenType = 1;
 			}
 		}*/
+
+		$this->init_curl_if_needed();
 
 		$oAuthHeader = array();
 		$oAuthHeader[ ] = $this->getOAuthHeader( $httpMethod, $requestURL, $requestType );
