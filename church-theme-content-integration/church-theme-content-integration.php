@@ -134,6 +134,7 @@ class Church_Theme_Content_Integration {
 			add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
 			add_action( 'admin_init', array( &$this, 'register_settings' ) );
 			add_action( 'admin_enqueue_scripts', array( &$this, 'enqueue_scripts' ) );
+			add_action( 'admin_notices', array( &$this, 'system_checks' ) );
 		}
 	}
 
@@ -217,6 +218,22 @@ class Church_Theme_Content_Integration {
 		$this->settings = array(
 			array( 'debug_mode', __( 'Debug Mode', self::$TEXT_DOMAIN ), array( $this, 'show_debug_option'), 'F' )
 		);
+	}
+
+	public function system_checks() {
+		if ( ! $this->isCTCActive() ) {
+			printf(
+				'<div class="error"><p>%s</p></div>',
+				__( 'Church Theme Content Integration: The Church Theme Content plugin from churchthemes.com
+					must be installed and activated before Church Theme Content Integration can be used.',
+					self::$TEXT_DOMAIN
+				)
+			);
+		}
+	}
+
+	protected function isCTCActive() {
+		return is_plugin_active( 'church-theme-content/church-theme-content.php' );
 	}
 
 	public function deactivation() {
@@ -557,7 +574,7 @@ class Church_Theme_Content_Integration {
 				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
 					$enabledOpt = $this->get_operation_enabled_option( $dataProvider->getTag(), $operation::getTag() );
 					$enabled = false;
-					if ( isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
+					if ( $this->isCTCActive() && isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
 						$enabled = true;
 					}
 					echo '<div class="ctci-run-button">';
