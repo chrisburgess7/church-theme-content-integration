@@ -550,7 +550,7 @@ class Church_Theme_Content_Integration {
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
 		echo '<div id="ctci-run-page">';
-		echo '<div id="ctci-run-page-loading"></div>';
+		echo '<div id="ctci-run-page-loading-box"></div>';
 		foreach ( $this->dataProviders as $dataProvider ) {
 			echo '<h3>' . $dataProvider->getHumanReadableName() . '</h3>';
 			foreach ( $this->operationTypes as $operation ) {
