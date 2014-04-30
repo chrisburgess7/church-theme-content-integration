@@ -507,7 +507,9 @@ class Church_Theme_Content_Integration {
 
 	public function enqueue_scripts() {
 		wp_register_style( 'ctci-style', plugins_url( '/admin/css/style.css', __FILE__ ), array(), '0.1', 'all' );
+		wp_register_script( 'ctci-scripts', plugins_url( '/admin/js/scripts.js', __FILE__ ), array( 'jquery' ), '0.1' );
 		wp_enqueue_style( 'ctci-style' );
+		wp_enqueue_script( 'ctci-scripts' );
 	}
 
 	public function build_admin_menu() {

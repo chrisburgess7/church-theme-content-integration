@@ -25,33 +25,10 @@ class CTCI_HtmlHelper implements CTCI_HtmlHelperInterface {
 			$classes .= 'ctci-enabled ';
 		}
 		$classes .= 'button button-primary button-large';
-		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
+		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '" class="ctci-sync-form">
 			<input type="hidden" name="action" value="' . $key . '">
-        <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="' . $classes . '" value="' . $label . '" ' . $attr . '>
+            <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="' . $classes . '" value="' . $label . '" ' . $attr . '>
         </form>
-        <script type="text/javascript">
-        jQuery(document).ready(function($){
-            $("#ctci-run-page-loading").hide();
-            var frm = $("#' . $key . '");
-            frm.submit(function (ev) {
-                $("#ctci-message-log").html("");
-                $("input.ctci-enabled").prop("disabled", true);
-                $("#ctci-run-page-loading").show();
-                $.ajax({
-                    type: frm.attr("method"),
-                    url: ajaxurl,
-                    data: frm.serialize(),
-                    success: function (data) {
-                        $("input.ctci-enabled").prop("disabled", false);
-                        $("#ctci-run-page-loading").hide();
-                        $("#ctci-message-log").html(data);
-                    }
-                });
-
-                ev.preventDefault();
-            });
-        });
-        </script>
     ';
 	}
 
