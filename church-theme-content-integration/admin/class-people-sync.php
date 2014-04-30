@@ -61,7 +61,6 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 
 	public function run() {
 
-		// TODO: think through error handling
 		// TODO: internationalisation of messages
 		$this->logger->info( 'Starting People Sync...' );
 
