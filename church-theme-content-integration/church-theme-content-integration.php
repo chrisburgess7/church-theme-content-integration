@@ -32,6 +32,7 @@ class Church_Theme_Content_Integration {
 	public static $PLUGIN_FILE = '';
 	public static $ADMIN_DIR = '';
 	public static $ADMIN_PATH = '';
+	public static $LANG_DIR = '';
 
 	public static $CONFIG_CAPABILITY = 'manage_options';
 	public static $RUN_SYNC_CAPABILITY = 'ctci_run_sync';
@@ -285,9 +286,7 @@ class Church_Theme_Content_Integration {
 		self::$ADMIN_PATH = trailingslashit( self::$PLUGIN_PATH ) . self::$ADMIN_DIR;
 		self::$CTC_PLUGIN_NAME = 'church-theme-content';
 		self::$CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
-
-		// define( 'CTCI_LANG_DIR', 'languages' ); // languages directory*/
-
+		self::$LANG_DIR = 'languages';
 	}
 
 	public function load_modules() {
@@ -323,35 +322,30 @@ class Church_Theme_Content_Integration {
 	 * The translation file must be named church-theme-content-$locale.mo.
 	 *
 	 * First it will check to see if the MO file exists in wp-content/languages/plugins.
-	 * If not, then the 'languages' direcory inside the plugin will be used.
+	 * If not, then the 'languages' directory inside the plugin will be used.
 	 * It is ideal to keep translation files outside of the plugin to avoid loss during updates.
 	 *
-	 * /
-	 * public function load_textdomain() {
-	 *
-	 * // Textdomain
-	 * $domain = 'church-theme-content';
-	 *
-	 * // WordPress core locale filter
-	 * $locale = apply_filters( 'plugin_locale', get_locale(), $domain );
-	 *
-	 * // WordPress 3.6 and earlier don't auto-load from wp-content/languages, so check and load manually
-	 * // http://core.trac.wordpress.org/changeset/22346
-	 * $external_mofile = WP_LANG_DIR . '/plugins/'. $domain . '-' . $locale . '.mo';
-	 * if ( get_bloginfo( 'version' ) <= 3.6 && file_exists( $external_mofile ) ) { // external translation exists
-	 * load_textdomain( $domain, $external_mofile );
-	 * }
-	 *
-	 * // Load normally
-	 * // Either using WordPress 3.7+ or older version with external translation
-	 * else {
-	 * $languages_dir = CTC_DIR . '/' . trailingslashit( CTC_LANG_DIR ); // ensure trailing slash
-	 * load_plugin_textdomain( $domain, false, $languages_dir );
-	 * }
-	 *
-	 * }
-	 *
-	 * /**
+    */
+	public function load_textdomain() {
+	    // WordPress core locale filter
+		$locale = apply_filters( 'plugin_locale', get_locale(), self::$TEXT_DOMAIN );
+
+		// WordPress 3.6 and earlier don't auto-load from wp-content/languages, so check and load manually
+		// http://core.trac.wordpress.org/changeset/22346
+		$external_mofile = WP_LANG_DIR . '/plugins/'. self::$TEXT_DOMAIN . '-' . $locale . '.mo';
+		if ( get_bloginfo( 'version' ) <= 3.6 && file_exists( $external_mofile ) ) {
+			// external translation exists
+			load_textdomain( self::$TEXT_DOMAIN, $external_mofile );
+		} else {
+			// Load normally
+			// Either using WordPress 3.7+ or older version with external translation
+			$languages_dir = self::$PLUGIN_DIR . '/' . trailingslashit( self::$LANG_DIR ); // ensure trailing slash
+			load_plugin_textdomain( self::$TEXT_DOMAIN, false, $languages_dir );
+		}
+	}
+
+
+	/**
 	 * Set includes
 	 *
 	 */
