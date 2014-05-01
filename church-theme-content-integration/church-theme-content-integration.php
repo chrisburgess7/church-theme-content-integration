@@ -321,7 +321,7 @@ class Church_Theme_Content_Integration {
 
 	public function load_modules() {
 		// add any sub-folders of admin that don't correspond to a service provider
-		$blacklist = array('.', '..');
+		$blacklist = array('.', '..', 'css', 'js');
 		$files = scandir( self::$ADMIN_PATH );
 		foreach ( $files as $file ) {
 			if ( ! in_array( $file, $blacklist ) ) {
