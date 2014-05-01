@@ -211,12 +211,12 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			),
 			'bad_sync_people_groups' => array(
 				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 't',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'f',
 					"List 1\r\nList 2", "F L S",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				),
 				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
-					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
+					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'T',
 					"List 1\r\nList 2", "F L S",
 					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
@@ -257,7 +257,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 				self::buildSettingsArray( '3', 'https://test.fellowshipone.com/',
 					'123', '12345678-90ab-cdef-1234567890ab', 'username', 'Pw1;:,.?!@#$%^&*()-', 'F',
 					"List 1\r\nList 2", "F L S",
-					'T','Church Position', 'F', 'F', 'T', 'F', 'T'
+					'T','Church Position', 'T', 'F', 'T', 'F', 'T'
 				)
 			),
 		);
