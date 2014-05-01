@@ -21,8 +21,15 @@ if ( !defined( 'ABSPATH' ) ) {
 class Church_Theme_Content_Integration {
 
 	public static $DB_VERSION = '0.1';
+	public static $CSS_VERSION = '0.1';
+	public static $JS_VERSION = '0.1';
+	public static $CTC_PLUGIN_NAME = 'church-theme-content';
+	public static $CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
+
+	public static $PLUGIN_NAME = '';
 	public static $PLUGIN_PATH = '';
 	public static $PLUGIN_DIR = '';
+	public static $PLUGIN_FILE = '';
 	public static $ADMIN_DIR = '';
 	public static $ADMIN_PATH = '';
 
@@ -104,28 +111,28 @@ class Church_Theme_Content_Integration {
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
 		// Set plugin data
-		//add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
 
 		// init variables
-		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 2 );
 
 		// Load this plugins service provider modules
-		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 2 );
+		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 3 );
 
 		// Load language file
 		//add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 1 );
 		
 		// Set includes
-		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 3 );
+		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 5 );
 
 		// Load includes
-		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 3 );
+		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 6 );
 
 		// Load objects
-		add_action( 'plugins_loaded', array( &$this, 'load_objects' ), 4 );
+		add_action( 'plugins_loaded', array( &$this, 'load_objects' ), 7 );
 
 		// init objects
-		add_action( 'plugins_loaded', array( &$this, 'init_objects' ), 5 );
+		add_action( 'plugins_loaded', array( &$this, 'init_objects' ), 8 );
 
 		// Set up run module actions
 		add_action( 'plugins_loaded', array( &$this, 'load_run_actions' ) );
@@ -220,38 +227,6 @@ class Church_Theme_Content_Integration {
 		);
 	}
 
-	public function system_checks() {
-		if ( ! $this->isCTCActive() ) {
-			printf(
-				'<div class="error"><p>%s: %s <a href="http://churchthemes.com">churchthemes.com</a> %s</p></div>',
-				__( 'Church Theme Content Integration', self::$TEXT_DOMAIN),
-				__( 'The Church Theme Content plugin from', self::$TEXT_DOMAIN),
-				__( 'must be installed and activated before Church Theme Content Integration can be used.',
-					self::$TEXT_DOMAIN
-				)
-			);
-		}
-		if ( ! $this->curlAvailable() ) {
-			printf(
-				'<div class="error"><p>%s: %s <a href="http://www.php.net/manual/en/book.curl.php">%s</a> %s</p></div>',
-				__( 'Church Theme Content Integration', self::$TEXT_DOMAIN),
-				__( 'This plugin requires that the', self::$TEXT_DOMAIN),
-				__( 'PHP curl library', self::$TEXT_DOMAIN),
-				__( 'be installed on your web server.',
-					self::$TEXT_DOMAIN
-				)
-			);
-		}
-	}
-
-	protected function isCTCActive() {
-		return is_plugin_active( 'church-theme-content/church-theme-content.php' );
-	}
-
-	protected function curlAvailable() {
-		return extension_loaded( 'curl' );
-	}
-
 	public function deactivation() {
 		$this->remove_cap();
 	}
@@ -299,23 +274,16 @@ class Church_Theme_Content_Integration {
 	 * @access public
 	 */
 	public function init_plugin_variables() {
+		self::$PLUGIN_NAME = $this->plugin_data[ 'Name' ];
 		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
 		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
+		self::$PLUGIN_FILE = __FILE__;
 		self::$ADMIN_DIR = 'admin';
 		self::$ADMIN_PATH = trailingslashit( self::$PLUGIN_PATH ) . self::$ADMIN_DIR;
-		// Plugin details
-		/*define( 'CTCI_VERSION', $this->plugin_data[ 'Version' ] ); // plugin version
-		define( 'CTCI_NAME', $this->plugin_data[ 'Name' ] ); // plugin name
-		define( 'CTCI_INFO_URL', $this->plugin_data[ 'PluginURI' ] ); // plugin's info page URL
-		define( 'CTCI_FILE', __FILE__ ); // plugin's main file path
-		define( 'CTCI_DIR', dirname( plugin_basename( CTCI_FILE ) ) ); // plugin's directory
-		define( 'CTCI_PATH', untrailingslashit( plugin_dir_path( CTCI_FILE ) ) ); // plugin's directory
-		define( 'CTCI_URL', untrailingslashit( plugin_dir_url( CTCI_FILE ) ) ); // plugin's directory URL
-		define( 'CTCI_DB_VERSION', '0.1');
+		self::$CTC_PLUGIN_NAME = 'church-theme-content';
+		self::$CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
 
-		// Directories
-		define( 'CTCI_ADMIN_DIR', CTCI_DIR . '/admin' ); // admin directory
-		define( 'CTCI_LANG_DIR', 'languages' ); // languages directory*/
+		// define( 'CTCI_LANG_DIR', 'languages' ); // languages directory*/
 
 	}
 
@@ -539,10 +507,42 @@ class Church_Theme_Content_Integration {
 	}
 
 	public function enqueue_scripts() {
-		wp_register_style( 'ctci-style', plugins_url( '/admin/css/style.css', __FILE__ ), array(), '0.1', 'all' );
-		wp_register_script( 'ctci-scripts', plugins_url( '/admin/js/scripts.js', __FILE__ ), array( 'jquery' ), '0.1' );
+		wp_register_style( 'ctci-style', plugins_url( '/admin/css/style.css', __FILE__ ), array(), self::$CSS_VERSION, 'all' );
+		wp_register_script( 'ctci-scripts', plugins_url( '/admin/js/scripts.js', __FILE__ ), array( 'jquery' ), self::$JS_VERSION );
 		wp_enqueue_style( 'ctci-style' );
 		wp_enqueue_script( 'ctci-scripts' );
+	}
+
+	public function system_checks() {
+		if ( ! $this->isCTCActive() ) {
+			printf(
+				'<div class="error"><p>%s: %s <a href="http://churchthemes.com">churchthemes.com</a> %s</p></div>',
+				__( 'Church Theme Content Integration', self::$TEXT_DOMAIN),
+				__( 'The Church Theme Content plugin from', self::$TEXT_DOMAIN),
+				__( 'must be installed and activated before Church Theme Content Integration can be used.',
+					self::$TEXT_DOMAIN
+				)
+			);
+		}
+		if ( ! $this->curlAvailable() ) {
+			printf(
+				'<div class="error"><p>%s: %s <a href="http://www.php.net/manual/en/book.curl.php">%s</a> %s</p></div>',
+				__( 'Church Theme Content Integration', self::$TEXT_DOMAIN),
+				__( 'This plugin requires that the', self::$TEXT_DOMAIN),
+				__( 'PHP curl library', self::$TEXT_DOMAIN),
+				__( 'be installed on your web server.',
+					self::$TEXT_DOMAIN
+				)
+			);
+		}
+	}
+
+	protected function isCTCActive() {
+		return is_plugin_active( self::$CTC_PLUGIN_FILE );
+	}
+
+	protected function curlAvailable() {
+		return extension_loaded( 'curl' );
 	}
 
 	public function build_admin_menu() {
