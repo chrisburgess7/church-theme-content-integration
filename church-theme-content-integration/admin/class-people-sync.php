@@ -16,7 +16,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 	}
 
 	public static function getHumanReadableName() {
-		return 'People Sync';
+		return __( 'People Sync', Church_Theme_Content_Integration::$TEXT_DOMAIN );
 	}
 
 	/**

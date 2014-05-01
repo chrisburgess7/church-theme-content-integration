@@ -16,7 +16,7 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		}
 		?>
 		<div class="wrap">
-			<h2><?php _e( $this->getHumanReadableName() . ' Settings', Church_Theme_Content_Integration::$TEXT_DOMAIN) ?></h2>
+			<h2><?php printf( __( '%s Settings', Church_Theme_Content_Integration::$TEXT_DOMAIN ), $this->getHumanReadableName() ); ?></h2>
 			<!--suppress HtmlUnknownTarget -->
 			<form method="post" action="options.php">
 				<?php
@@ -44,7 +44,7 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 	protected function addSettingsSection( $id, $title, $beforeContentCallbackName ) {
 		add_settings_section(
 			$id,
-			__( $title, Church_Theme_Content_Integration::$TEXT_DOMAIN ),
+			$title,
 			array( $this, $beforeContentCallbackName ),
 			$this->getSettingsPageName()
 		);
@@ -53,7 +53,7 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 	protected function addSettingsField( $sectionName, $fieldName, $fieldTitle, $displayFieldCallbackName, array $args = array() ) {
 		add_settings_field(
 			$fieldName,
-			__( $fieldTitle, Church_Theme_Content_Integration::$TEXT_DOMAIN ),
+			$fieldTitle,
 			array( $this, $displayFieldCallbackName ),
 			$this->getSettingsPageName(),
 			$sectionName,

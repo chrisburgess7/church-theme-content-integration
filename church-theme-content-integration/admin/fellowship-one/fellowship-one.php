@@ -117,7 +117,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	 * @return string   A human readable name for the provider.
 	 */
 	public function getHumanReadableName() {
-		return 'Fellowship One';
+		return __( 'Fellowship One', Church_Theme_Content_Integration::$TEXT_DOMAIN );
 	}
 
 	/**
@@ -203,30 +203,27 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	}
 
 	protected function registerSectionsAndFields() {
-		// TODO: Need to add internationalisation method here for these labels, so that these strings are recognised
-		// as requiring translation
-
 		$this->addSettingsSection(
 			'ctci_f1_credentials',
-			'Credentials',
+			__( 'Credentials', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'credentialsSectionCallback'
 		);
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'auth_mode',
-			'Authentication Method',
+			__( 'Authentication Method', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displaySelectField',
 			array(
 				'options' => array(
-					'3' => 'OAuth (3rd Party)',
-					'2' => 'Credentials Based (2nd Party)'
+					'3' => __( 'OAuth (3rd Party)', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
+					'2' => __( 'Credentials Based (2nd Party)', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 				)
 			)
 		);
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'api_url',
-			'API URL',
+			__( 'API URL', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayTextField',
 			array(
 				'size' => '40'
@@ -235,7 +232,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'api_key',
-			'API Consumer Key',
+			__( 'API Consumer Key', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayTextField',
 			array(
 				'size' => '6'
@@ -244,7 +241,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'api_secret',
-			'API Consumer Secret',
+			__( 'API Consumer Secret', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayTextField',
 			array(
 				'size' => '40'
@@ -253,24 +250,24 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'username',
-			'Username (2nd Party only!)',
+			__( 'Username (2nd Party only!)', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayTextField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_credentials',
 			'password',
-			'Password (2nd Party only!)',
+			__( 'Password (2nd Party only!)', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayPasswordField'
 		);
 		$this->addSettingsSection(
 			'ctci_f1_people_sync_settings',
-			'People Sync Settings',
+			__( 'People Sync Settings', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'peopleSyncSectionCallback'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'people_lists',
-			'People Lists to Sync',
+			__( 'People Lists to Sync', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayTextAreaField',
 			array(
 				'rows' => '10',
@@ -280,13 +277,13 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_people_groups',
-			'Sync Lists to Groups?',
+			__( 'Sync Lists to Groups?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'name_format',
-			'Name Format',
+			__( 'Name Format', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displaySelectField',
 			array(
 				'options' => $this->nameFormatOptions
@@ -295,13 +292,13 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_position',
-			'Sync Position?',
+			__( 'Sync Position?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'position_attribute',
-			'Position Attribute Group',
+			__( 'Position Attribute Group', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayTextField',
 			array(
 				'maxlength' => '50',
@@ -311,31 +308,31 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_phone',
-			'Sync Phone?',
+			__( 'Sync Phone?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_email',
-			'Sync Email?',
+			__( 'Sync Email?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_facebook',
-			'Sync Facebook URL?',
+			__( 'Sync Facebook URL?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_twitter',
-			'Sync Twitter URL?',
+			__( 'Sync Twitter URL?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 		$this->addSettingsField(
 			'ctci_f1_people_sync_settings',
 			'sync_linkedin',
-			'Sync LinkedIn URL?',
+			__( 'Sync LinkedIn URL?', Church_Theme_Content_Integration::$TEXT_DOMAIN ),
 			'displayCheckBoxField'
 		);
 	}
@@ -488,9 +485,11 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		$authActionValue = "auth_f1_{$operationTag}";
 		$authName = "ctci_f1_$authActionValue";
 		$authId = $authName;
-		$authButtonTitle = __(
-			"Authenticate with " . $this->getHumanReadableName() . " (" . $operation->getHumanReadableName() . ")",
-			Church_Theme_Content_Integration::$TEXT_DOMAIN
+		/* translators: the label for the authenticate button(s) */
+		$authButtonTitle = sprintf( __(
+				'Authenticate with %1$s (%2$s)',
+				Church_Theme_Content_Integration::$TEXT_DOMAIN
+			), $this->getHumanReadableName(), $operation->getHumanReadableName()
 		);
 
 		$this->session->start();
