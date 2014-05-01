@@ -7,7 +7,7 @@
  */
 
 require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/fellowship-one/OAuth/class-f1-oauth-client.php';
-require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/fellowship-one/OAuth/class-f1-api-keys.php';
+require_once dirname( __FILE__ ) . '/class-f1-api-keys.php';
 require_once dirname( __FILE__ ) . '/../../../../../church-theme-content-integration/admin/fellowship-one/interface-f1-api-settings.php';
 
 class F1Credentials implements CTCI_F1APISettingsInterface {
@@ -30,6 +30,10 @@ class F1Credentials implements CTCI_F1APISettingsInterface {
 
 	public function getF1ServerBaseURL() {
 		return CTCI_F1APIKeys::$base_url;
+	}
+
+	public function getAuthenticationMode() {
+		// TODO: Implement getAuthenticationMode() method.
 	}
 }
 
