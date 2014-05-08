@@ -28,6 +28,11 @@ interface CTCI_DataProviderInterface {
 	public function getHumanReadableName();
 
 	/**
+	 * @return string   The name of the WP setting used to store config options for this data provider
+	 */
+	public function getSettingsGroupName();
+
+	/**
 	 * Return the file paths of php files to be included for this data provider.  The file paths should be relative
 	 * to the data provider's root folder.
 	 *

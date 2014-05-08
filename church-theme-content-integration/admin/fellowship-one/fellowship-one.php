@@ -147,7 +147,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 	}
 
-	protected function getSettingsGroupName() {
+	public function getSettingsGroupName() {
 		return 'ctci_f1_options';
 	}
 

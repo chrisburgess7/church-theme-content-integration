@@ -35,8 +35,6 @@ abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {
 		$this->registerSectionsAndFields();
 	}
 
-	abstract protected function getSettingsGroupName();
-
 	abstract protected function getSettingsPageName();
 
 	abstract protected function registerSectionsAndFields();

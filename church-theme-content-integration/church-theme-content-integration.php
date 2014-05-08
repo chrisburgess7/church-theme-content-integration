@@ -15,6 +15,10 @@ if ( !defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// TODO: clearer error handling if settings not filled correctly
+// TODO: settings import/export
+// TODO: ajax timeout issue?
+
 /**
  * Main class
  */
@@ -27,6 +31,7 @@ class Church_Theme_Content_Integration {
 	public static $CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
 
 	public static $PLUGIN_NAME = '';
+	public static $PLUGIN_VERSION = '';
 	public static $PLUGIN_PATH = '';
 	public static $PLUGIN_DIR = '';
 	public static $PLUGIN_FILE = '';
@@ -141,6 +146,8 @@ class Church_Theme_Content_Integration {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
 			add_action( 'admin_init', array( &$this, 'register_settings' ) );
+			add_action( 'admin_init', array( $this, 'process_settings_export' ) );
+			add_action( 'admin_init', array( $this, 'process_settings_import' ) );
 			add_action( 'admin_enqueue_scripts', array( &$this, 'enqueue_scripts' ) );
 			add_action( 'admin_notices', array( &$this, 'system_checks' ) );
 		}
@@ -279,6 +286,7 @@ class Church_Theme_Content_Integration {
 	 */
 	public function init_plugin_variables() {
 		self::$PLUGIN_NAME = $this->plugin_data[ 'Name' ];
+		self::$PLUGIN_VERSION = $this->plugin_data[ 'Version' ];
 		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
 		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
 		self::$PLUGIN_FILE = __FILE__;
@@ -625,6 +633,69 @@ class Church_Theme_Content_Integration {
 				submit_button();
 				?>
 			</form>
+			<div class="metabox-holder">
+				<div class="postbox">
+					<h3><span><?php _e( 'Export Settings' ); ?></span></h3>
+					<div class="inside">
+						<p><?php _e( 'Export the plugin settings for this site as a .json file. This allows you to easily import the configuration into another site.', self::$TEXT_DOMAIN ); ?></p>
+						<form method="post">
+							<p><input type="hidden" name="ctci_action" value="export_settings" /></p>
+							<p>
+								<?php wp_nonce_field( 'ctci_export_nonce', 'ctci_export_nonce' ); ?>
+								<?php submit_button( __( 'Export', self::$TEXT_DOMAIN ), 'secondary', 'submit', false ); ?>
+							</p>
+						</form>
+					</div><!-- .inside -->
+				</div><!-- .postbox -->
+				<?php if ( $this->httpVarManager->hasGetVar('ctci-import-status') ) : ?>
+					<?php
+						$status = $this->httpVarManager->getGetVar('ctci-import-status');
+						if ( $status == 0 ) :
+					?>
+						<div class="updated"><p>Settings successfully imported.</p></div>
+					<?php elseif ( $status == 1 ) : ?>
+						<div class="error">
+						<p>
+							<?php _e( 'Please upload a valid json file.', self::$TEXT_DOMAIN ); ?>
+						</p>
+						</div>
+					<?php elseif ( $status == 2 ) : ?>
+						<div class="error">
+							<p>
+								<?php _e( 'Please select a file to import.', self::$TEXT_DOMAIN ); ?>
+							</p>
+						</div>
+					<?php elseif ( $status == 3 ) : ?>
+						<div class="error">
+							<p>
+								<?php _e( 'The file selected was not exported from this plugin.', self::$TEXT_DOMAIN ); ?>
+							</p>
+						</div>
+					<?php elseif ( $status == 4 ) : ?>
+						<div class="error">
+							<p>
+								<?php _e( 'The file selected was exported from a different version of this plugin. Please make sure that you are exporting and importing from the same version.', self::$TEXT_DOMAIN ); ?>
+							</p>
+						</div>
+					<?php endif; ?>
+				<?php endif; ?>
+				<div class="postbox">
+					<h3><span><?php _e( 'Import Settings', self::$TEXT_DOMAIN ); ?></span></h3>
+					<div class="inside">
+						<p><?php _e( 'Import the plugin settings from a .json file. This file can be obtained by exporting the settings on another site using the form above.', self::$TEXT_DOMAIN ); ?></p>
+						<form method="post" enctype="multipart/form-data">
+							<p>
+								<input type="file" name="import_file" />
+							</p>
+							<p>
+								<input type="hidden" name="ctci_action" value="import_settings" />
+								<?php wp_nonce_field( 'ctci_import_nonce', 'ctci_import_nonce' ); ?>
+								<?php submit_button( __( 'Import', self::$TEXT_DOMAIN ), 'secondary', 'submit', false ); ?>
+							</p>
+						</form>
+					</div><!-- .inside -->
+				</div><!-- .postbox -->
+			</div><!-- .metabox-holder -->
 		</div>
 	<?php
 	}
@@ -735,6 +806,94 @@ class Church_Theme_Content_Integration {
 
 	public static function get_run_module_key( $providerTag, $operation ) {
 		return "ctci_run_{$providerTag}_$operation";
+	}
+
+	/**
+	 * Process a settings export that generates a .json file of the shop settings
+	 */
+	public function process_settings_export() {
+
+		if( empty( $_POST['ctci_action'] ) || 'export_settings' != $_POST['ctci_action'] )
+			return;
+
+		if( ! wp_verify_nonce( $_POST['ctci_export_nonce'], 'ctci_export_nonce' ) )
+			return;
+
+		if( ! current_user_can( self::$CONFIG_CAPABILITY ) )
+			return;
+
+		$settings = array();
+
+		$settings['Plugin-Name'] = self::$PLUGIN_NAME;
+		$settings['Version'] = self::$PLUGIN_VERSION;
+		$settings[ self::$CONFIG_GROUP ] = get_option( self::$CONFIG_GROUP );
+
+		foreach ( $this->dataProviders as $dataProvider ) {
+			$optionName = $dataProvider->getSettingsGroupName();
+			$settings[ $optionName ] = get_option( $optionName );
+		}
+
+		ignore_user_abort( true );
+
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=ctci-settings-export-' . date( 'm-d-Y' ) . '.json' );
+		header( "Expires: 0" );
+
+		echo json_encode( $settings );
+		exit;
+	}
+
+	/**
+	 * Process a settings import from a json file
+	 */
+	public function process_settings_import() {
+
+		if( empty( $_POST['ctci_action'] ) || 'import_settings' != $_POST['ctci_action'] )
+			return;
+
+		if( ! wp_verify_nonce( $_POST['ctci_import_nonce'], 'ctci_import_nonce' ) )
+			return;
+
+		if( ! current_user_can( self::$CONFIG_CAPABILITY ) )
+			return;
+
+		$extension = end( explode( '.', $_FILES['import_file']['name'] ) );
+
+		if( $extension != 'json' ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ctci-configuration&ctci-import-status=1' ) );
+			exit;
+		}
+
+		$import_file = $_FILES['import_file']['tmp_name'];
+
+		if( empty( $import_file ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ctci-configuration&ctci-import-status=2' ) );
+			exit;
+		}
+
+		// Retrieve the settings from the file and convert the json object to an array.
+		$settings = json_decode( file_get_contents( $import_file ), true );
+
+		if ( ! isset( $settings['Plugin-Name'] ) || $settings['Plugin-Name'] != self::$PLUGIN_NAME ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ctci-configuration&ctci-import-status=3' ) );
+			exit;
+		}
+
+		if ( ! isset( $settings['Version'] ) || $settings['Version'] != self::$PLUGIN_VERSION ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=ctci-configuration&ctci-import-status=4' ) );
+			exit;
+		}
+
+		unset( $settings['Plugin-Name'] );
+		unset( $settings['Version'] );
+
+		foreach ( $settings as $settingName => $settingValue ) {
+			update_option( $settingName, $settingValue );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=ctci-configuration&ctci-import-status=0' ) );
+		exit;
 	}
 }
 
