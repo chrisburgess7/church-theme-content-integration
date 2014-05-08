@@ -16,7 +16,6 @@ if ( !defined( 'ABSPATH' ) ) {
 }
 
 // TODO: clearer error handling if settings not filled correctly
-// TODO: settings import/export
 // TODO: ajax timeout issue?
 
 /**
@@ -159,7 +158,6 @@ class Church_Theme_Content_Integration {
 		$this->load_default_settings();
 	}
 
-	// TODO: add a delete action for removing this table
 	public function setup_db() {
 		global $wpdb;
 		$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
