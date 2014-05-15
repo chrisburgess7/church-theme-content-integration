@@ -305,7 +305,6 @@ class Church_Theme_Content_Integration {
 					if ( file_exists( $providerClassFile ) ) {
 						require_once $providerClassFile;
 						$class = str_replace( '-', '_', $file );
-						// TODO: capitalization?
 						$class = "CTCI_$class";
 						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
 							/** @var CTCI_DataProviderInterface $obj */
@@ -317,7 +316,6 @@ class Church_Theme_Content_Integration {
 			}
 		}
 	}
-
 
 	/**
 	 * Load language file
