@@ -272,7 +272,7 @@ class Church_Theme_Content_Integration {
 		$plugin_data = current( get_plugins( '/' . $plugin_dir ) );
 
 		// Set plugin data
-		$this->plugin_data = apply_filters( 'ctc_plugin_data', $plugin_data );
+		$this->plugin_data = apply_filters( 'ctci_plugin_data', $plugin_data );
 
 	}
 
