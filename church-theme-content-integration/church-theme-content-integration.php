@@ -125,7 +125,7 @@ class Church_Theme_Content_Integration {
 		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 3 );
 
 		// Load language file
-		//add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 1 );
+		add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 4 );
 		
 		// Set includes
 		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 5 );
