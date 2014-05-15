@@ -47,8 +47,6 @@ class Church_Theme_Content_Integration {
 
 	public static $RUN_PAGE = 'ctci-main-options';
 
-	//public static $ENABLE_OPT_DISPLAY_CALLBACK_FUNCPFX = 'enable_opt_display_';
-
 	public static $TEXT_DOMAIN = 'church-theme-content-integration';
 
 	/**
