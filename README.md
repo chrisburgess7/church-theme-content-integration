@@ -14,6 +14,17 @@ Currently supports:
 
 **This project is currently in beta only.**
 
+# Requirements
+
+This plugin synchronises data into custom post types created by the
+[Church Theme Content WP plugin](http://wordpress.org/plugins/church-theme-content/), so install that on your WordPress
+site if you have not already. Note that CTC Integration will still install without CTC, but you wont be able to run
+anything.
+
+This plugin also requires the use of the PHP cURL library to communicate with Fellowship One.
+This plugin, once activated, will check that it exists and inform you if it doesn't, as well as preventing you from
+running the affected synchronisations.
+
 # Installation
 
 Create a zip file containing the church-theme-content-integration sub-folder, and install it using the standard
