@@ -209,13 +209,13 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			$ctcPerson->editPosition( $person->getPosition() );
 		}
 		if ( $person->syncFacebookURL() ) {
-			$ctcPerson->editURL( $person->getFacebookURL() );
+			$ctcPerson->editFacebookURL( $person->getFacebookURL() );
 		}
 		if ( $person->syncTwitterURL() ) {
-			$ctcPerson->editURL( $person->getTwitterURL() );
+			$ctcPerson->editTwitterURL( $person->getTwitterURL() );
 		}
 		if ( $person->syncLinkedInURL() ) {
-			$ctcPerson->editURL( $person->getLinkedInURL() );
+			$ctcPerson->editLinkedInURL( $person->getLinkedInURL() );
 		}
 		$this->wpal->updateCTCPerson( $ctcPerson );
 	}
