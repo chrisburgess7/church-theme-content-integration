@@ -147,7 +147,17 @@ class Church_Theme_Content_Integration {
 			add_action( 'admin_init', array( $this, 'process_settings_import' ) );
 			add_action( 'admin_enqueue_scripts', array( &$this, 'enqueue_scripts' ) );
 			add_action( 'admin_notices', array( &$this, 'system_checks' ) );
+			// add action to handle a ctc group being deleted
+			add_action( 'delete_ctc_person_group', array( &$this, 'delete_ctc_person_group' ) );
 		}
+	}
+
+	public function delete_ctc_person_group( $term_id ) {
+		$this->init_plugin_variables();
+		$this->set_includes();
+		$this->load_includes();
+		$wpal = new CTCI_WPAL();
+		$wpal->deleteCTCGroupAttachRecord( $term_id );
 	}
 
 	public function activation() {
