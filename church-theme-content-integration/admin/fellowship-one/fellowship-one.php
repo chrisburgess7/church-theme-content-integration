@@ -587,15 +587,15 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 
 		$this->peopleLists = explode( "\r\n", $options['people_lists']);
-		$this->syncPeopleGroups = $options['sync_people_groups'];
+		$this->syncPeopleGroups = $options['sync_people_groups'] === 'T';
 		$this->peopleNameFormat = $options['name_format'];
-		$this->syncPersonPosition = $options['sync_position'];
+		$this->syncPersonPosition = $options['sync_position'] === 'T';
 		$this->personPositionAttribute = $options['position_attribute'];
-		$this->syncPersonPhone = $options['sync_phone'];
-		$this->syncPersonEmail = $options['sync_email'];
-		$this->syncPersonFacebookURL = $options['sync_facebook'];
-		$this->syncPersonTwitterURL = $options['sync_twitter'];
-		$this->syncPersonLinkedInURL = $options['sync_linkedin'];
+		$this->syncPersonPhone = $options['sync_phone'] === 'T';
+		$this->syncPersonEmail = $options['sync_email'] === 'T';
+		$this->syncPersonFacebookURL = $options['sync_facebook'] === 'T';
+		$this->syncPersonTwitterURL = $options['sync_twitter'] === 'T';
+		$this->syncPersonLinkedInURL = $options['sync_linkedin'] === 'T';
 
 		// NOTE: this must come AFTER setting the above, as the auth client relies on retrieving the set values
 		// in it's constructor
