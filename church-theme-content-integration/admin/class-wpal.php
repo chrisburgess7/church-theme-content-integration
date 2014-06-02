@@ -119,15 +119,19 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	 * @throws CTCI_CouldNotUnattachCTCGroupException
 	 */
 	public function unattachCTCGroup( CTCI_CTCGroupInterface $ctcGroup ) {
-		/** @var $wpdb wpdb */
-		global $wpdb;
-		$attachTable = $wpdb->prefix . self::$ctcGroupConnectTable;
-		$return = $wpdb->delete( $attachTable, array( 'term_id' => $ctcGroup->id() ), array( '%d') );
+		$return = $this->deleteCTCGroupAttachRecord( $ctcGroup->id() );
 		if ( $return === false ) {
 			throw new CTCI_CouldNotUnattachCTCGroupException( $ctcGroup );
 		} else {
 			return $return;
 		}
+	}
+
+	public function deleteCTCGroupAttachRecord( $ctcGroupId ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$attachTable = $wpdb->prefix . self::$ctcGroupConnectTable;
+		return $wpdb->delete( $attachTable, array( 'term_id' => $ctcGroupId ), array( '%d') );
 	}
 
 	/**

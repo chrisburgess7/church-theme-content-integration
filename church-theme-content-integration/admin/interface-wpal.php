@@ -22,6 +22,8 @@ interface CTCI_WPALInterface {
 
 	public function unattachCTCGroup( CTCI_CTCGroupInterface $ctcGroup );
 
+	public function deleteCTCGroupAttachRecord( $ctcGroupId );
+
 	public function updateCTCGroup( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group );
 
 	public function deleteCTCGroup( CTCI_CTCGroupInterface $ctcGroup );
