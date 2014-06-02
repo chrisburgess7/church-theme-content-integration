@@ -278,7 +278,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 			),
 			array(
 				'id' => '1121',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'http://www.linkedin.com/in/person3',
 				'preferred' => false
 			),
@@ -717,7 +717,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => false
 			), array(
 				'id' => '12345215',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'http://www.linkedin.com/in/person3',
 				'preferred' => false
 			), array(
@@ -741,7 +741,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => true
 			), array(
 				'id' => '12345123',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'https://www.linkedin.com/in/person4',
 				'preferred' => false
 			)
@@ -804,7 +804,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => false
 			), array(
 				'id' => '12345326',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'https://www.linkedin.com/in/person6',
 				'preferred' => false
 			)
@@ -1324,7 +1324,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => false
 			), array(
 				'id' => '12345215',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'http://www.linkedin.com/in/person3',
 				'preferred' => false
 			), array(
@@ -1348,7 +1348,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => true
 			), array(
 				'id' => '12345123',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'https://www.linkedin.com/in/person4',
 				'preferred' => false
 			)
@@ -1411,7 +1411,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => false
 			), array(
 				'id' => '12345326',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'https://www.linkedin.com/in/person6',
 				'preferred' => false
 			)
@@ -1834,7 +1834,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => false
 			), array(
 				'id' => '12345215',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'http://www.linkedin.com/in/person3',
 				'preferred' => false
 			), array(
@@ -1858,7 +1858,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => true
 			), array(
 				'id' => '12345123',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'https://www.linkedin.com/in/person4',
 				'preferred' => false
 			)
@@ -1921,7 +1921,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 				'preferred' => false
 			), array(
 				'id' => '12345326',
-				'type' => 'Linkedin',
+				'type' => 'Linked-In',
 				'value' => 'https://www.linkedin.com/in/person6',
 				'preferred' => false
 			)
@@ -2402,11 +2402,11 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 	                },
 	                "communicationGeneralType": "SocialMedia",';
 					break;
-				case 'Linkedin':
+				case 'Linked-In':
 					$json .= '"communicationType": {
 	                    "@id": "202",
 	                    "@uri": "https://demo.fellowshiponeapi.com/v1/Communications/CommunicationTypes/202",
-	                    "name": "Linkedin"
+	                    "name": "Linked-In"
 	                },
 	                "communicationGeneralType": "SocialMedia",';
 					break;
