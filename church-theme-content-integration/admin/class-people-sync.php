@@ -61,20 +61,20 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 
 	public function run() {
 
-		// TODO: internationalisation of messages
-		$this->logger->info( 'Starting People Sync...' );
+		$textDomain = Church_Theme_Content_Integration::$TEXT_DOMAIN;
+		$this->logger->info( __( 'Starting People Sync...', $textDomain ) );
 
 		$dataProvider = $this->peopleDataProvider;
 		if ( $dataProvider === null ) {
-			throw new LogicException( 'Data Provider not set' );
+			throw new LogicException( __( 'Data Provider not set', $textDomain ) );
 		}
 
-		$this->logger->info( sprintf( "Setting up %s for people sync...", $this->dataProvider->getHumanReadableName() ) );
+		$this->logger->info( sprintf( __( "Setting up %s for people sync...", $textDomain ), $this->dataProvider->getHumanReadableName() ) );
 		$dataProvider->setupForPeopleSync();
 
 		// update the list of groups if they are being synced
 		if ( $dataProvider->syncGroups() ) {
-			$this->logger->info( 'Updating Groups...' );
+			$this->logger->info( __( 'Updating Groups...', $textDomain ) );
 			$this->updateGroups( $dataProvider );
 		}
 
@@ -85,31 +85,31 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		$attachedCTCPeople = $this->wpal->getCTCPeopleAttachedViaProvider( $dataProvider->getProviderPersonTag() );
 
 		foreach ( $attachedCTCPeople as $ctcPerson ) {
-			$this->logger->info( sprintf( 'Analysing attached person: %s.', $ctcPerson->getName() ) );
+			$this->logger->info( sprintf( __( 'Analysing attached person: %s.', $textDomain ), $ctcPerson->getName() ) );
 			$dpId = $this->wpal->getAttachedPersonId( $ctcPerson );
 
 			// if the CTC person is attached there should be an associated id no. for the attached record
 			// in the data provider. If that is not so, something has gone wrong...
 			if ( $dpId === '' ) {
-				$this->logger->warning( sprintf( 'Person %s could not be synced. Couldn\'t retrieve service provider id.', $ctcPerson->getName() ) );
+				$this->logger->warning( sprintf( __( 'Person %s could not be synced. Couldn\'t retrieve service provider id.', $textDomain ), $ctcPerson->getName() ) );
 				continue;
 			}
 
 			if ( isset( $people[ $dpId ] ) ) {
-				$this->logger->info( sprintf( 'Syncing attached person: %s.', $ctcPerson->getName() ) );
+				$this->logger->info( sprintf( __( 'Syncing attached person: %s.', $textDomain ), $ctcPerson->getName() ) );
 				$this->syncCTCPerson( $ctcPerson, $people[ $dpId ], $dataProvider->syncGroups() );
 				// we've just synced an attached person, so we don't need the record any more
 				unset( $people[ $dpId ] );
 			} else {
 				// this means that a CTC person with an attached record, no longer has that record in the list
 				// of people to sync, so either just delete the attach record, or delete the CTC person entirely
-				$this->logger->info( sprintf( 'Unattaching person: %s.', $ctcPerson->getName() ) );
+				$this->logger->info( sprintf( __( 'Unattaching person: %s.', $textDomain ), $ctcPerson->getName() ) );
 				$this->wpal->unattachCTCPerson( $ctcPerson );
 				if ( $dataProvider->deleteUnattachedPeople() ) {
-                    $this->logger->info( sprintf( 'Deleting person: %s.', $ctcPerson->getName() ) );
+                    $this->logger->info( sprintf( __( 'Deleting person: %s.', $textDomain ), $ctcPerson->getName() ) );
                     $this->wpal->deleteCTCPerson( $ctcPerson );
 				} else {
-                    $this->logger->info( sprintf( 'Unpublishing person: %s.', $ctcPerson->getName() ) );
+                    $this->logger->info( sprintf( __( 'Unpublishing person: %s.', $textDomain ), $ctcPerson->getName() ) );
                     $this->wpal->unpublishCTCPerson( $ctcPerson );
 				}
 			}
@@ -118,7 +118,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 		// now check the unattached people that we now need to sync
 		// all attached persons have been removed above
 		foreach ( $people as $person ) {
-			$this->logger->info( sprintf( 'Analysing new person: %s.', $person->getName() ) );
+			$this->logger->info( sprintf( __( 'Analysing new person: %s.', $textDomain ), $person->getName() ) );
 
 			// attempt to attach the person from the data provider to
 			// a person record in wp db
@@ -126,15 +126,15 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			$attached = $this->attachPerson( $person );
 
 			if ( $attached instanceof CTCI_CTCPersonInterface ) {
-				$this->logger->info( sprintf( '%s has been attached to an existing person record.', $person->getName(), $this->dataProvider->getHumanReadableName() ) );
+				$this->logger->info( sprintf( __( '%s has been attached to an existing person record.', $textDomain ), $person->getName(), $this->dataProvider->getHumanReadableName() ) );
 				// make sure that the attached record is published to it shows up
 				$this->wpal->publishCTCPerson( $attached );
 				$this->syncCTCPerson( $attached, $person, $dataProvider->syncGroups() );
-				$this->logger->info( sprintf( '%s has been synchronized.', $person->getName() ) );
+				$this->logger->info( sprintf( __( '%s has been synchronized.', $textDomain ), $person->getName() ) );
 			} else {
-				$this->logger->info( sprintf( 'Creating new record for: %s.', $person->getName() ) );
+				$this->logger->info( sprintf( __( 'Creating new record for: %s.', $textDomain ), $person->getName() ) );
 				$this->createNewCTCPerson( $person, $dataProvider->syncGroups() );
-				$this->logger->info( 'Created.' );
+				$this->logger->info( __( 'Created.', $textDomain ) );
 			}
 		}
 
