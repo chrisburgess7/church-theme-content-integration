@@ -57,6 +57,8 @@ interface CTCI_WPALInterface {
 
 	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
 
+	public function publishCTCPerson( CTCI_CTCPersonInterface $ctcPerson );
+
 	/**
 	 * @param $providerTag
 	 * @return CTCI_CTCPersonInterface[]

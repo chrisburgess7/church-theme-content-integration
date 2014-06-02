@@ -230,6 +230,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 		$ctcGroups = array();
 		foreach ( $ctcGroupsConnect as $groupConnect ) {
+			// todo: handle possible exception if ctc group for the attach record doesn't exist
 			$ctcGroup = $this->getCTCGroup( $groupConnect['term_id'] );
 			$ctcGroup->setAttachedGroup( $providerTag, $groupConnect['provider_group_id'] );
 			$ctcGroups[ $ctcGroup->getAttachedGroupProviderId() ] = $ctcGroup;
@@ -432,7 +433,19 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
 		$return = wp_update_post( array(
 			'ID' => $ctcPerson->id(),
-			'post_status' => 'draft'
+			'post_status' => 'trash'
+		) );
+		if ( $return === 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public function publishCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
+		$return = wp_update_post( array(
+			'ID' => $ctcPerson->id(),
+			'post_status' => 'publish'
 		) );
 		if ( $return === 0) {
 			return false;
