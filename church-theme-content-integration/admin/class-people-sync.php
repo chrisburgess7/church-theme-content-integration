@@ -96,13 +96,14 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			}
 
 			if ( isset( $people[ $dpId ] ) ) {
-				$this->logger->info( sprintf( 'Syncing person: %s.', $ctcPerson->getName() ) );
+				$this->logger->info( sprintf( 'Syncing attached person: %s.', $ctcPerson->getName() ) );
 				$this->syncCTCPerson( $ctcPerson, $people[ $dpId ], $dataProvider->syncGroups() );
 				// we've just synced an attached person, so we don't need the record any more
 				unset( $people[ $dpId ] );
 			} else {
 				// this means that a CTC person with an attached record, no longer has that record in the list
-				// of people to sync, so either unpublish or delete them
+				// of people to sync, so either just delete the attach record, or delete the CTC person entirely
+				$this->logger->info( sprintf( 'Unattaching person: %s.', $ctcPerson->getName() ) );
 				$this->wpal->unattachCTCPerson( $ctcPerson );
 				if ( $dataProvider->deleteUnattachedPeople() ) {
                     $this->logger->info( sprintf( 'Deleting person: %s.', $ctcPerson->getName() ) );
@@ -126,6 +127,8 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 
 			if ( $attached instanceof CTCI_CTCPersonInterface ) {
 				$this->logger->info( sprintf( '%s has been attached to an existing person record.', $person->getName(), $this->dataProvider->getHumanReadableName() ) );
+				// make sure that the attached record is published to it shows up
+				$this->wpal->publishCTCPerson( $attached );
 				$this->syncCTCPerson( $attached, $person, $dataProvider->syncGroups() );
 				$this->logger->info( sprintf( '%s has been synchronized.', $person->getName() ) );
 			} else {
@@ -170,7 +173,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 			}
 		}
 
-		// go through any groups from provider that are new (attached ones removed above)
+		// go through any groups from provider that are new (attached ones removed from groups list above)
 		foreach ( $groups as $group ) {
 			$unattachedCTCGroups = $this->wpal->getUnattachedCTCGroups();
 			$attached = false;
@@ -227,7 +230,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 				$person->getName() === $unattachedCTCPerson->getName()
 			) {
 				if ( ! $this->wpal->attachCTCPerson( $unattachedCTCPerson, $person ) ) {
-					return false; // todo: specific exception / error handling for this scenario???
+					return false; // specific exception / error handling for this scenario???
 				} else {
 					return $unattachedCTCPerson;
 				}
