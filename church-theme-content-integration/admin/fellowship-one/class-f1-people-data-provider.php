@@ -226,7 +226,7 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 	}
 
 	public function deleteUnattachedGroups() {
-		return false;   // TODO: make option
+		return true;   // TODO: make option
 	}
 
 	public function deleteUnattachedPeople() {
