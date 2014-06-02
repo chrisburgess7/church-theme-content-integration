@@ -36,11 +36,14 @@ interface CTCI_CTCPersonInterface {
 	public function setURLsFromArray( array $urls );
 	public function editURLsFromArray( array $urls );
 	public function editURL( $url );
+	public function editFacebookURL( $url );
+	public function editTwitterURL( $url );
+	public function editLinkedInURL( $url );
 	public function getURLs();
 	public function setExcerpt( $excerpt );
 	public function editExcerpt( $excerpt );
 	public function isExcerptDirty();
 	public function getExcerpt();
-	public function setGroups( array $ctcGroups );
-	public function getGroups();
+	/*public function setGroups( array $ctcGroups );
+	public function getGroups();*/
 } 

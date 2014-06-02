@@ -166,5 +166,265 @@ https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2')
 		$this->assertTrue( $ctcPerson->isURLsDirty() );
 	}
 
+	public static function editFacebookURLData() {
+		$fullURLSample = str_replace( "\r", '',
+			'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2');
+		return array(
+			'url removed' => array(
+				$fullURLSample, '', str_replace( "\r", '',
+					'https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2'
+				)
+			), 'url changed' => array(
+				$fullURLSample, 'https://www.facebook.com/test', str_replace( "\r", '',
+					'https://www.facebook.com/test
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2'
+				)
+			)
+		);
+	}
+
+	/**
+	 * @dataProvider editFacebookURLData
+	 * @param $startURLs
+	 * @param $urlEdit
+	 * @param $result
+	 */
+	public function testEditFacebookURL( $startURLs, $urlEdit, $result ) {
+		$ctcPerson = new CTCI_CTCPerson();
+		if ( is_array( $startURLs ) ) {
+			$ctcPerson->setURLsFromArray( $startURLs );
+		} else {
+			$ctcPerson->setURLs( $startURLs );
+		}
+		$this->assertFalse( $ctcPerson->isURLsDirty() );
+
+		$ctcPerson->editFacebookURL( $urlEdit );
+
+		$this->assertEquals( $result, $ctcPerson->getUrls() );
+		$this->assertTrue( $ctcPerson->isURLsDirty() );
+	}
+
+	public static function editTwitterURLData() {
+		$fullURLSample = str_replace( "\r", '',
+			'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2');
+		return array(
+			'url removed' => array(
+				$fullURLSample, '', str_replace( "\r", '',
+					'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2'
+				)
+			), 'url changed' => array(
+				$fullURLSample, 'https://twitter.com/test', str_replace( "\r", '',
+					'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/test
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2'
+				)
+			)
+		);
+	}
+
+	/**
+	 * @dataProvider editTwitterURLData
+	 * @param $startURLs
+	 * @param $urlEdit
+	 * @param $result
+	 */
+	public function testEditTwitterURL( $startURLs, $urlEdit, $result ) {
+		$ctcPerson = new CTCI_CTCPerson();
+		if ( is_array( $startURLs ) ) {
+			$ctcPerson->setURLsFromArray( $startURLs );
+		} else {
+			$ctcPerson->setURLs( $startURLs );
+		}
+		$this->assertFalse( $ctcPerson->isURLsDirty() );
+
+		$ctcPerson->editTwitterURL( $urlEdit );
+
+		$this->assertEquals( $result, $ctcPerson->getUrls() );
+		$this->assertTrue( $ctcPerson->isURLsDirty() );
+	}
+
+	public static function editLinkedInURLData() {
+		$fullURLSample = str_replace( "\r", '',
+			'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/shareArticle?url={url}&title={title}
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2');
+		return array(
+			'url removed' => array(
+				$fullURLSample, '', str_replace( "\r", '',
+					'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2'
+				)
+			), 'url changed' => array(
+				$fullURLSample, 'http://www.linkedin.com/test', str_replace( "\r", '',
+					'https://www.facebook.com/dialog/feed?app_id={app_id}&link={url}&picture={img}&name={title}&description={desc}&redirect_uri={redirect_url}
+https://twitter.com/share?url={url}&text={title}&via={via}&hashtags={hashtags}
+https://plus.google.com/share?url={url}
+https://pinterest.com/pin/create/bookmarklet/?media={img}&url={url}&is_video={is_video}&description={title}
+http://www.youtube.com/watch?v=uMdl80k-3yo
+https://vimeo.com/391720
+https://www.flickr.com/photos/eshu/galleries/72157621948084368/
+http://picasa.google.com.au/
+http://instagram.com/username111
+https://foursquare.com/explore?cat=food&mode=url&near=Wollongong%2C%20NSW
+http://every1-knows-its-butters.tumblr.com/
+http://www.tumblr.com/share/link?url={url}&name={title}&description={desc}
+skype://notsurewhatgoeshere
+https://soundcloud.com/iambrodydalle
+http://www.linkedin.com/test
+https://github.com/chrisburgess7
+http://dribbble.com/MailChimp
+https://itunes.apple.com/au/podcast/the-history-of-britain/id802163163?mt=2'
+				)
+			)
+		);
+	}
+
+	/**
+	 * @dataProvider editLinkedInURLData
+	 * @param $startURLs
+	 * @param $urlEdit
+	 * @param $result
+	 */
+	public function testEditLinkedInURL( $startURLs, $urlEdit, $result ) {
+		$ctcPerson = new CTCI_CTCPerson();
+		if ( is_array( $startURLs ) ) {
+			$ctcPerson->setURLsFromArray( $startURLs );
+		} else {
+			$ctcPerson->setURLs( $startURLs );
+		}
+		$this->assertFalse( $ctcPerson->isURLsDirty() );
+
+		$ctcPerson->editLinkedInURL( $urlEdit );
+
+		$this->assertEquals( $result, $ctcPerson->getUrls() );
+		$this->assertTrue( $ctcPerson->isURLsDirty() );
+	}
 }
  

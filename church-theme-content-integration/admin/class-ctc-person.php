@@ -10,10 +10,11 @@ require_once dirname(__FILE__) . '/interface-ctc-person.php';
 
 class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 
-	protected $urlRegex;
-	protected $urlRegex1;
-	protected $urlRegex2;
-	protected $skypeRegex;
+	protected static $urlRegex;
+	protected static $urlRegex1;
+	protected static $urlRegex2;
+	protected static $urlRegex2WS;
+	protected static $skypeRegex;
 
 	protected $nameDirty;
 	protected $bioDirty;
@@ -32,21 +33,32 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 	protected $urls;
 	protected $excerpt;
 
+	private static function init() {
+		// only perform once
+		if ( self::$urlRegex === null ) {
+			// credits: https://gist.github.com/dperini/729294
+			self::$urlRegex1 = '_' .
+				'(?:(?:https?)://)' .
+				'(?>[a-z\x{00a1}-\x{ffff}0-9]+-?)*\.?'; // Note that this is an atomic group - needed to avoid catastrophic backtracking
+			self::$urlRegex2 = '(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*' . // domain name
+				'(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,}))' . // TLD identifier
+				'(?::\d{2,5})?(?:/[^\s]*)?' .  // rest of path
+				'_iuS';
+			self::$urlRegex2WS = '(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*' . // domain name
+				'(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,}))' . // TLD identifier
+				'(?::\d{2,5})?(?:/[^\s]*)?\s*' .  // rest of path
+				'_iuS';
+			self::$urlRegex = self::$urlRegex1 .
+				'(facebook|twitter|plus.google|pinterest|youtube|vimeo|flickr|picasa|' .
+				'instagram|foursquare|tumblr|soundcloud|linkedin|github|dribbble|itunes)' .
+				self::$urlRegex2;
+			self::$skypeRegex = '_skype://(?:[^\s]*)_iuS';
+		}
+	}
+
 	public function __construct() {
 		$this->setClean();
-		// credits: https://gist.github.com/dperini/729294
-		$this->urlRegex1 = '_' .
-			'(?:(?:https?)://)' .
-			'(?>[a-z\x{00a1}-\x{ffff}0-9]+-?)*\.?'; // Note that this is an atomic group - needed to avoid catastrophic backtracking
-		$this->urlRegex2 = '(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*' . // domain name
-			'(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,}))' . // TLD identifier
-			'(?::\d{2,5})?(?:/[^\s]*)?' .  // rest of path
-			'_iuS';
-		$this->urlRegex = $this->urlRegex1 .
-			'(facebook|twitter|plus.google|pinterest|youtube|vimeo|flickr|picasa|' .
-			'instagram|foursquare|tumblr|soundcloud|linkedin|github|dribbble|itunes)' .
-			$this->urlRegex2;
-		$this->skypeRegex = '_skype://(?:[^\s]*)_iuS';
+		self::init();
 	}
 
 	public function setClean() {
@@ -221,13 +233,13 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 		return $this->excerptDirty;
 	}
 
-	public function setGroups( array $ctcGroups ) {
-		// TODO: Implement setGroups() method.
+	/*public function setGroups( array $ctcGroups ) {
+
 	}
 
 	public function getGroups() {
-		// TODO: Implement getGroups() method.
-	}
+
+	}*/
 
 	public function editName( $name ) {
 		$this->setName( $name );
@@ -274,10 +286,10 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 	public function editURL( $url ) {
 		$matches = array();
 		// check the passed url to see if it matches a known type
-		if ( preg_match( $this->urlRegex, $url, $matches ) ) {
+		if ( preg_match( self::$urlRegex, $url, $matches ) ) {
 			$urlType = $matches[1];
 			// create a regex for just this url type, so we replace the right one
-			$urlTypeRegex = $this->urlRegex1 . $urlType . $this->urlRegex2;
+			$urlTypeRegex = self::$urlRegex1 . $urlType . self::$urlRegex2;
 			$replaced = 0;
 			$urls = preg_replace( $urlTypeRegex, $url, $this->urls, 1, $replaced );
 			if ( $replaced ) {
@@ -291,9 +303,9 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 			}
 		} else {
 			// check if skype url
-			if ( preg_match( $this->skypeRegex, $url ) ) {
+			if ( preg_match( self::$skypeRegex, $url ) ) {
 				$replaced = 0;
-				$urls = preg_replace( $this->skypeRegex, $url, $this->urls, 1, $replaced );
+				$urls = preg_replace( self::$skypeRegex, $url, $this->urls, 1, $replaced );
 				if ( $replaced ) {
 					$this->urls = $urls;
 				} else {
@@ -314,6 +326,43 @@ class CTCI_CTCPerson implements CTCI_CTCPersonInterface {
 		}
 		$this->urlsDirty = true;
 		return $this;
+	}
+
+	public function editFacebookURL( $url ) {
+		$this->editURLOfType( 'facebook', $url );
+	}
+
+	public function editTwitterURL( $url ) {
+		$this->editURLOfType( 'twitter', $url );
+	}
+
+	public function editLinkedInURL( $url ) {
+		$this->editURLOfType( 'linkedin', $url );
+	}
+
+	private function editURLOfType( $type, $url ) {
+		// we need to include trailing whitespace in the regex if the passed url is empty, so that
+		// the whole line gets removed
+		if ( $url === '' || $url === null ) {
+			$urlTypeRegex = self::$urlRegex1 . $type . self::$urlRegex2WS;
+		} else {
+			$urlTypeRegex = self::$urlRegex1 . $type . self::$urlRegex2;
+		}
+		$replaced = 0;
+		// we attempt a replace
+		$urls = preg_replace( $urlTypeRegex, $url, $this->urls, 1, $replaced );
+		if ( $replaced ) {
+			$this->urls = $urls;
+		} else {
+			// if $replaced is still 0, then the url of that type didn't exist in the url string
+			// so we append
+			if ( ! empty( $this->urls ) ) {
+				$this->urls .= "\n" . $url;
+			} else {
+				$this->urls = $url;
+			}
+		}
+		$this->urlsDirty = true;
 	}
 
 	public function editExcerpt( $excerpt ) {
