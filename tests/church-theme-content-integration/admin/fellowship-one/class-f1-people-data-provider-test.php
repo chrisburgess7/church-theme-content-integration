@@ -2166,7 +2166,231 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEmpty( $person6->getGroups() );
 
 	}
-	
+
+	public function testSetupForPeopleSync_DeletingRemovedLinkedInURL() {
+		/*
+		 * Sync groups true
+		 * 1 people list to sync, called Staff, with 3 people in it
+		 * All sync options set to true
+		 */
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPeopleGroups')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('getF1PeopleLists')
+			->will($this->returnValue(array('Staff')));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonPosition')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1PersonPositionAttribute')
+			->will($this->returnValue('Church Position'));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonPhone')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonEmail')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonFacebookURL')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonTwitterURL')
+			->will($this->returnValue(true));
+		$this->peopleSyncSettingsMock
+			->expects($this->any())
+			->method('f1SyncPersonLinkedInURL')
+			->will($this->returnValue(true));
+
+		// build a list of 1 group
+		$groupsJSON = $this->buildPeopleListsJSON( array(
+			array(
+				'id' => '1235',
+				'name' => 'Staff',
+				'description' => 'All full-time staff'
+			)
+		));
+		// check that the test json data is well formed
+		$this->assertNotNull( json_decode( $groupsJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPeopleLists')
+			->will($this->returnValue( $groupsJSON ));
+
+		// these are the members of the Staff people list
+		$memberListJSON = $this->buildMemberListJSON( array(
+			'id' => '1235', 'name' => 'Staff'
+		), array(
+			array(
+				'id' => '12345',
+				'person-id' => '123456',
+				'name' => 'John Doe'
+			),
+		));
+		$this->assertNotNull( json_decode( $memberListJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPeopleListMembers')
+			->will($this->returnValue($memberListJSON));
+
+		// details of each member of the Staff group
+		// the third person covers title, firstname, lastname, middlename, goesbyname and suffix
+		$person1JSON = $this->buildPersonJSON( array(
+			'id' => '123456',
+			'title' => 'Mr',
+			'firstName' => 'Johnathan',
+			'lastName' => 'Doe',
+			'middleName' => 'Edward',
+			'goesByName' => 'John',
+			'suffix' => 'II'
+		));
+		$this->assertNotNull( json_decode( $person1JSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPerson')
+			->will($this->returnValueMap(array(
+				array( 123456, $person1JSON ),
+				array( '123456', $person1JSON ),
+			)));
+
+		// add communications data for each person
+		// person 1: home, work (preferred), mobile phone. email, home email (preferred), work email, plus facebook, twitter and linkedin
+		$person1CommJSON = $this->buildCommunicationsJSON( '123456', array(
+			array(
+				'id' => '1111',
+				'type' => 'Home Phone',
+				'value' => '4211 1113',
+				'preferred' => false
+			),
+			array(
+				'id' => '1113',
+				'type' => 'Work Phone',
+				'value' => '4299 1113',
+				'preferred' => true
+			),
+			array(
+				'id' => '1112',
+				'type' => 'Mobile Phone',
+				'value' => '0400 111 113',
+				'preferred' => false
+			),
+			array(
+				'id' => '1114',
+				'type' => 'Email',
+				'value' => 'person1@test.com',
+				'preferred' => false
+			),
+			array(
+				'id' => '1115',
+				'type' => 'Home Email',
+				'value' => 'person1_home@test.com',
+				'preferred' => true
+			),
+			array(
+				'id' => '1116',
+				'type' => 'Work Email',
+				'value' => 'person1_work@test.com',
+				'preferred' => false
+			),
+			array(
+				'id' => '1120',
+				'type' => 'Facebook',
+				'value' => 'https://www.facebook.com/person1',
+				'preferred' => false
+			),
+			array(
+				'id' => '1121',
+				'type' => 'Linked-In',
+				'value' => '',
+				'preferred' => false
+			),
+			array(
+				'id' => '1122',
+				'type' => 'Twitter',
+				'value' => 'https://twitter.com/person1',
+				'preferred' => false
+			)
+		));
+		$this->assertNotNull( json_decode( $person1CommJSON ) );
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPersonCommunications')
+			->will($this->returnValueMap(array(
+				array( 123456, $person1CommJSON ),
+				array( '123456', $person1CommJSON ),
+			)));
+
+		// add attributes for position, with attribute name being 'Church Position'
+		$person1AttrJSON = $this->buildPersonAttributesJSON( '123456', array(
+			array(
+				'id' => '111111',
+				'group-id' => '111',
+				'group-attr-id' => '1111',
+				'group-name' => 'Not Church Position',
+				'attr-name' => 'something completely other'
+			), array(
+				'id' => '111112',
+				'group-id' => '112',
+				'group-attr-id' => '1112',
+				'group-name' => 'Not Church Position',
+				'attr-name' => 'another other'
+			), array(
+				'id' => '111113',
+				'group-id' => '113',
+				'group-attr-id' => '1113',
+				'group-name' => 'Church Position',
+				'attr-name' => 'Pastor'
+			), array(
+				'id' => '111114',
+				'group-id' => '114',
+				'group-attr-id' => '1114',
+				'group-name' => 'Abilities',
+				'attr-name' => 'Presentation'
+			)
+		));
+		$this->assertNotNull( json_decode( $person1AttrJSON ) );
+
+		$this->authClientMock
+			->expects($this->any())
+			->method('getPersonAttributes')
+			->will($this->returnValueMap(array(
+				array( 123456, $person1AttrJSON ),
+				array( '123456', $person1AttrJSON ),
+			)));
+
+
+		/*********************
+		 *
+		 *      Act
+		 *
+		 *********************/
+		try {
+			$this->sutF1PeopleDataProvider->setupForPeopleSync();
+		} catch ( Exception $e ) {
+			/** @noinspection PhpUnusedLocalVariableInspection */
+			$x = 'stop';
+			throw $e;
+		}
+
+		$people = $this->sutF1PeopleDataProvider->getPeople();
+
+		$this->assertInternalType( 'array', $people );
+		$this->assertCount( 1, $people );
+		$this->assertArrayHasKey( 123456, $people );
+		$person1 = $people[123456];
+		$this->assertTrue( $person1->syncLinkedInURL() );
+		$this->assertEquals( '', $person1->getLinkedInURL() );
+
+	}
+
 	protected function buildPeopleListsJSON( $lists ) {
 		$json = '{"peopleLists":{"peopleList":[';
 		foreach ( $lists as $list ) {
