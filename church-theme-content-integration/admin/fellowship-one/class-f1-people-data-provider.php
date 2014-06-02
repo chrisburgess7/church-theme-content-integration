@@ -189,7 +189,7 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 							$person->setTwitterURL( $communication->communicationValue );
 						}
 						if ( $this->settings->f1SyncPersonLinkedInURL() &&
-							$communication->communicationType->name === 'Linkedin'
+							$communication->communicationType->name === 'Linked-In'
 						) {
 							$person->setSyncLinkedInURL();
 							$person->setLinkedInURL( $communication->communicationValue );
