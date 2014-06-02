@@ -234,10 +234,19 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 
 		$ctcGroups = array();
 		foreach ( $ctcGroupsConnect as $groupConnect ) {
-			// todo: handle possible exception if ctc group for the attach record doesn't exist
-			$ctcGroup = $this->getCTCGroup( $groupConnect['term_id'] );
-			$ctcGroup->setAttachedGroup( $providerTag, $groupConnect['provider_group_id'] );
-			$ctcGroups[ $ctcGroup->getAttachedGroupProviderId() ] = $ctcGroup;
+			$doAttach = false;
+			$ctcGroup = null;
+			try {
+				$ctcGroup = $this->getCTCGroup( $groupConnect['term_id'] );
+				$doAttach = true;
+			} catch ( Exception $e ) {}
+			// only add attached group if no exception thrown above
+			// exception will throw if attach record exists for ctc group that doesn't
+			// shouldn't happen but only means a bit of bloat in the attach table which is safe to ignore
+			if ( $doAttach && ! is_null( $ctcGroup ) ) {
+				$ctcGroup->setAttachedGroup( $providerTag, $groupConnect['provider_group_id'] );
+				$ctcGroups[ $ctcGroup->getAttachedGroupProviderId() ] = $ctcGroup;
+			}
 		}
 
 		return $ctcGroups;
