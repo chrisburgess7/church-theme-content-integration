@@ -517,6 +517,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	 */
 	public function getUnattachedCTCPeople() {
 		$posts = get_posts( array(
+			'numberposts' => -1,    // needed to ensure all posts are retrieved
 			'post_type' => self::$ctcPersonPostType,
 			'post_status' => 'any',
 			'meta_query' => array(

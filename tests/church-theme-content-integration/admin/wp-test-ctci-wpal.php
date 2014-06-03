@@ -917,4 +917,36 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$this->assertEquals( $ctcPeople[ $id[3] ]->getName(), 'Test Person 4' );
 	}
 
+	public function testGetUnattachedCTCPeople_MoreThan5() {
+		// create an attached person
+		$id[0] = wp_insert_post( array(
+			'post_title' => 'Test Person',
+			'post_type' => CTCI_WPAL::$ctcPersonPostType,
+		));
+		$this->assertTrue( is_int($id[0]) && $id[0] > 0);
+		// add an attach record
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonProviderTagMetaTag, 'f1' );
+		update_post_meta( $id[0], CTCI_WPAL::$ctcPersonProviderIdMetaTag, '9e73' );
+
+		// and a bunhc of unattached
+		for ( $i = 1; $i <= 6; $i++ ) {
+			$id[ $i ] = wp_insert_post( array(
+				'post_title' => "Test Person $i",
+				'post_type' => CTCI_WPAL::$ctcPersonPostType
+			));
+			$this->assertTrue( is_int($id[$i]) && $id[$i] > 0);
+		}
+
+		$ctcPeople = $this->sut->getUnattachedCTCPeople();
+
+		$this->assertTrue( is_array( $ctcPeople ) );
+		$this->assertEquals( 6, count( $ctcPeople ) );
+		foreach ( $ctcPeople as $ctcPerson ) {
+			$this->assertInstanceOf( 'CTCI_CTCPerson', $ctcPerson );
+		}
+		for ( $i = 1; $i <= 6; $i++ ) {
+			$this->assertTrue( isset( $ctcPeople[ $id[ $i ] ] ) );
+		}
+	}
+
 }
