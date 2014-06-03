@@ -727,16 +727,16 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		$ctcPerson->setId( $id );
 		$this->sut->unpublishCTCPerson( $ctcPerson );
 
-		$this->assertEquals( 'trash', get_post( $id )->post_status );
+		$this->assertEquals( 'draft', get_post( $id )->post_status );
 	}
 
 	public function testPublishCTCPerson() {
 		$id = wp_insert_post( array(
 			'post_title' => 'Test Person',
 			'post_type' => CTCI_WPAL::$ctcPersonPostType,
-			'post_status' => 'trash'
+			'post_status' => 'draft'
 		));
-		$this->assertEquals( 'trash', get_post( $id )->post_status );
+		$this->assertEquals( 'draft', get_post( $id )->post_status );
 
 		$ctcPerson = new CTCI_CTCPerson();
 		$ctcPerson->setId( $id );

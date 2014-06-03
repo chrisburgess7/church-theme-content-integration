@@ -446,7 +446,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public function unpublishCTCPerson( CTCI_CTCPersonInterface $ctcPerson ) {
 		$return = wp_update_post( array(
 			'ID' => $ctcPerson->id(),
-			'post_status' => 'trash'
+			'post_status' => 'draft'
 		) );
 		if ( $return === 0) {
 			return false;
