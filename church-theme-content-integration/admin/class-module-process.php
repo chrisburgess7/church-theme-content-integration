@@ -100,6 +100,11 @@ class CTCI_ModuleProcess {
 				}
 			}
 		}
+	}
+
+	public function runAJAX() {
+		$this->run();
+		// ajax output
 		echo $this->logger->toHTML();
 		die(); // needed to avoid wordpress returning a zero at the end of the response
 	}

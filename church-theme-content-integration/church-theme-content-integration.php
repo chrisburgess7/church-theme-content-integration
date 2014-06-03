@@ -16,7 +16,6 @@ if ( !defined( 'ABSPATH' ) ) {
 }
 
 // TODO: clearer error handling if settings not filled correctly
-// TODO: ajax timeout issue?
 
 /**
  * Main class
@@ -508,7 +507,7 @@ class Church_Theme_Content_Integration {
 					$moduleKey = $this->get_run_module_key( $dataProvider->getTag(), $operation::getTag() );
 					add_action(
 						'wp_ajax_' . $moduleKey,
-						array( $process, 'run' )
+						array( $process, 'runAJAX' )
 					);
 				}
 			}
