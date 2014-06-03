@@ -31,7 +31,10 @@ class CTCI_ModuleProcess {
 
 	public function run() {
 		$this->logger->clear();
-		//echo 'module run' . PHP_EOL;
+
+		// set 5 minute time limit, hopefully long enough...
+		set_time_limit(300);
+
 		foreach ( $this->dataProviders as $dataProvider ) {
 			try {
 				if ( ! $dataProvider->initDataProviderForProcess( $this->logger ) ) {
@@ -61,12 +64,16 @@ class CTCI_ModuleProcess {
 				);
 				continue;
 			}
-			//echo 'init complete' . PHP_EOL;
+
+			// run each given operation on this data provider
 			foreach ( $this->operations as $operation ) {
 				try {
 					$valid = $operation->setDataProvider( $dataProvider );
 					if ( $valid ) {
-						//echo 'running...' . PHP_EOL;
+
+						/**
+						 * The main point of it all.
+						 */
 						$operation->run();
 
 						if ( ! $this->logger->hasErrors() ) {
