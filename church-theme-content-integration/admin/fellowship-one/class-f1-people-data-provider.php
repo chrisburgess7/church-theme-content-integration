@@ -145,16 +145,18 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					if ( $this->settings->f1SyncPersonPosition() ) {
 						$person->setSyncPosition();
 						$position = '';
-						foreach ( $attributeData->attributes->attribute as $attribute ) {
-							if ( $attribute->attributeGroup->name === $this->settings->f1PersonPositionAttribute() ) {
-								if ( $position !== '' ) {
-									$position .= ', ';
+						if ( isset( $attributeData->attributes ) ) {
+							foreach ( $attributeData->attributes->attribute as $attribute ) {
+								if ( $attribute->attributeGroup->name === $this->settings->f1PersonPositionAttribute() ) {
+									if ( $position !== '' ) {
+										$position .= ', ';
+									}
+									$position .= $attribute->attributeGroup->attribute->name;
 								}
-								$position .= $attribute->attributeGroup->attribute->name;
 							}
-						}
-						if ( $position !== '' ) {
-							$person->setPosition( $position );
+							if ( $position !== '' ) {
+								$person->setPosition( $position );
+							}
 						}
 					}
 
@@ -178,31 +180,33 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 					if ( $this->settings->f1SyncPersonLinkedInURL() ) {
 						$person->setSyncLinkedInURL();
 					}
-					foreach ( $communicationsData->communications->communication as $communication ) {
-						if ( $this->settings->f1SyncPersonPhone() &&
-							$communication->communicationGeneralType === 'Telephone' && 'true' == $communication->preferred
-						) {
-							$person->setPhone( $communication->communicationValue );
-						}
-						if ( $this->settings->f1SyncPersonEmail() &&
-							$communication->communicationGeneralType === 'Email' && 'true' == $communication->preferred
-						) {
-							$person->setEmail( $communication->communicationValue );
-						}
-						if ( $this->settings->f1SyncPersonFacebookURL() &&
-							$communication->communicationType->name === 'Facebook'
-						) {
-							$person->setFacebookURL( $communication->communicationValue );
-						}
-						if ( $this->settings->f1SyncPersonTwitterURL() &&
-							$communication->communicationType->name === 'Twitter'
-						) {
-							$person->setTwitterURL( $communication->communicationValue );
-						}
-						if ( $this->settings->f1SyncPersonLinkedInURL() &&
-							$communication->communicationType->name === 'Linked-In'
-						) {
-							$person->setLinkedInURL( $communication->communicationValue );
+					if ( isset( $communicationsData->communications ) ) {
+						foreach ( $communicationsData->communications->communication as $communication ) {
+							if ( $this->settings->f1SyncPersonPhone() &&
+								$communication->communicationGeneralType === 'Telephone' && 'true' == $communication->preferred
+							) {
+								$person->setPhone( $communication->communicationValue );
+							}
+							if ( $this->settings->f1SyncPersonEmail() &&
+								$communication->communicationGeneralType === 'Email' && 'true' == $communication->preferred
+							) {
+								$person->setEmail( $communication->communicationValue );
+							}
+							if ( $this->settings->f1SyncPersonFacebookURL() &&
+								$communication->communicationType->name === 'Facebook'
+							) {
+								$person->setFacebookURL( $communication->communicationValue );
+							}
+							if ( $this->settings->f1SyncPersonTwitterURL() &&
+								$communication->communicationType->name === 'Twitter'
+							) {
+								$person->setTwitterURL( $communication->communicationValue );
+							}
+							if ( $this->settings->f1SyncPersonLinkedInURL() &&
+								$communication->communicationType->name === 'Linked-In'
+							) {
+								$person->setLinkedInURL( $communication->communicationValue );
+							}
 						}
 					}
 
