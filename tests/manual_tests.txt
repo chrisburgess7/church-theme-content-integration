@@ -1,0 +1,29 @@
+
+Fellowship One / People Sync
+
+1. Fresh install, sync 2 people lists with all fields. Check everything is synced.
+
+2. After initial sync, edit bio text, re-run sync with changes to at least every CTC field once. Check each field change
+and that bio's have been unchanged.
+
+3. Repeat 2 with selection of fields set to NOT sync
+
+4. Delete one people list, verify that previously synced records from that list are 'removed'.
+Currently that means set to draft.
+
+5. Re-add the people list removed in previous step. All records should re-attach and show up as before.
+
+6. Remove one person from one of the lists in F1. Check that it is removed when syncing.
+
+7. Add that removed person to the F1 list. Should be reattached and synced again.
+
+8. Add a new person to F1 list, check that added when synced.
+
+9. Add a new person to F1 list that will be attached to existing CTC person. Check that that attaches.
+
+10. Remove one people list from list to sync. Add another new people list to sync. Remove one person from people list
+that remains to be synced, then add 2 new people to that list, one to be attached, the other that is new. Check that this
+ all behaves as expected.
+
+11. Set sync groups to false. Move one person in CTC from one CTC group to another. Run sync and check that no group
+changes.
