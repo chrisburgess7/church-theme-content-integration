@@ -30,6 +30,9 @@ class CTCI_ModuleProcess {
 	}
 
 	public function run() {
+
+		$textDomain = Church_Theme_Content_Integration::$TEXT_DOMAIN;
+
 		$this->logger->clear();
 
 		// set 5 minute time limit, hopefully long enough...
@@ -39,28 +42,37 @@ class CTCI_ModuleProcess {
 			try {
 				if ( ! $dataProvider->initDataProviderForProcess( $this->logger ) ) {
 					$this->logger->error(
-						'Init failed for provider ' . $dataProvider->getHumanReadableName() . '. '
+						sprintf( __( 'Init failed for provider %s.', $textDomain ), $dataProvider->getHumanReadableName() )
 					);
 					continue;
 				}
 			} catch ( Exception $e ) {
 				$this->logger->error(
-					'Init failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
-					$e->getMessage(), $e
+					sprintf(
+						__( 'Init failed for provider %s. %s', $textDomain ),
+						$dataProvider->getHumanReadableName(),
+						$e->getMessage()
+					), $e
 				);
 				continue;
 			}
 			try {
 				if ( ! $dataProvider->authenticateForProcess() ) {
 					$this->logger->error(
-						'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. '
+						sprintf(
+							__( 'Authentication failed for provider %s.', $textDomain),
+							$dataProvider->getHumanReadableName()
+						)
 					);
 					continue;
 				}
 			} catch ( Exception $e ) {
 				$this->logger->error(
-					'Authentication failed for provider ' . $dataProvider->getHumanReadableName() . '. ' .
-					$e->getMessage(), $e
+					sprintf(
+						__( 'Authentication failed for provider %s. %s', $textDomain),
+						$dataProvider->getHumanReadableName(),
+						$e->getMessage()
+					), $e
 				);
 				continue;
 			}
@@ -79,9 +91,9 @@ class CTCI_ModuleProcess {
 						if ( ! $this->logger->hasErrors() ) {
 							$procName = $dataProvider->getHumanReadableName() . ' ' . $operation->getHumanReadableName();
 							if ( ! $this->logger->hasWarnings() ) {
-								$this->logger->success( $procName . ' complete.' );
+								$this->logger->success( sprintf( __( '%s complete.', $textDomain ), $procName) );
 							} else {
-								$this->logger->warning( $procName . ' has finished with warnings.' );
+								$this->logger->warning( sprintf( __( '%s has finished with warnings.', $textDomain ), $procName) );
 							}
 						}
 					}
