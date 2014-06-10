@@ -136,6 +136,62 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 		return $str;
 	}
 
+	protected function getExceptionString( Exception $exception ) {
+		$str = sprintf(
+			'Type: %s, File: %s, Line: %s, Message: %s,
+			Trace: %s
+			ToString: %s',
+			get_class( $exception ), $exception->getFile(), $exception->getLine(), $exception->getMessage(),
+			$exception->getTraceAsString(), (string) $exception
+		);
+		return $str;
+	}
+
+	public function toString() {
+		return $this->__toString();
+	}
+
+	public function __toString() {
+		$output = '';
+		foreach ( $this->messages as $message ) {
+			switch ( $message[0] ) {
+				case static::$ERROR:
+					if ( $this->filter & static::$ERROR ) {
+						$output .= 'Error: ';
+						$output .= $message[1];
+						if ( $this->outputExceptionDetails && $message[2] instanceof \Exception ) {
+							$output .= ' Exception Details: ';
+							$output .= $this->getExceptionString( $message[2] );
+						}
+					}
+					break;
+				case static::$WARNING:
+					if ( $this->filter & static::$WARNING ) {
+						$output .= 'Warning: ';
+						$output .= $message[1];
+						if ( $this->outputExceptionDetails && $message[2] instanceof \Exception ) {
+							$output .= ' Exception Details: ';
+							$output .= $this->getExceptionString( $message[2] );
+						}
+					}
+					break;
+				case static::$INFO:
+					if ( $this->filter & static::$INFO ) {
+						$output .= 'Info: ';
+						$output .= $message[1];
+					}
+					break;
+				case static::$SUCCESS:
+					if ( $this->filter & static::$SUCCESS ) {
+						$output .= 'Success: ';
+						$output .= $message[1];
+					}
+					break;
+			}
+		}
+		return $output;
+	}
+
 	public function hasWarnings() {
 		return $this->hasWarnings;
 	}

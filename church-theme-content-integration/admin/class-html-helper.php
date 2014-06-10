@@ -57,4 +57,20 @@ class CTCI_HtmlHelper implements CTCI_HtmlHelperInterface {
 		);
 		echo '</form>';
 	}
+
+	public function showAJAXButton( $label, $key, $enabled = true ) {
+		$classes = '';
+		$attr = '';
+		if ( ! $enabled ) {
+			$attr .= 'disabled';
+		} else {
+			$classes .= 'ctci-enabled ';
+		}
+		$classes .= 'button button-primary button-large';
+		echo '<form name="' . $key . '" action="#" method="post" id="' . $key . '">
+				<input type="hidden" name="action" value="' . $key . '">
+	            <input type="submit" name="' . $key . '_submit" id="' . $key . '_submit" class="' . $classes . '" value="' . $label . '" ' . $attr . '>
+	        </form>
+	    ';
+	}
 }

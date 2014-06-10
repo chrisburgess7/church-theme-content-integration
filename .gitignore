@@ -1,3 +1,4 @@
 class-f1-api-keys.php
 tests/copy-files-to-localhost.php
 phpunit-dbunit.xml
+node_modules

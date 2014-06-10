@@ -36,11 +36,12 @@ else
 }
 
 function uninstall() {
-
 	/** @var $wpdb wpdb */
 	$wpdb = $GLOBALS['wpdb'];
 	$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
 	$wpdb->query("DROP TABLE IF EXISTS $tableName");
+	$syncStatusTable = $wpdb->prefix . 'ctci_syncstatus';
+	$wpdb->query("DROP TABLE IF EXISTS $syncStatusTable");
 	delete_option('ctci_db_version');
 	delete_option('ctci_config_options');
 	delete_option('ctci_f1_options');

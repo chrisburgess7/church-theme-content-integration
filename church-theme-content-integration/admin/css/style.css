@@ -2,19 +2,8 @@
 #ctci-run-page {
     display: inline-block;
     position: relative;
-    width: 30%;
     vertical-align: top;
     padding: 10px 0
-}
-
-#ctci-run-page-loading-box {
-    box-sizing: border-box;
-    display: inline-block;
-    position: absolute;
-    opacity: 0.5;
-    border: grey 25px solid;
-    width: 100%;
-    height: 100%;
 }
 
 #ctci-run-page-loading-box.ctci-run-page-loading {
@@ -25,11 +14,46 @@
     display: inline-block;
 }
 
+.ctci-run-indicator {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    vertical-align: bottom;
+    padding: 3px 10px;
+}
+
+.ctci-run-indicator.ctci-spinner {
+    background: url(images/spinner.gif) no-repeat center;
+}
+
+.ctci-run-update {
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.wrap .ctci-run-update .update-nag, .wrap .ctci-run-update .updated, .wrap .ctci-run-update .error {
+    margin: 0 0 0 10px;
+    padding: 6px 15px;
+    vertical-align: bottom;
+}
+
+/* some of these need to be defaulted */
+.wrap .ctci-run-update .update-nag {
+    font-size: inherit;
+    line-height: inherit;
+}
+
 #ctci-run-messages {
     display: inline-block;
     width: 68%;
     margin-top: 10px;
     padding: 5px 10px;
+}
+
+#ctci-log-viewer {
+    border-top: 1px solid grey;
+    margin-top: 20px;
+    padding-top: 10px;
 }
 
 #ctci-message-log {

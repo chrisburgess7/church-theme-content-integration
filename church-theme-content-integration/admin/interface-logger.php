@@ -15,6 +15,7 @@ interface CTCI_LoggerInterface {
 	public function success( $message );
 	public function filter( $flags );
 	public function toHTML();
+	public function toString();
 	public function hasWarnings();
 	public function hasErrors();
 } 

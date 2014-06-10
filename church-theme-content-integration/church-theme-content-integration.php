@@ -3,7 +3,7 @@
  * Plugin Name: Church Theme Content Integration
  * Plugin URI:
  * Description: Provides integration functionality between the Church Theme Content plugin and other church-related service providers.
- * Version: 0.1
+ * Version: 0.2
  * Author: Chris Burgess
  * Author URI:
  * License: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -22,7 +22,7 @@ if ( !defined( 'ABSPATH' ) ) {
  */
 class Church_Theme_Content_Integration {
 
-	public static $DB_VERSION = '0.1';
+	public static $DB_VERSION = '0.2';
 	public static $CSS_VERSION = '0.1';
 	public static $JS_VERSION = '0.1';
 	public static $CTC_PLUGIN_NAME = 'church-theme-content';
@@ -101,6 +101,15 @@ class Church_Theme_Content_Integration {
 
 	private $settings = array();
 
+	public static function getLogFileName( $type = 'txt' ) {
+		$path = plugin_dir_path( __FILE__ ) . 'log';
+		if ( $type === 'html' ) {
+			$path .= '_html';
+		}
+		$path .= '.txt';
+		return $path;
+	}
+
 	/**
 	 * Constructor
 	 *
@@ -168,15 +177,33 @@ class Church_Theme_Content_Integration {
 	public function setup_db() {
 		global $wpdb;
 		$tableName = $wpdb->prefix . 'ctci_ctcgroup_connect';
-		$connectTableSQL = "CREATE TABLE $tableName (
+		$sql = "CREATE TABLE $tableName (
 			term_id bigint(20) NOT NULL,
 			data_provider varchar(16) NOT NULL,
 			provider_group_id varchar(32) NOT NULL,
 			KEY term_id (term_id)
 		);";
 
+		// TODO: test this on install!!!
+		$syncStatusTable = $wpdb->prefix . 'ctci_syncstatus';
+		$sql .= "CREATE TABLE $syncStatusTable (
+			id int NOT NULL,
+			message varchar(256),
+			errors int,
+			error_messages varchar(256),
+			warnings int,
+			warning_messages varchar(256),
+		 	KEY id (id)
+		);";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta($connectTableSQL);
+		dbDelta($sql);
+
+		// the sync status table needs to have one row with PK 1
+		$syncRowCount = $wpdb->get_var( "SELECT COUNT(*) FROM $syncStatusTable" );
+		if ($syncRowCount < 1) {
+			$wpdb->insert( $syncStatusTable, array( 'id' => 1, 'errors' => 0, 'warnings' => 0 ) );
+		}
 
 		add_option( "ctci_db_version", self::$DB_VERSION);
 	}
@@ -500,7 +527,7 @@ class Church_Theme_Content_Integration {
 		foreach ( $this->dataProviders as $dataProvider ) {
 			foreach ( $this->operationTypes as $operation ) {
 				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
-					$process = new CTCI_ModuleProcess( $this->logger );
+					$process = new CTCI_ModuleProcess( $this->logger, $this->wpal );
 					$process->addDataProvider( $dataProvider );
 					$operationInstance = clone $operation;
 					$process->addOperation( $operationInstance );
@@ -512,13 +539,51 @@ class Church_Theme_Content_Integration {
 				}
 			}
 		}
+		// add the run action for retrieving the log file
+		add_action( 'wp_ajax_ctci_getlog', array( $this, 'get_log_file_ajax' ) );
+	}
+
+	public function get_log_file_ajax() {
+		$str = file_get_contents( self::getLogFileName('html') );
+		if ( $str === false ) {
+			echo 'Error: file could not be opened';
+		} else {
+			echo $str;
+		}
+		die();
 	}
 
 	public function enqueue_scripts() {
 		wp_register_style( 'ctci-style', plugins_url( '/admin/css/style.css', __FILE__ ), array(), self::$CSS_VERSION, 'all' );
-		wp_register_script( 'ctci-scripts', plugins_url( '/admin/js/scripts.js', __FILE__ ), array( 'jquery' ), self::$JS_VERSION );
+		wp_register_script( 'ctci-sprintf-js', plugins_url( '/admin/js/sprintf.js', __FILE__ ), array(), self::$JS_VERSION );
+		wp_register_script( 'ctci-run-status', plugins_url( '/admin/js/CTCIRunStatus.js', __FILE__ ), array(), self::$JS_VERSION );
+		wp_register_script( 'ctci-scripts', plugins_url( '/admin/js/scripts.js', __FILE__ ), array( 'jquery', 'ctci-sprintf-js', 'ctci-run-status' ), self::$JS_VERSION );
 		wp_enqueue_style( 'ctci-style' );
+
+		// create i18n strings for our JS
+		// note that for testing, these have been replicated in the Spec.html test files, as this code isn't available in test
+		// make sure that these are the same when testing!!!
+		$translations = array(
+			'message_1_error_with_message' => __( '%1$s. Error: %2$s', self::$TEXT_DOMAIN ),
+			'message_x_errors_with_message' => __( '%1$s. Error: %2$s (%3$d errors in total, see log for details)', self::$TEXT_DOMAIN ),
+			'message_1_error_no_message' => __( '%1$s. An error has occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_x_errors_no_message' => __( '%1$s. %2$s errors have occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_1_warning_with_message' => __( '%1$s. Warning: %2$s', self::$TEXT_DOMAIN ),
+			'message_x_warnings_with_message' => __( '%1$s. Warning: %2$s (%3$d warnings in total, see log for details)', self::$TEXT_DOMAIN ),
+			'message_1_warning_no_message' => __( '%1$s. A warning has occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_x_warnings_no_message' => __( '%1$s. %2$s warnings have occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_both_message' => __( '%1$s. %2$s error(s) have occurred. Error: %3$s. %4$s warning(s) have occurred. Warning: %5$s.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_error_message' => __( '%1$s. %2$s error(s) have occurred. Error: %3$s. %4$s warning(s) have occurred, see log.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_warning_message' => __( '%1$s. %2$s error(s) have occurred, see log. %3$s warning(s) have occurred. Warning: %4$s.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_no_message' => __( '%1$s. %2$s error(s) have occurred, see log. %3$s warning(s) have occurred, see log.', self::$TEXT_DOMAIN ),
+			'ajax_response_not_json_upon_completion' => __( 'Sorry, but a problem has occurred retrieving the status from the server. The log might tell you if the sync has succeeded.', self::$TEXT_DOMAIN ),
+		);
+
+		wp_localize_script( 'ctci-scripts', 'ctci_translations', $translations );
+		wp_enqueue_script( 'ctci-sprintf-js' );
+		wp_enqueue_script( 'ctci-run-status' );
 		wp_enqueue_script( 'ctci-scripts' );
+
 	}
 
 	public function system_checks() {
@@ -586,7 +651,7 @@ class Church_Theme_Content_Integration {
 		echo '<div class="wrap">';
 		echo '<h2>' . __( 'Church Theme Content Integration', self::$TEXT_DOMAIN ) . '</h2>';
 		echo '<div id="ctci-run-page">';
-		echo '<div id="ctci-run-page-loading-box"></div>';
+
 		foreach ( $this->dataProviders as $dataProvider ) {
 			echo '<h3>' . $dataProvider->getHumanReadableName() . '</h3>';
 			foreach ( $this->operationTypes as $operation ) {
@@ -596,6 +661,7 @@ class Church_Theme_Content_Integration {
 					if ( $this->isCTCActive() && $this->curlAvailable() && isset( $configOptions[ $enabledOpt ] ) && $configOptions[ $enabledOpt ] === 'T' ) {
 						$enabled = true;
 					}
+					echo '<div class="ctci-run-section">';
 					echo '<div class="ctci-run-button">';
 					switch ( $dataProvider->getRunButtonHandlerType() ) {
 						case CTCI_DataProviderInterface::RUNBUTTON_CUSTOM:
@@ -606,18 +672,22 @@ class Church_Theme_Content_Integration {
 							$this->htmlHelper->showAJAXRunButtonFor( $dataProvider, $operation, $enabled );
 							break;
 					}
-					echo '</div>';
+					echo '</div>'; // run button
+					echo '<div class="ctci-run-indicator"></div>';
+					echo '<div class="ctci-run-update"></div>';
+					echo '</div>'; // run section
 				}
 			}
 		}
+
+		echo '</div>'; // end run page
+
+		// view log section
+		echo '<div id="ctci-log-viewer">';
+		$this->htmlHelper->showAJAXButton( 'View Log', 'ctci_getlog' );
+		echo '<div id="ctci-message-log"></div>';
 		echo '</div>';
-		echo '<div id="ctci-run-messages">';
-		echo '<h3>Message Log</h3>';
-		echo '<div id="ctci-message-log">';
-		echo $this->logger->toHTML();
-		echo '</div>';
-		echo '</div>';
-		echo '</div>';
+		echo '</div>'; // end wrap
 	}
 
 	public function show_configuration_page() {

@@ -15,8 +15,12 @@ class CTCI_ModuleProcess {
 	/** @var CTCI_LoggerInterface */
 	protected $logger;
 
-	public function __construct( CTCI_LoggerInterface $logger ) {
+	/** @var CTCI_WPALInterface */
+	protected $wpal;
+
+	public function __construct( CTCI_LoggerInterface $logger, CTCI_WPAL $wpal ) {
 		$this->logger = $logger;
+		$this->wpal = $wpal;
 	}
 
 	public function addDataProvider( CTCI_DataProviderInterface $dataProvider ) {
@@ -91,6 +95,8 @@ class CTCI_ModuleProcess {
 						if ( ! $this->logger->hasErrors() ) {
 							$procName = $dataProvider->getHumanReadableName() . ' ' . $operation->getHumanReadableName();
 							if ( ! $this->logger->hasWarnings() ) {
+								// todo: a class to encapsulate the sync status and log messages to enforce consistency
+								$this->wpal->setSyncMessage( sprintf( __( '%s complete.', $textDomain ), $procName) );
 								$this->logger->success( sprintf( __( '%s complete.', $textDomain ), $procName) );
 							} else {
 								$this->logger->warning( sprintf( __( '%s has finished with warnings.', $textDomain ), $procName) );
@@ -116,8 +122,37 @@ class CTCI_ModuleProcess {
 
 	public function runAJAX() {
 		$this->run();
+		// todo: include run time and operation type
+		$fHandleTxt = fopen( Church_Theme_Content_Integration::getLogFileName(), 'w' );
+		if ( $fHandleTxt !== false ) {
+			fwrite( $fHandleTxt, $this->logger->toString() );
+			fclose( $fHandleTxt );
+		}
+		$fHandleHTML = fopen( Church_Theme_Content_Integration::getLogFileName('html'), 'w' );
+		if ( $fHandleHTML !== false ) {
+			fwrite( $fHandleHTML, $this->logger->toHTML() );
+			fclose( $fHandleHTML );
+		}
 		// ajax output
-		echo $this->logger->toHTML();
+		//echo $this->logger->toHTML();
+		$json = $this->wpal->getSyncStatusAsJSON();
+		if ( $json === false ) {
+			echo json_encode( array(
+				'warnings' => 1,
+				'warning_message' => __(
+					'An error has occurred retrieving status upon completion. Checking the log may tell you if it worked.',
+					Church_Theme_Content_Integration::$TEXT_DOMAIN
+				)
+			));
+		} else {
+			echo $json;
+			// test hack
+			/*echo json_encode( array(
+				'message' => 'A test message',
+				'warnings' => 1,
+				'warning_messages' => 'Something kind of bad has happened'
+			));*/
+		}
 		die(); // needed to avoid wordpress returning a zero at the end of the response
 	}
 } 
