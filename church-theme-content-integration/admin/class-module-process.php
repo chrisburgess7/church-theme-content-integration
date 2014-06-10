@@ -121,15 +121,38 @@ class CTCI_ModuleProcess {
 	}
 
 	public function runAJAX() {
+		$runtime = new DateTime();
+
 		$this->run();
-		// todo: include run time and operation type
+
+		// build some strings identifying this run with it's operations and providers
+		$operationString = "Operation(s): ";
+		foreach( $this->operations as $op ) {
+			$operationString .= $op->getHumanReadableName() . ', ';
+		}
+		$operationString = substr( $operationString, 0, strlen( $operationString ) - 2 );
+		$providersString = "Data provider(s): ";
+		foreach( $this->dataProviders as $dp ) {
+			$providersString .= $dp->getHumanReadableName() . ', ';
+		}
+		$providersString = substr( $providersString, 0, strlen( $providersString ) - 2 );
+
+		// output txt file
 		$fHandleTxt = fopen( Church_Theme_Content_Integration::getLogFileName(), 'w' );
 		if ( $fHandleTxt !== false ) {
+			fwrite( $fHandleTxt, "Run at: " . $runtime->format('Y-m-d H:i:s') . PHP_EOL );
+			fwrite( $fHandleTxt, $operationString . PHP_EOL);
+			fwrite( $fHandleTxt, $providersString . PHP_EOL);
 			fwrite( $fHandleTxt, $this->logger->toString() );
 			fclose( $fHandleTxt );
 		}
+
+		// output html file for the admin page log viewer
 		$fHandleHTML = fopen( Church_Theme_Content_Integration::getLogFileName('html'), 'w' );
 		if ( $fHandleHTML !== false ) {
+			fwrite( $fHandleHTML, "<p>Run at: " . $runtime->format('Y-m-d H:i:s') . '</p>' );
+			fwrite( $fHandleHTML, '<p>' . $operationString . '</p>');
+			fwrite( $fHandleHTML, '<p>' . $providersString . '</p>');
 			fwrite( $fHandleHTML, $this->logger->toHTML() );
 			fclose( $fHandleHTML );
 		}
