@@ -541,6 +541,8 @@ class Church_Theme_Content_Integration {
 		}
 		// add the run action for retrieving the log file
 		add_action( 'wp_ajax_ctci_getlog', array( $this, 'get_log_file_ajax' ) );
+		// add action for polling sync status
+		add_action( 'wp_ajax_ctci_check_status', array( $this, 'get_sync_status' ) );
 	}
 
 	public function get_log_file_ajax() {
@@ -550,6 +552,20 @@ class Church_Theme_Content_Integration {
 		} else {
 			echo $str;
 		}
+		die();
+	}
+
+	public function get_sync_status() {
+		require_once dirname( __FILE__ ) . '/admin/class-wpal.php';
+		$wpal = new CTCI_WPAL();
+
+		try{
+			$json = $wpal->getSyncStatusAsJSON();
+			if ( $json !== false ) {
+				echo $json;
+			}
+		} catch ( Exception $e ) {}
+
 		die();
 	}
 

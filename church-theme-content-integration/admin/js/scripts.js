@@ -13,6 +13,8 @@ jQuery(document).ready(function($){
         var $indicator = $runSection.find(".ctci-run-indicator");
         var $statusUpdate = $runSection.find(".ctci-run-update");
 
+        var statusCheckId;
+
         // disable all buttons
         $("input.ctci-enabled").prop("disabled", true);
         // add spinner
@@ -31,16 +33,31 @@ jQuery(document).ready(function($){
                 $("input.ctci-enabled").prop("disabled", false);
                 // remove spinner
                 $indicator.removeClass("ctci-spinner");
+                // stop the status check running on the interval
+                clearInterval(statusCheckId);
                 // set the completion message
                 var parsedData = JSON.parse(data);
                 if (parsedData == false) {
                     CTCIRunStatus.update($statusUpdate, ctci_translations.ajax_response_not_json_upon_completion);
                 } else {
-                    // todo: add ajax recurring request to pull updates as they happen
                     CTCIRunStatus.setFromObject($statusUpdate, parsedData);
                 }
             }
         });
+
+        statusCheckId = setInterval( function(){
+            $.ajax({
+                type: 'POST',
+                url: ajaxurl,
+                data: 'action=ctci_check_status',
+                success: function(data) {
+                    var parsedData = JSON.parse(data);
+                    if (parsedData !== false) {
+                        CTCIRunStatus.setFromObject($statusUpdate, parsedData, 'update');
+                    }
+                }
+            })
+        }, 3000 );
 
         ev.preventDefault();
     });

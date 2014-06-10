@@ -10,21 +10,33 @@ if (!CTCIRunStatus) {
 
 (function () {
 
+    function showMessage($el, type, msg) {
+        slideIn = false;
+        if ( $el.html() === '' ) {
+            $el.hide();
+            slideIn = true;
+        }
+        $el.html('<div class="' + type + '">' + msg + '</div>');
+        if ( slideIn ) {
+            $el.fadeIn();
+        }
+    }
+
     if (typeof CTCIRunStatus.update !== 'function') {
         CTCIRunStatus.update = function ($el, msg) {
-            $el.html('<div class="update-nag">' + msg + '</div>');
+            showMessage($el, 'update-nag', msg);
         }
     }
 
     if (typeof CTCIRunStatus.success !== 'function') {
         CTCIRunStatus.success = function ($el, msg) {
-            $el.html('<div class="updated">' + msg + '</div>');
+            showMessage($el, 'updated', msg);
         }
     }
 
     if (typeof CTCIRunStatus.error !== 'function') {
         CTCIRunStatus.error = function ($el, msg) {
-            $el.html('<div class="error">' + msg + '</div>');
+            showMessage($el, 'error', msg);
         }
     }
 
