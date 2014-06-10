@@ -188,6 +188,7 @@ class CTCI_Logger implements CTCI_LoggerInterface {
 					}
 					break;
 			}
+			$output .= PHP_EOL;
 		}
 		return $output;
 	}
