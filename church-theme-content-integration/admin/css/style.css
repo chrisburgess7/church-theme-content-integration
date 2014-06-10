@@ -56,6 +56,10 @@
     padding-top: 10px;
 }
 
+#ctci_getlog {
+    display: inline-block;
+}
+
 #ctci-message-log {
     min-height: 100px
 }

@@ -45,17 +45,21 @@ jQuery(document).ready(function($){
         ev.preventDefault();
     });
 
-
-
     // view log button
-    var log = $("#ctci_getlog");
-    log.submit(function (ev) {
+    var $log = $("#ctci_getlog");
+    var $submit = $log.find('input[type=submit]');
+    var $spinnerDiv = $('#ctci-log-viewer').find('.ctci-run-indicator');
+    $log.submit(function (ev) {
+        $submit.prop("disabled", true);
+        $spinnerDiv.addClass("ctci-spinner");
         $("#ctci-message-log").html("");
         $.ajax({
-            type: log.attr("method"),
+            type: $log.attr("method"),
             url: ajaxurl,
-            data: log.serialize(),
+            data: $log.serialize(),
             success: function (data) {
+                $submit.prop("disabled", false);
+                $spinnerDiv.removeClass("ctci-spinner");
                 $("#ctci-message-log").html(data);
             }
         });

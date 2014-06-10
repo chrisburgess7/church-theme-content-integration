@@ -685,6 +685,7 @@ class Church_Theme_Content_Integration {
 		// view log section
 		echo '<div id="ctci-log-viewer">';
 		$this->htmlHelper->showAJAXButton( 'View Log', 'ctci_getlog' );
+		echo '<div class="ctci-run-indicator"></div>';
 		echo '<div id="ctci-message-log"></div>';
 		echo '</div>';
 		echo '</div>'; // end wrap
