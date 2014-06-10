@@ -22,6 +22,8 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public static $ctcPersonProviderTagMetaTag = '_ctci_person_provider_tag';
 	public static $ctcPersonProviderIdMetaTag = '_ctci_person_provider_id';
 
+	public static $syncStatusTable = 'ctci_syncstatus';
+
 	public function getOption( $option ) {
 		return get_option( $option );
 	}
@@ -536,6 +538,63 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		return $ctcPeople;
 	}
 
+	public function clearSyncStatus() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$wpdb->update( $wpdb->prefix . self::$syncStatusTable, array(
+			'message' => null,
+			'errors' => 0,
+			'error_messages' => null,
+			'warnings' => 0,
+			'warning_messages' => null
+		), array( 'id' => 1 ) );
+	}
+
+	public function setSyncMessage( $message ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$wpdb->update( $wpdb->prefix . self::$syncStatusTable, array( 'message' => $message ), array( 'id' => 1 ) );
+	}
+
+	public function addSyncError( $message = null ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncStatusTable = $wpdb->prefix . self::$syncStatusTable;
+		if ( $message !== null ) {
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE $syncStatusTable SET errors = errors + 1, error_messages = %s WHERE id = 1",
+					$message
+				)
+			);
+		} else {
+			$wpdb->query( "UPDATE $syncStatusTable SET errors = errors + 1 WHERE id = 1" );
+		}
+	}
+
+	public function addSyncWarning( $message = null ) {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncStatusTable = $wpdb->prefix . self::$syncStatusTable;
+		if ( $message !== null ) {
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE $syncStatusTable SET warnings = warnings + 1, warning_messages = %s WHERE id = 1",
+					$message
+				)
+			);
+		} else {
+			$wpdb->query( "UPDATE $syncStatusTable SET warnings = warnings + 1 WHERE id = 1" );
+		}
+	}
+
+	public function getSyncStatusAsJSON() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncStatusTable = $wpdb->prefix . self::$syncStatusTable;
+		$data = $wpdb->get_row("SELECT message, errors, error_messages, warnings, warning_messages FROM $syncStatusTable WHERE id = 1");
+		return json_encode( $data );
+	}
 }
 
 class CTCI_CreateCTCGroupException extends Exception {

@@ -76,4 +76,10 @@ interface CTCI_WPALInterface {
 
 	public function getCurrentAdminPageURL();
 
+	public function clearSyncStatus();
+	public function setSyncMessage( $message );
+	public function addSyncError( $message = null );
+	public function addSyncWarning( $message = null );
+	public function getSyncStatusAsJSON();
+
 } 

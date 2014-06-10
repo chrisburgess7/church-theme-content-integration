@@ -949,4 +949,215 @@ class WP_Test_CTCI_WPALTest extends WP_UnitTestCase {
 		}
 	}
 
+	public function testClearSyncStatus() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query(
+			"REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages)
+			VALUES (1, 'A test message', 1, 'An error message', 2, 'A warning message')" );
+
+		$this->assertNotEquals( array(
+				'id' => 1, 'message' => null, 'errors' => 0, 'error_messages' => null, 'warnings' => 0, 'warning_messages' => null
+			), $wpdb->get_row("SELECT * FROM $syncTable WHERE id = 1", ARRAY_A)
+		);
+
+		$this->sut->clearSyncStatus();
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+		$this->assertEquals( array(
+				'id' => 1, 'message' => null, 'errors' => 0, 'error_messages' => null, 'warnings' => 0, 'warning_messages' => null
+			), $wpdb->get_row("SELECT * FROM $syncTable WHERE id = 1", ARRAY_A)
+		);
+	}
+
+	public function testSetSyncMessage() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+		$message = 'A test message';
+
+		$this->sut->setSyncMessage( $message );
+
+		$this->assertEquals( $message, $wpdb->get_var( "SELECT message FROM $syncTable WHERE id = 1" ) );
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testSetSyncMessage_Replace() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->update( $syncTable, array( 'message' => 'Replaced message' ), array( 'id' => 1 ) );
+		$message = 'A test message';
+
+		$this->sut->setSyncMessage( $message );
+
+		$this->assertEquals( $message, $wpdb->get_var( "SELECT message FROM $syncTable" ) );
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+	
+	public function testAddSyncError_NoMessage() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+
+		$this->sut->addSyncError();
+		
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		
+		$this->sut->addSyncError();
+
+		$this->assertEquals( 2, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+
+		$this->sut->addSyncError();
+
+		$this->assertEquals( 3, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testAddSyncError_Messages() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+
+		$this->sut->addSyncError('Message 1');
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		$this->assertEquals( 'Message 1', $wpdb->get_var( "SELECT error_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncError('Message 2');
+
+		$this->assertEquals( 2, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		$this->assertEquals( 'Message 2', $wpdb->get_var( "SELECT error_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncError('Message 3');
+
+		$this->assertEquals( 3, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		$this->assertEquals( 'Message 3', $wpdb->get_var( "SELECT error_messages FROM $syncTable" ) );
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testAddSyncError_MessagesAndNoMessage() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+
+		$this->sut->addSyncError('Message 1');
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		$this->assertEquals( 'Message 1', $wpdb->get_var( "SELECT error_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncError();
+
+		$this->assertEquals( 2, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		$this->assertEquals( 'Message 1', $wpdb->get_var( "SELECT error_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncError('Message 3');
+
+		$this->assertEquals( 3, $wpdb->get_var( "SELECT errors FROM $syncTable" ) );
+		$this->assertEquals( 'Message 3', $wpdb->get_var( "SELECT error_messages FROM $syncTable" ) );
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testAddSyncWarning_NoMessage() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+
+		$this->sut->addSyncWarning();
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+
+		$this->sut->addSyncWarning();
+
+		$this->assertEquals( 2, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+
+		$this->sut->addSyncWarning();
+
+		$this->assertEquals( 3, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+
+		$this->assertEquals(1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testAddSyncWarning_Messages() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+
+		$this->sut->addSyncWarning('Message 1');
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+		$this->assertEquals( 'Message 1', $wpdb->get_var( "SELECT warning_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncWarning('Message 2');
+
+		$this->assertEquals( 2, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+		$this->assertEquals( 'Message 2', $wpdb->get_var( "SELECT warning_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncWarning('Message 3');
+
+		$this->assertEquals( 3, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+		$this->assertEquals( 'Message 3', $wpdb->get_var( "SELECT warning_messages FROM $syncTable" ) );
+
+		$this->assertEquals(1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testAddSyncWarning_MessagesAndNoMessage() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+
+		$this->sut->addSyncWarning('Message 1');
+
+		$this->assertEquals( 1, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+		$this->assertEquals( 'Message 1', $wpdb->get_var( "SELECT warning_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncWarning();
+
+		$this->assertEquals( 2, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+		$this->assertEquals( 'Message 1', $wpdb->get_var( "SELECT warning_messages FROM $syncTable" ) );
+
+		$this->sut->addSyncWarning('Message 3');
+
+		$this->assertEquals( 3, $wpdb->get_var( "SELECT warnings FROM $syncTable" ) );
+		$this->assertEquals( 'Message 3', $wpdb->get_var( "SELECT warning_messages FROM $syncTable" ) );
+
+		$this->assertEquals(1, $wpdb->get_var( "SELECT COUNT(*) FROM $syncTable" ) );
+	}
+
+	public function testGetSyncStatusAsJSON() {
+		/** @var $wpdb wpdb */
+		global $wpdb;
+		$syncTable = $wpdb->prefix . CTCI_WPAL::$syncStatusTable;
+		$wpdb->query( "REPLACE INTO $syncTable (id, message, errors, error_messages, warnings, warning_messages) VALUES (1, NULL, 0, NULL, 0, NULL)" );
+		$contents = array(
+			'message' => 'A test message',
+			'errors' => 0,
+			'error_messages' => null,
+			'warnings' => 1,
+			'warning_messages' => 'A warning'
+		);
+		$wpdb->update( $syncTable, $contents, array( 'id' => 1 ) );
+
+		$actualJSON = $this->sut->getSyncStatusAsJSON();
+
+		// convert some values to json format
+		$contents['errors'] = "0";
+		$contents['error_messages'] = "";
+		$contents['warnings'] = "1";
+		$this->assertEquals( json_encode( $contents ), $actualJSON );
+
+	}
 }
