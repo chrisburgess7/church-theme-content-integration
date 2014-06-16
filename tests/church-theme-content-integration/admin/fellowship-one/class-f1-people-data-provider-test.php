@@ -10,7 +10,7 @@ require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integratio
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/fellowship-one.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/OAuth/class-f1-oauth-client.php';
 // required so that phpunit recognises type hinting
-require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-status-tracker.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/interface-operation.php';
 
 class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
@@ -20,7 +20,7 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 	/** @var PHPUnit_Framework_MockObject_MockObject */
 	protected $peopleSyncSettingsMock;
 	/** @var PHPUnit_Framework_MockObject_MockObject */
-	protected $loggerMock;
+	protected $statusTrackerMock;
 
 	/**
 	 * @var CTCI_F1PeopleDataProvider
@@ -41,12 +41,12 @@ class CTCI_F1PeopleDataProviderTest extends \PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->loggerMock = $this->getMockBuilder('CTCI_Logger')
+		$this->statusTrackerMock = $this->getMockBuilder('CTCI_StatusTracker')
 			->disableOriginalConstructor()
 			->getMock();
 
 		$this->sutF1PeopleDataProvider = new CTCI_F1PeopleDataProvider(
-			$this->authClientMock, $this->peopleSyncSettingsMock, $this->loggerMock
+			$this->authClientMock, $this->peopleSyncSettingsMock, $this->statusTrackerMock
 		);
 	}
 
