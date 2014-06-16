@@ -500,24 +500,29 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				//echo 'running auth';
 				/** @noinspection PhpUnusedLocalVariableInspection */
 				$data = false;
+				$message = '';
 				try {
 					// if this succeeds, it redirects browser to service provider login page
 					$data = $this->authClient->authenticate();
 				} catch ( CTCI_F1APIRequestException $e ) {
-					return sprintf( __(
+					$message = sprintf( __(
 							'Error occurred while retrieving request tokens for authentication with the service provider. HTTP Response Code: %d. Request URL: %s. Headers: %s. Response Body: %s.',
 							Church_Theme_Content_Integration::$TEXT_DOMAIN
 						), $e->getHttpCode(), $e->getRequestURL(), $e->getRequestHeaders(), $e->getResponseBody()
 					);
 				} catch ( Exception $e ) {
-					return sprintf( __(
+					$message = sprintf( __(
 							'An unexpected error occurred during authentication. Message: %s',
 							Church_Theme_Content_Integration::$TEXT_DOMAIN
 						), $e->getMessage() );
 				}
 				if ( ! $data ) {
 					$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
-					return __( 'Could not connect to the server (no request token)', Church_Theme_Content_Integration::$TEXT_DOMAIN );
+					if ( $message !== '' ) {
+						return $message;
+					} else {
+						return __( 'Could not connect to the server (no request token)', Church_Theme_Content_Integration::$TEXT_DOMAIN );
+					}
 				}
 			} else {
 				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
@@ -540,16 +545,17 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 			/** @noinspection PhpUnusedLocalVariableInspection */
 			$success = false;
+			$message = '';
 			try {
 				$success = $this->authClient->retrieveAccessToken($oauth_token, $token_secret);
 			} catch ( CTCI_F1APIRequestException $e ) {
-				return sprintf( __(
+				$message = sprintf( __(
 						'Error occurred while retrieving access tokens for authentication with the service provider. HTTP Response Code: %d. Request URL: %s. Headers: %s. Response Body: %s.',
 						Church_Theme_Content_Integration::$TEXT_DOMAIN
 					), $e->getHttpCode(), $e->getRequestURL(), $e->getRequestHeaders(), $e->getResponseBody()
 				);
 			} catch ( Exception $e ) {
-				return sprintf( __(
+				$message = sprintf( __(
 					'An unexpected error occurred. Message: %s',
 					Church_Theme_Content_Integration::$TEXT_DOMAIN
 				), $e->getMessage() );
@@ -565,6 +571,11 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
 			} else {
 				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
+				if ( $message !== '' ) {
+					return $message;
+				} else {
+					return __( 'Failed to retrieve Access Tokens for authentication with the service provider.', Church_Theme_Content_Integration::$TEXT_DOMAIN );
+				}
 			}
 		} else {
 			//echo 'default auth';

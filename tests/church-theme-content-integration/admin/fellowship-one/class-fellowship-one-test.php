@@ -9,11 +9,10 @@
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/fellowship-one/fellowship-one.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-people-sync.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/interface-people-data-provider.php';
-require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/interface-status-tracker.php';
+require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-status-tracker.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-wpal.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-html-helper.php';
-require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-logger.php';
-//require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/church-theme-content-integration.php';
 
 class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
@@ -39,7 +38,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	protected $authClientMock;
 
 	/** @var PHPUnit_Framework_MockObject_MockObject */
-	protected $loggerMock;
+	protected $statusTrackerMock;
 
 	public function setUp() {
 		$this->sut = new CTCI_Fellowship_One();
@@ -55,7 +54,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 		$this->htmlHelperMock = $this->getMock('CTCI_HtmlHelper', array(), array( $this, 'get_run_module_key' ) );
 
-		$this->loggerMock = $this->getMock('CTCI_Logger');
+		$this->statusTrackerMock = $this->getMockBuilder('CTCI_StatusTracker')->disableOriginalConstructor()->getMock();
 	}
 
 	protected function get_run_module_key( $providerTag, $operation ) {
@@ -338,8 +337,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->sutInitOnLoad();
 
 		// must be called before getDataProvider
-		$logger = new CTCI_Logger();
-		$this->sut->initDataProviderForProcess( $logger );
+		$this->sut->initDataProviderForProcess( $this->statusTrackerMock );
 
 		$actual = $this->sut->getDataProviderFor( $tag );
 
@@ -372,9 +370,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			->method('authenticate')
 			->will($this->returnValue(true));
 
-		$this->loggerMock->expects( $this->never() )
-			->method( 'error' );
-
 		$this->htmlHelperMock->expects($this->never())
 			->method('showActionButton');
 
@@ -384,7 +379,9 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+
+		$this->assertTrue( $return );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateFailure() {
@@ -409,9 +406,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			->method('authenticate')
 			->will( $this->returnValue( false ) );
 
-		$this->loggerMock->expects( $this->once() )
-			->method( 'error' );
-
 		$this->htmlHelperMock->expects($this->once())
 			->method('showActionButton');
 
@@ -421,7 +415,10 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+
+		// check that we get an error message
+		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateException() {
@@ -448,10 +445,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			->method('authenticate')
 			->will( $this->throwException( $exception ) );
 
-		$this->loggerMock->expects( $this->atLeastOnce() )
-			->method( 'error' )
-			->with( $this->isType('string'), $this->logicalOr( $this->equalTo( $exception ), $this->isNull() ) );
-
 		$this->htmlHelperMock->expects($this->once())
 			->method('showActionButton');
 
@@ -461,7 +454,10 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+
+		// check that we get an error message
+		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateForOtherOperation() {
@@ -485,9 +481,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->authClientMock->expects($this->never())
 			->method('authenticate');
 
-		$this->loggerMock->expects( $this->never() )
-			->method( 'error' );
-
 		$this->htmlHelperMock->expects($this->once())
 			->method('showActionButton');
 
@@ -497,7 +490,10 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+
+		// check that we get an error message
+		$this->assertTrue( $return );
 	}
 
 	public function testShowSyncButtonFor_AuthenticatedInSession() {
@@ -518,9 +514,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->memSession->set('ctci_f1_access_token', 1234567890);
 		$this->memSession->set('ctci_f1_access_token_secret', 1234567890);
 
-		$this->loggerMock->expects( $this->never() )
-			->method( 'error' );
-
 		$this->htmlHelperMock->expects($this->never())
 			->method('showActionButton');
 
@@ -530,7 +523,9 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->once())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+
+		$this->assertTrue( $return );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateCallback() {
@@ -600,9 +595,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 					return null;
 			}));
 
-		$this->loggerMock->expects( $this->never() )
-			->method( 'error' );
-
 		$this->htmlHelperMock->expects($this->never())
 			->method('showActionButton');
 
@@ -612,8 +604,9 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->once())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
+		$this->assertTrue( $return );
 		$this->assertTrue( $accessTokenSet, "access token not set" );
 		$this->assertTrue( $accessTokenSecretSet, "access token secret not set" );
 	}
@@ -666,9 +659,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->sessionMock->expects( $this->never() )
 			->method( 'set' );
 
-		$this->loggerMock->expects( $this->never() )
-			->method( 'error' );
-
 		$this->htmlHelperMock->expects($this->once())
 			->method('showActionButton');
 
@@ -678,8 +668,10 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
+		// check that we get an error message
+		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateCallback_AccessTokenException() {
@@ -723,10 +715,6 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			->with( $this->equalTo( $oauth_token ), $this->equalTo( $oauth_token_secret ) )
 			->will( $this->throwException( $exception ) );
 
-		$this->loggerMock->expects( $this->once() )
-			->method( 'error' )
-			->with( $this->isType('string'), $this->equalTo( $exception ) );
-
 		$this->authClientMock->expects( $this->never() )
 			->method( 'getAccessToken' );
 
@@ -745,8 +733,10 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
+		// check that we get an error message
+		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
 	}
 
 	public function testShowSyncButtonFor_Default() {
@@ -785,7 +775,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->sessionMock->expects( $this->never() )
 			->method( 'set' );
 
-		$this->loggerMock->expects( $this->never() )
+		$this->statusTrackerMock->expects( $this->never() )
 			->method( 'error' );
 
 		$this->htmlHelperMock->expects($this->once())
@@ -797,14 +787,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock ), $this->loggerMock );
+		$this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ), $this->statusTrackerMock );
 
 	}
-}
-
-// some global dependencies that need to be defined
-function __( $arg ) { return $arg; }
-
-class Church_Theme_Content_Integration {
-	public static $TEXT_DOMAIN = 'church-theme-content-integration';
 }
