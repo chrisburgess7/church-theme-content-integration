@@ -541,7 +541,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public function clearSyncStatus() {
 		/** @var $wpdb wpdb */
 		global $wpdb;
-		$wpdb->update( $wpdb->prefix . self::$syncStatusTable, array(
+		return $wpdb->update( $wpdb->prefix . self::$syncStatusTable, array(
 			'message' => null,
 			'errors' => 0,
 			'error_messages' => null,
@@ -553,7 +553,7 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 	public function setSyncMessage( $message ) {
 		/** @var $wpdb wpdb */
 		global $wpdb;
-		$wpdb->update( $wpdb->prefix . self::$syncStatusTable, array( 'message' => $message ), array( 'id' => 1 ) );
+		return $wpdb->update( $wpdb->prefix . self::$syncStatusTable, array( 'message' => $message ), array( 'id' => 1 ) );
 	}
 
 	public function addSyncError( $message = null ) {
@@ -561,14 +561,14 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		global $wpdb;
 		$syncStatusTable = $wpdb->prefix . self::$syncStatusTable;
 		if ( $message !== null ) {
-			$wpdb->query(
+			return $wpdb->query(
 				$wpdb->prepare(
 					"UPDATE $syncStatusTable SET errors = errors + 1, error_messages = %s WHERE id = 1",
 					$message
 				)
 			);
 		} else {
-			$wpdb->query( "UPDATE $syncStatusTable SET errors = errors + 1 WHERE id = 1" );
+			return $wpdb->query( "UPDATE $syncStatusTable SET errors = errors + 1 WHERE id = 1" );
 		}
 	}
 
@@ -577,14 +577,14 @@ class CTCI_WPAL implements CTCI_WPALInterface {
 		global $wpdb;
 		$syncStatusTable = $wpdb->prefix . self::$syncStatusTable;
 		if ( $message !== null ) {
-			$wpdb->query(
+			return $wpdb->query(
 				$wpdb->prepare(
 					"UPDATE $syncStatusTable SET warnings = warnings + 1, warning_messages = %s WHERE id = 1",
 					$message
 				)
 			);
 		} else {
-			$wpdb->query( "UPDATE $syncStatusTable SET warnings = warnings + 1 WHERE id = 1" );
+			return $wpdb->query( "UPDATE $syncStatusTable SET warnings = warnings + 1 WHERE id = 1" );
 		}
 	}
 
