@@ -150,7 +150,7 @@ class CTCI_PeopleSync implements CTCI_OperationInterface {
 				$this->wpal->publishCTCPerson( $attached );
 				$this->syncCTCPerson( $attached, $person, $dataProvider->syncGroups() );
 
-				$this->statusTracker->addPersonAttached( $person->getName() );
+				$this->statusTracker->addPersonAttachedAndSynced( $person->getName() );
 			} else {
 				$this->statusTracker->info( sprintf( __( 'Creating new record for: %s.', $textDomain ), $person->getName() ) );
 

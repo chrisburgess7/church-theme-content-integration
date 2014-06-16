@@ -193,11 +193,11 @@ class CTCI_StatusTracker implements CTCI_StatusTrackerInterface {
 		);
 	}
 
-	public function addPersonAttached( $personName ) {
+	public function addPersonAttachedAndSynced( $personName ) {
 		$this->updatePeopleSyncStatus(
 			'persons_attached',
 			$personName,
-			__( 'Person \'%s\' Attached.', Church_Theme_Content_Integration::$TEXT_DOMAIN )
+			__( 'Person \'%s\' Attached and Synced.', Church_Theme_Content_Integration::$TEXT_DOMAIN )
 		);
 	}
 
@@ -300,8 +300,8 @@ class CTCI_StatusTracker implements CTCI_StatusTrackerInterface {
 			if ( isset( $this->peopleSyncStatus[ $tag ]['persons_attached'] ) ) {
 				$msg .= sprintf(
 					_n(
-						'1 Person Attached. ',
-						'%d People Attached. ',
+						'1 Person Attached and Synced. ',
+						'%d People Attached and Synced. ',
 						$this->peopleSyncStatus[ $tag ]['persons_attached'],
 						Church_Theme_Content_Integration::$TEXT_DOMAIN
 					), $this->peopleSyncStatus[ $tag ]['persons_attached']

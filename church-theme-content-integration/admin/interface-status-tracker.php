@@ -34,6 +34,6 @@ interface CTCI_StatusTrackerInterface {
 	public function addPersonSynced( $personName );
 	public function addPersonDeleted( $personName );
 	public function addPersonUnattachedUnpublished( $personName );
-	public function addPersonAttached( $personName );
+	public function addPersonAttachedAndSynced( $personName );
 	public function addPersonCreated( $personName );
 } 
