@@ -184,7 +184,6 @@ class Church_Theme_Content_Integration {
 			KEY term_id (term_id)
 		);";
 
-		// TODO: test this on install!!!
 		$syncStatusTable = $wpdb->prefix . 'ctci_syncstatus';
 		$sql .= "CREATE TABLE $syncStatusTable (
 			id int NOT NULL,
