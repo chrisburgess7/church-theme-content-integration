@@ -17,7 +17,7 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 
 	protected $authClient;
 
-	protected $logger;
+	protected $statusTracker;
 
 	/*protected $syncGroups = true;
 	protected $peopleListsToSync = array();*/
@@ -25,11 +25,11 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 	public function __construct(
 		CTCI_F1OAuthClientInterface $authClient,
 		CTCI_F1PeopleSyncSettingsInterface $settings,
-		CTCI_LoggerInterface $logger
+		CTCI_StatusTrackerInterface $statusTracker
 	) {
 		$this->settings = $settings;
 		$this->authClient = $authClient;
-		$this->logger = $logger;
+		$this->statusTracker = $statusTracker;
 		/*$this->syncGroups = $settings->f1SyncPeopleGroups();
 		$this->peopleListsToSync = $settings->getF1PeopleLists();*/
 	}
@@ -64,6 +64,8 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 		$peopleListsToSync = $this->settings->getF1PeopleLists();
 		$this->authClient->json();
 
+		$this->statusTracker->info( __( 'Retrieving People Lists from Fellowship One...', Church_Theme_Content_Integration::$TEXT_DOMAIN ), true );
+
 		$peopleLists = json_decode( $this->authClient->getPeopleLists() );
 		if ( null === $peopleLists ) {
 			throw new CTCI_JSONDecodeException;
@@ -71,8 +73,6 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 
 		foreach ( $peopleLists->peopleLists->peopleList as $peopleList ) {
 			if ( in_array( $peopleList->name, $peopleListsToSync ) ) {
-				$this->logger->info( 'Processing List: ' . $peopleList->name );
-
 				// we have a people list to sync
 				$currGroup = new CTCI_PeopleGroup(
 					$this->getProviderPersonTag(),
@@ -82,12 +82,28 @@ class CTCI_F1PeopleDataProvider implements CTCI_PeopleDataProviderInterface {
 				);
 				$this->groups[ $peopleList->{'@id'} ] = $currGroup;
 
+				$this->statusTracker->info( sprintf( __(
+					'Retrieving from Fellowship One people from list %s...',
+					Church_Theme_Content_Integration::$TEXT_DOMAIN
+				), $peopleList->name ), true );
+
 				// scan for members
 				$members = json_decode( $this->authClient->getPeopleListMembers( $peopleList->{'@id'} ) );
 				if ( null === $members ) {
 					throw new CTCI_JSONDecodeException;
 				}
+
+				$peopleCount = count( $members->members->member );
+				$peopleIndex = 0;
+
 				foreach ( $members->members->member as $member ) {
+
+					$peopleIndex++;
+					$this->statusTracker->info( sprintf( __(
+						'Processing from Fellowship One person %1$d out of %2$d from list %3$s...',
+						Church_Theme_Content_Integration::$TEXT_DOMAIN
+					), $peopleIndex, $peopleCount, $peopleList->name ), true );
+
 					// note, there is a member id, and a person id. We want the person id.
 					$personId = $member->person->{'@id'};
 

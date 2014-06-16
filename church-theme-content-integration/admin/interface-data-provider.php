@@ -57,12 +57,17 @@ interface CTCI_DataProviderInterface {
 
 	public function getRunButtonHandlerType();
 
-	public function showSyncButtonFor( CTCI_OperationInterface $operation, CTCI_LoggerInterface $logger, $enabled = true );
+	/**
+	 * @param CTCI_OperationInterface $operation
+	 * @param bool $enabled
+	 * @return mixed    True if everything is ok, or a string reporting an error message.
+	 */
+	public function showSyncButtonFor( CTCI_OperationInterface $operation, $enabled = true );
 
 	/**
 	 * Initialise the data provider at the start of any sync process.
 	 */
-	public function initDataProviderForProcess( CTCI_LoggerInterface $logger );
+	public function initDataProviderForProcess( CTCI_StatusTrackerInterface $statusTracker );
 
 	public function authenticateForProcess();
 

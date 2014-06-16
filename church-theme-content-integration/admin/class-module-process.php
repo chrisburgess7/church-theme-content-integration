@@ -12,14 +12,17 @@ class CTCI_ModuleProcess {
 	/** @var CTCI_OperationInterface[]  */
 	protected $operations = array();
 
-	/** @var CTCI_LoggerInterface */
-	protected $logger;
+	/** @var CTCI_LoggerInterface /
+	protected $statusTracker;*/
+
+	/** @var CTCI_StatusTrackerInterface */
+	protected $statusTracker;
 
 	/** @var CTCI_WPALInterface */
 	protected $wpal;
 
-	public function __construct( CTCI_LoggerInterface $logger, CTCI_WPAL $wpal ) {
-		$this->logger = $logger;
+	public function __construct( CTCI_StatusTrackerInterface $statusTracker, CTCI_WPAL $wpal ) {
+		$this->statusTracker = $statusTracker;
 		$this->wpal = $wpal;
 	}
 
@@ -37,21 +40,25 @@ class CTCI_ModuleProcess {
 
 		$textDomain = Church_Theme_Content_Integration::$TEXT_DOMAIN;
 
-		$this->logger->clear();
-
-		// set 5 minute time limit, hopefully long enough...
-		set_time_limit(300);
+		$this->statusTracker->clear();
 
 		foreach ( $this->dataProviders as $dataProvider ) {
+			$this->statusTracker->registerDataProvider( $dataProvider );
+		}
+
+		foreach ( $this->dataProviders as $dataProvider ) {
+
+			$this->statusTracker->setDataProviderToTrack( $dataProvider );
+
 			try {
-				if ( ! $dataProvider->initDataProviderForProcess( $this->logger ) ) {
-					$this->logger->error(
+				if ( ! $dataProvider->initDataProviderForProcess( $this->statusTracker ) ) {
+					$this->statusTracker->error(
 						sprintf( __( 'Init failed for provider %s.', $textDomain ), $dataProvider->getHumanReadableName() )
 					);
 					continue;
 				}
 			} catch ( Exception $e ) {
-				$this->logger->error(
+				$this->statusTracker->error(
 					sprintf(
 						__( 'Init failed for provider %s. %s', $textDomain ),
 						$dataProvider->getHumanReadableName(),
@@ -60,9 +67,10 @@ class CTCI_ModuleProcess {
 				);
 				continue;
 			}
+
 			try {
 				if ( ! $dataProvider->authenticateForProcess() ) {
-					$this->logger->error(
+					$this->statusTracker->error(
 						sprintf(
 							__( 'Authentication failed for provider %s.', $textDomain),
 							$dataProvider->getHumanReadableName()
@@ -71,7 +79,7 @@ class CTCI_ModuleProcess {
 					continue;
 				}
 			} catch ( Exception $e ) {
-				$this->logger->error(
+				$this->statusTracker->error(
 					sprintf(
 						__( 'Authentication failed for provider %s. %s', $textDomain),
 						$dataProvider->getHumanReadableName(),
@@ -92,25 +100,23 @@ class CTCI_ModuleProcess {
 						 */
 						$operation->run();
 
-						if ( ! $this->logger->hasErrors() ) {
+						if ( ! $this->statusTracker->hasErrors() ) {
 							$procName = $dataProvider->getHumanReadableName() . ' ' . $operation->getHumanReadableName();
-							if ( ! $this->logger->hasWarnings() ) {
-								// todo: a class to encapsulate the sync status and log messages to enforce consistency
-								$this->wpal->setSyncMessage( sprintf( __( '%s complete.', $textDomain ), $procName) );
-								$this->logger->success( sprintf( __( '%s complete.', $textDomain ), $procName) );
+							if ( ! $this->statusTracker->hasWarnings() ) {
+								$this->statusTracker->success( sprintf( __( '%s complete.', $textDomain ), $procName) );
 							} else {
-								$this->logger->warning( sprintf( __( '%s has finished with warnings.', $textDomain ), $procName) );
+								$this->statusTracker->warning( sprintf( __( '%s has finished with warnings.', $textDomain ), $procName) );
 							}
 						}
 					}
 				} catch ( Exception $e ) {
-					$this->logger->error(
+					$this->statusTracker->error(
 						sprintf( '%s %s - %s', $dataProvider->getHumanReadableName(),
 							$operation->getHumanReadableName(), $e->getMessage()
 						), $e
 					);
 					// debugging...
-/*					$this->logger->error(
+/*					$this->statusTracker->error(
 						sprintf( '%s %s - Type: %s, Message: %s, File: %s, Line: %s', $dataProvider->getHumanReadableName(),
 							$operation->getHumanReadableName(), get_class($e), $e->getMessage(), $e->getFile(), $e->getLine()
 						)
@@ -123,7 +129,12 @@ class CTCI_ModuleProcess {
 	public function runAJAX() {
 		$runtime = new DateTime();
 
+		// set 5 minute time limit, hopefully long enough...
+		set_time_limit(300);
+
 		$this->run();
+
+		$logger = $this->statusTracker->getLogger();
 
 		// build some strings identifying this run with it's operations and providers
 		$operationString = "Operation(s): ";
@@ -143,7 +154,7 @@ class CTCI_ModuleProcess {
 			fwrite( $fHandleTxt, "Run at: " . $runtime->format('Y-m-d H:i:s') . PHP_EOL );
 			fwrite( $fHandleTxt, $operationString . PHP_EOL);
 			fwrite( $fHandleTxt, $providersString . PHP_EOL);
-			fwrite( $fHandleTxt, $this->logger->toString() );
+			fwrite( $fHandleTxt, $logger->toString() );
 			fclose( $fHandleTxt );
 		}
 
@@ -153,11 +164,11 @@ class CTCI_ModuleProcess {
 			fwrite( $fHandleHTML, "<p>Run at: " . $runtime->format('Y-m-d H:i:s') . '</p>' );
 			fwrite( $fHandleHTML, '<p>' . $operationString . '</p>');
 			fwrite( $fHandleHTML, '<p>' . $providersString . '</p>');
-			fwrite( $fHandleHTML, $this->logger->toHTML() );
+			fwrite( $fHandleHTML, $logger->toHTML() );
 			fclose( $fHandleHTML );
 		}
+
 		// ajax output
-		//echo $this->logger->toHTML();
 		$json = $this->wpal->getSyncStatusAsJSON();
 		if ( $json === false ) {
 			echo json_encode( array(
@@ -169,12 +180,6 @@ class CTCI_ModuleProcess {
 			));
 		} else {
 			echo $json;
-			// test hack
-			/*echo json_encode( array(
-				'message' => 'A test message',
-				'warnings' => 1,
-				'warning_messages' => 'Something kind of bad has happened'
-			));*/
 		}
 		die(); // needed to avoid wordpress returning a zero at the end of the response
 	}

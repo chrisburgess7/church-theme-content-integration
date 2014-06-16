@@ -78,9 +78,9 @@ class Church_Theme_Content_Integration {
 	private $wpal;
 
 	/**
-	 * @var CTCI_LoggerInterface
+	 * @var CTCI_StatusTrackerInterface
 	 */
-	private $logger;
+	private $statusTracker;
 
 	/**
 	 * @var CTCI_Session
@@ -409,6 +409,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/interface-people-data-provider.php',
 				self::$ADMIN_DIR . '/interface-people-group.php',
 				self::$ADMIN_DIR . '/interface-person.php',
+				self::$ADMIN_DIR . '/interface-status-tracker.php',
 				self::$ADMIN_DIR . '/interface-wpal.php',
 				self::$ADMIN_DIR . '/class-ctc-group.php',
 				self::$ADMIN_DIR . '/class-ctc-person.php',
@@ -421,6 +422,7 @@ class Church_Theme_Content_Integration {
 				self::$ADMIN_DIR . '/class-people-sync.php',
 				self::$ADMIN_DIR . '/class-person.php',
 				self::$ADMIN_DIR . '/class-session.php',
+				self::$ADMIN_DIR . '/class-status-tracker.php',
 				self::$ADMIN_DIR . '/class-wpal.php',
 
 			),
@@ -498,8 +500,8 @@ class Church_Theme_Content_Integration {
 		if ( ! is_object( $this->wpal ) ) {
 			$this->wpal = new CTCI_WPAL();
 		}
-		if ( ! is_object( $this->logger ) ) {
-			$this->logger = new CTCI_Logger();
+		if ( ! is_object( $this->statusTracker ) ) {
+			$this->statusTracker = new CTCI_StatusTracker( $this->wpal, new CTCI_Logger() );
 		}
 		$this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
 		$this->httpVarManager = new CTCI_HTTPVariablesManager();
@@ -508,14 +510,14 @@ class Church_Theme_Content_Integration {
 		// a list of all operations currently supported
 		// need to add new ones here once implemented
 		$this->operationTypes = array(
-			new CTCI_PeopleSync( $this->wpal, $this->logger )
+			new CTCI_PeopleSync( $this->wpal, $this->statusTracker )
 		);
 	}
 
 	public function init_objects() {
 		$options = get_option( self::$CONFIG_GROUP );
 		if ( $options['debug_mode'] === 'T' ) {
-			$this->logger->includeExceptions();
+			$this->statusTracker->includeExceptions();
 		}
 
 		foreach ( $this->dataProviders as $dataProvider ) {
@@ -527,7 +529,7 @@ class Church_Theme_Content_Integration {
 		foreach ( $this->dataProviders as $dataProvider ) {
 			foreach ( $this->operationTypes as $operation ) {
 				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
-					$process = new CTCI_ModuleProcess( $this->logger, $this->wpal );
+					$process = new CTCI_ModuleProcess( $this->statusTracker, $this->wpal );
 					$process->addDataProvider( $dataProvider );
 					$operationInstance = clone $operation;
 					$process->addOperation( $operationInstance );
@@ -679,9 +681,10 @@ class Church_Theme_Content_Integration {
 					}
 					echo '<div class="ctci-run-section">';
 					echo '<div class="ctci-run-button">';
+					$status = true;
 					switch ( $dataProvider->getRunButtonHandlerType() ) {
 						case CTCI_DataProviderInterface::RUNBUTTON_CUSTOM:
-							$dataProvider->showSyncButtonFor( $operation, $this->logger, $enabled );
+							$status = $dataProvider->showSyncButtonFor( $operation, $enabled );
 							break;
 						default:
 						case CTCI_DataProviderInterface::RUNBUTTON_AJAX:
@@ -690,7 +693,11 @@ class Church_Theme_Content_Integration {
 					}
 					echo '</div>'; // run button
 					echo '<div class="ctci-run-indicator"></div>';
-					echo '<div class="ctci-run-update"></div>';
+					if ( $status == true ) {
+						echo '<div class="ctci-run-update"></div>';
+					} else {
+						printf( '<div class="ctci-run-update"><div class="error">%s</div></div>', $status );
+					}
 					echo '</div>'; // run section
 				}
 			}

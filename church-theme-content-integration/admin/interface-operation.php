@@ -15,6 +15,6 @@ interface CTCI_OperationInterface {
 	public static function getTag();
 	public static function getHumanReadableName();
 	public function setDataProvider( CTCI_DataProviderInterface $dataProvider );
-	public function setLogger( CTCI_LoggerInterface $logger );
+	public function setStatusTracker( CTCI_StatusTrackerInterface $statusTracker );
 	public function run();
 } 
