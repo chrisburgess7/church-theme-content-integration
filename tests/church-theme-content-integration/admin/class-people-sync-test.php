@@ -9,9 +9,11 @@
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-people-sync.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/interface-data-provider.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/interface-people-data-provider.php';
+require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/interface-status-tracker.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/fellowship-one/fellowship-one.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/fellowship-one/class-f1-people-data-provider.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-logger.php';
+require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-status-tracker.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-wpal.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-person.php';
 require_once dirname( __FILE__ ) . '/../../../church-theme-content-integration/admin/class-people-group.php';
@@ -25,7 +27,7 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 	/** @var PHPUnit_Framework_MockObject_MockObject */
 	protected $peopleDataProviderMock;
 	/** @var PHPUnit_Framework_MockObject_MockObject */
-	protected $loggerMock;
+	protected $statusTrackerMock;
 	/** @var PHPUnit_Framework_MockObject_MockObject */
 	protected $wpalMock;
 
@@ -59,7 +61,7 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 			->method('getProviderPersonTag')
 			->will( $this->returnValue('f1') );
 
-		$this->loggerMock = $this->getMockBuilder('CTCI_Logger')
+		$this->statusTrackerMock = $this->getMockBuilder('CTCI_StatusTracker')
 			->disableOriginalConstructor()
 			->getMock();
 
@@ -67,7 +69,7 @@ class CTCI_PeopleSyncTest extends PHPUnit_Framework_TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 
-		$this->sutPeopleSync = new CTCI_PeopleSync( $this->wpalMock, $this->loggerMock );
+		$this->sutPeopleSync = new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock );
 		$this->sutPeopleSync->setDataProvider( $this->dataProviderMock );
 
 		// set up expectations for all calls to run()
