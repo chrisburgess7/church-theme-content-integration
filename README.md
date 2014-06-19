@@ -34,8 +34,9 @@ WordPress plugin installer.
 
 1. Get your [API key](http://developer.fellowshipone.com/key/). Select the People, Groups, and Events realms.
 
-2. In WP, navigate to CTC Integration -> Fellowship One. Enter your API URL, Consumer Key and Consumer Secret.
-If using 2nd party credential based authentication, enter your username and password (however, note that this
+2. In WP, navigate to CTC Integration -> Fellowship One. Enter your API URL (base URL only, minus the '/v1/'),
+Consumer Key and Consumer Secret.
+If you are using 2nd party credential based authentication, enter your username and password (however, note that this
 will be stored as plain text in the wordpress database, so use with care!).
 
 #### Difference between 2nd Party and 3rd Party authentication
