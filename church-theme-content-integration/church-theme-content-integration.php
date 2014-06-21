@@ -692,7 +692,7 @@ class Church_Theme_Content_Integration {
 					}
 					echo '</div>'; // run button
 					echo '<div class="ctci-run-indicator"></div>';
-					if ( $status == true ) {
+					if ( $status === true ) {
 						echo '<div class="ctci-run-update"></div>';
 					} else {
 						printf( '<div class="ctci-run-update"><div class="error">%s</div></div>', $status );
