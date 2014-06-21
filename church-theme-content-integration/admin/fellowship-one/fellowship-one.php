@@ -17,6 +17,8 @@ require_once dirname( __FILE__ ) . '/../class-http-variables-manager.php';
 
 class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISettingsInterface, CTCI_F1PeopleSyncSettingsInterface {
 
+    protected $debugMode = false;
+
 	/** @var CTCI_WPALInterface */
 	protected $wpal;
 	/** @var CTCI_Session */
@@ -63,6 +65,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 	protected $syncPersonLinkedInURL;
 
 	public function __construct() {
+        $this->debugMode = false;
 		$this->session = null;
 		$this->wpal = null;
 		$this->nameFormatOptions = array(
@@ -101,6 +104,10 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			'L S, FQ J.' => 'Doe II, Johnathan "John" E.',
 		);
 	}
+
+    public function setDebugMode( $mode = true ) {
+        $this->debugMode = $mode;
+    }
 
 	public function setWPAL( CTCI_WPALInterface $wpal ) {
 		$this->wpal = $wpal;
@@ -502,26 +509,23 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$data = false;
 				$message = '';
 				try {
+
 					// if this succeeds, it redirects browser to service provider login page
 					$data = $this->authClient->authenticate();
-				} catch ( CTCI_F1APIRequestException $e ) {
-					$message = sprintf( __(
-							'Error occurred while retrieving request tokens for authentication with the service provider. HTTP Response Code: %d. Request URL: %s. Headers: %s. Response Body: %s.',
-							Church_Theme_Content_Integration::$TEXT_DOMAIN
-						), $e->getHttpCode(), $e->getRequestURL(), $e->getRequestHeaders(), $e->getResponseBody()
-					);
-				} catch ( Exception $e ) {
-					$message = sprintf( __(
-							'An unexpected error occurred during authentication. Message: %s',
-							Church_Theme_Content_Integration::$TEXT_DOMAIN
-						), $e->getMessage() );
+
+                    //echo 'Data: ' . $data;
+                } catch ( Exception $e ) {
+                    $message = $this->authenticateExceptionMessage( $e );
 				}
+
+                //echo 'Message: ' . $message . ' Data: ' . $data;
 				if ( ! $data ) {
+                    //echo 'Not data';
 					$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
 					if ( $message !== '' ) {
 						return $message;
 					} else {
-						return __( 'Could not connect to the server (no request token)', Church_Theme_Content_Integration::$TEXT_DOMAIN );
+						return __( 'Could not authenticate with the server.', Church_Theme_Content_Integration::$TEXT_DOMAIN );
 					}
 				}
 			} else {
@@ -546,6 +550,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			/** @noinspection PhpUnusedLocalVariableInspection */
 			$success = false;
 			$message = '';
+            // todo: improve these error messages
 			try {
 				$success = $this->authClient->retrieveAccessToken($oauth_token, $token_secret);
 			} catch ( CTCI_F1APIRequestException $e ) {
@@ -584,6 +589,63 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 		return true;
 	}
+
+    protected function authenticateExceptionMessage( Exception $e ) {
+        try {
+            throw $e;
+        } catch ( CTCI_F1APIRequestException $e ) {
+            if ( ! $this->debugMode ) {
+                return __(
+                        'Incorrect server response attempting to retrieve request tokens for authentication with the service provider. This may indicate an incorrect API URL setting. Set debug mode option for more information.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                );
+            } else {
+                return sprintf( __(
+                    'Incorrect server response attempting to retrieve request tokens for authentication with the service provider. This may indicate an incorrect API URL setting. HTTP Response Code: %d. Request URL: %s. Response Body: %s.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getHttpCode(), $e->getRequestURL(), $e->getResponseBody()
+                );
+            }
+        } catch ( CTCI_CURLException $e ) {
+            if ( $e->getCode() === 6 ) {
+                if ( ! $this->debugMode ) {
+                    return __(
+                        'Failed to resolve Fellowship One server. This may be caused by your internet connection or the server being down.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    );
+                } else {
+                    return sprintf( __(
+                        'Failed to resolve Fellowship One server. This may be caused by your internet connection or the server being down. cURL Error No: 6. Exception details: %s',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e );
+                }
+            } else {
+                if ( ! $this->debugMode ) {
+                    return sprintf( __(
+                        'The cURL library has reported an error with error code: %d',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getCode() );
+                } else {
+                    return sprintf( __(
+                        'The cURL library has reported an error with error code: %d. Exception details: %s',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getCode(), $e );
+                }
+            }
+        } catch ( Exception $e ) {
+            if ( ! $this->debugMode ) {
+                return sprintf( __(
+                    'An unexpected error occurred during authentication. Message: %s',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                ), $e->getMessage() );
+            } else {
+                return sprintf( __(
+                    'An unexpected error occurred during authentication. Message: %s. Exception details: %s',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                ), $e->getMessage(), $e );
+            }
+        }
+    }
 
 	public function initDataProviderForProcess( CTCI_StatusTrackerInterface $statusTracker ) {
 		if ( $this->wpal !== null ) {

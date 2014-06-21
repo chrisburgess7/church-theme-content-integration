@@ -43,6 +43,8 @@ interface CTCI_DataProviderInterface {
 	 */
 	public function getIncludes( $type );
 
+    public function setDebugMode( $mode = true );
+
 	public function initOnLoad(
 		CTCI_Session $session, CTCI_HTTPVariablesManagerInterface $httpVarManager, CTCI_HtmlHelperInterface $htmlHelper
 	);
@@ -82,14 +84,6 @@ interface CTCI_DataProviderInterface {
 	 * @return mixed
 	 */
 	public function getDataProviderFor( $operation );
-
-	/*public function setEnableFieldName( $function, $fieldName );
-
-	public function getEnableFieldName( $function );
-
-	public function addEnableField( $function, $page, $section, $configFieldsBaseName );*/
-
-	//public function showEnablePeopleSyncField();
 
 }
 

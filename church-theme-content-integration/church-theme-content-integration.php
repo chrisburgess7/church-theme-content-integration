@@ -517,6 +517,9 @@ class Church_Theme_Content_Integration {
 		$options = get_option( self::$CONFIG_GROUP );
 		if ( $options['debug_mode'] === 'T' ) {
 			$this->statusTracker->includeExceptions();
+            foreach ( $this->dataProviders as $dataProvider ) {
+                $dataProvider->setDebugMode();
+            }
 		}
 
 		foreach ( $this->dataProviders as $dataProvider ) {
