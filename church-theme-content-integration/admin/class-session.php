@@ -38,7 +38,9 @@ class CTCI_Session {
 class CTCI_PhpSessionAdapter implements CTCI_SessionAdapter
 {
 	public function start() {
-		session_start();
+		if ( ! session_id() ) {
+            session_start();
+        }
 	}
 	public function has($var) {
 		return isset( $_SESSION[$var] );

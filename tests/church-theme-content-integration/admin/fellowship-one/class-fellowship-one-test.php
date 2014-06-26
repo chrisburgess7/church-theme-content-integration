@@ -14,9 +14,20 @@ require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integratio
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-wpal.php';
 require_once dirname( __FILE__ ) . '/../../../../church-theme-content-integration/admin/class-html-helper.php';
 
+// subclass the sut to override the die method so that it doesn't affect the tests
+class FellowshipOneSUT extends CTCI_Fellowship_One {
+    protected $dieCalled = false;
+    protected function callDie() {
+        $this->dieCalled = true;
+    }
+    public function wasDieCalled() {
+        return $this->dieCalled;
+    }
+}
+
 class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
-	/** @var CTCI_Fellowship_One */
+	/** @var FellowshipOneSUT */
 	protected $sut;
 
 	/** @var PHPUnit_Framework_MockObject_MockObject */
@@ -41,7 +52,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 	protected $statusTrackerMock;
 
 	public function setUp() {
-		$this->sut = new CTCI_Fellowship_One();
+		$this->sut = new FellowshipOneSUT();
 
 		$this->wpalMock = $this->getMockBuilder('CTCI_WPAL')->disableOriginalConstructor()->getMock();
 		$this->sut->setWPAL( $this->wpalMock );
@@ -379,9 +390,9 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+        $this->sut->handleAuthentication();
 
-		$this->assertTrue( $return );
+        $this->assertTrue( $this->sut->wasDieCalled() );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateFailure() {
@@ -415,10 +426,13 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
+        $this->sut->handleAuthentication();
 		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
 		// check that we get an error message
 		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateException() {
@@ -454,10 +468,13 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
+        $this->sut->handleAuthentication();
 		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
 		// check that we get an error message
 		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateForOtherOperation() {
@@ -490,10 +507,12 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
+        $this->sut->handleAuthentication();
 		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
-		// check that we get an error message
 		$this->assertTrue( $return );
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
 	}
 
 	public function testShowSyncButtonFor_AuthenticatedInSession() {
@@ -523,9 +542,12 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->once())
 			->method('showAJAXRunButtonFor');
 
-		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+        $this->sut->handleAuthentication();
+        $return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
-		$this->assertTrue( $return );
+        $this->assertTrue( $return );
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
 	}
 
 	public function testShowSyncButtonFor_AuthenticateCallback() {
@@ -604,9 +626,12 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->once())
 			->method('showAJAXRunButtonFor');
 
-		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+        $this->sut->handleAuthentication();
+        $return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
-		$this->assertTrue( $return );
+        $this->assertTrue( $return );
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
 		$this->assertTrue( $accessTokenSet, "access token not set" );
 		$this->assertTrue( $accessTokenSecretSet, "access token secret not set" );
 	}
@@ -668,8 +693,11 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+        $this->sut->handleAuthentication();
+        $return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
 		// check that we get an error message
 		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
 	}
@@ -733,10 +761,13 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 		$this->htmlHelperMock->expects($this->never())
 			->method('showAJAXRunButtonFor');
 
-		$return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
+        $this->sut->handleAuthentication();
+        $return = $this->sut->showSyncButtonFor( new CTCI_PeopleSync( $this->wpalMock, $this->statusTrackerMock ) );
 
-		// check that we get an error message
-		$this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
+        // die should only be called if authenticate returns true
+        $this->assertFalse( $this->sut->wasDieCalled() );
+        // check that we get an error message
+        $this->assertTrue( $return !== true && is_string( $return ) && $return !== '' );
 	}
 
 	public function testShowSyncButtonFor_Default() {

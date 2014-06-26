@@ -30,3 +30,7 @@ function _n( $msg, $pluralMsg, $count, /** @noinspection PhpUnusedParameterInspe
 		return $pluralMsg;
 	}
 }
+
+function add_action( $tag, $callable ) {
+
+}

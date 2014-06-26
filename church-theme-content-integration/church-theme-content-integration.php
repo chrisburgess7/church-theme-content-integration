@@ -3,7 +3,7 @@
  * Plugin Name: Church Theme Content Integration
  * Plugin URI:
  * Description: Provides integration functionality between the Church Theme Content plugin and other church-related service providers.
- * Version: 0.2
+ * Version: 0.3
  * Author: Chris Burgess
  * Author URI:
  * License: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -118,6 +118,17 @@ class Church_Theme_Content_Integration {
 	 */
 	public function __construct() {
 
+        self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
+        self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
+        self::$PLUGIN_FILE = __FILE__;
+        self::$ADMIN_DIR = 'admin';
+        self::$ADMIN_PATH = trailingslashit( self::$PLUGIN_PATH ) . self::$ADMIN_DIR;
+        self::$CTC_PLUGIN_NAME = 'church-theme-content';
+        self::$CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
+        self::$LANG_DIR = 'languages';
+
+        $this->load_data_providers();
+
 		register_activation_hook( __FILE__, array( $this, 'activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
@@ -128,7 +139,7 @@ class Church_Theme_Content_Integration {
 		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 2 );
 
 		// Load this plugins service provider modules
-		add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 3 );
+		//add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 3 );
 
 		// Load language file
 		add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 4 );
@@ -160,15 +171,289 @@ class Church_Theme_Content_Integration {
 		}
 	}
 
-	public function delete_ctc_person_group( $term_id ) {
-		$this->init_plugin_variables();
-		$this->set_includes();
-		$this->load_includes();
-		$wpal = new CTCI_WPAL();
-		$wpal->deleteCTCGroupAttachRecord( $term_id );
-	}
+    public function load_data_providers() {
+        $blacklist = array('.', '..', 'css', 'js');
+        $files = scandir( self::$ADMIN_PATH );
+        foreach ( $files as $file ) {
+            if ( ! in_array( $file, $blacklist ) ) {
+                $fullFilename = trailingslashit( self::$ADMIN_PATH ) . $file;
+                if ( is_dir( $fullFilename ) ) {
+                    $providerClassFile = trailingslashit( $fullFilename ) . $file . '.php';
+                    if ( file_exists( $providerClassFile ) ) {
+                        require_once $providerClassFile;
+                        $class = str_replace( '-', '_', $file );
+                        $class = "CTCI_$class";
+                        if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
+                            /** @var CTCI_DataProviderInterface $obj */
+                            $obj = new $class;
+                            $this->dataProviders[ $file ] = $obj;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	public function activation() {
+
+    /**
+     * Set plugin data
+     *
+     * This data is used by constants.
+     *
+     */
+    public function set_plugin_data() {
+
+        // Load plugin.php if get_plugins() not available
+        if ( !function_exists( 'get_plugins' ) ) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        // Get path to plugin's directory
+        $plugin_dir = plugin_basename( dirname( __FILE__ ) );
+
+        // Get plugin data
+        $plugin_data = current( get_plugins( '/' . $plugin_dir ) );
+
+        // Set plugin data
+        $this->plugin_data = apply_filters( 'ctci_plugin_data', $plugin_data );
+
+    }
+
+    /**
+     * Define constants
+     *
+     */
+    public function init_plugin_variables() {
+        self::$PLUGIN_NAME = $this->plugin_data[ 'Name' ];
+        self::$PLUGIN_VERSION = $this->plugin_data[ 'Version' ];
+    }
+
+    /**
+     * Load language file
+     *
+     * This will load the MO file for the current locale.
+     * The translation file must be named church-theme-content-$locale.mo.
+     *
+     * First it will check to see if the MO file exists in wp-content/languages/plugins.
+     * If not, then the 'languages' directory inside the plugin will be used.
+     * It is ideal to keep translation files outside of the plugin to avoid loss during updates.
+     *
+     */
+    public function load_textdomain() {
+        // WordPress core locale filter
+        $locale = apply_filters( 'plugin_locale', get_locale(), self::$TEXT_DOMAIN );
+
+        // WordPress 3.6 and earlier don't auto-load from wp-content/languages, so check and load manually
+        // http://core.trac.wordpress.org/changeset/22346
+        $external_mofile = WP_LANG_DIR . '/plugins/'. self::$TEXT_DOMAIN . '-' . $locale . '.mo';
+        if ( get_bloginfo( 'version' ) <= 3.6 && file_exists( $external_mofile ) ) {
+            // external translation exists
+            load_textdomain( self::$TEXT_DOMAIN, $external_mofile );
+        } else {
+            // Load normally
+            // Either using WordPress 3.7+ or older version with external translation
+            $languages_dir = self::$PLUGIN_DIR . '/' . trailingslashit( self::$LANG_DIR ); // ensure trailing slash
+            load_plugin_textdomain( self::$TEXT_DOMAIN, false, $languages_dir );
+        }
+    }
+
+
+    /**
+     * Set includes
+     *
+     */
+    public function set_includes() {
+        $includes = array(
+
+            // Frontend or admin
+            'always' => array(
+
+            ),
+
+            // Admin only
+            'admin' => array(
+
+                self::$ADMIN_DIR . '/interface-ctc-group.php',
+                self::$ADMIN_DIR . '/interface-ctc-person.php',
+                self::$ADMIN_DIR . '/interface-data-provider.php',
+                self::$ADMIN_DIR . '/interface-general-settings.php',
+                self::$ADMIN_DIR . '/interface-html-helper.php',
+                self::$ADMIN_DIR . '/interface-http-variables-manager.php',
+                self::$ADMIN_DIR . '/interface-logger.php',
+                self::$ADMIN_DIR . '/interface-operation.php',
+                self::$ADMIN_DIR . '/interface-people-data-provider.php',
+                self::$ADMIN_DIR . '/interface-people-group.php',
+                self::$ADMIN_DIR . '/interface-person.php',
+                self::$ADMIN_DIR . '/interface-status-tracker.php',
+                self::$ADMIN_DIR . '/interface-wpal.php',
+                self::$ADMIN_DIR . '/class-ctc-group.php',
+                self::$ADMIN_DIR . '/class-ctc-person.php',
+                self::$ADMIN_DIR . '/class-data-provider.php',
+                self::$ADMIN_DIR . '/class-html-helper.php',
+                self::$ADMIN_DIR . '/class-http-variables-manager.php',
+                self::$ADMIN_DIR . '/class-logger.php',
+                self::$ADMIN_DIR . '/class-module-process.php',
+                self::$ADMIN_DIR . '/class-people-group.php',
+                self::$ADMIN_DIR . '/class-people-sync.php',
+                self::$ADMIN_DIR . '/class-person.php',
+                self::$ADMIN_DIR . '/class-session.php',
+                self::$ADMIN_DIR . '/class-status-tracker.php',
+                self::$ADMIN_DIR . '/class-wpal.php',
+
+            ),
+            // Frontend only
+
+            'frontend' => array (
+
+            ),
+        );
+
+        // add include files from modules
+        foreach ( $this->dataProviders as $folder => $dataProvider ) {
+            $modIncludesAlways = $dataProvider->getIncludes( 'always' );
+            foreach ( $modIncludesAlways as $includeFile ) {
+                $includes['always'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
+            }
+            $modIncludesAdmin = $dataProvider->getIncludes( 'admin' );
+            foreach ( $modIncludesAdmin as $includeFile ) {
+                $includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
+            }
+            $modIncludesFrontend = $dataProvider->getIncludes( 'frontend' );
+            foreach ( $modIncludesFrontend as $includeFile ) {
+                $includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
+            }
+        }
+
+        $this->includes = apply_filters( 'ctci_includes', $includes );
+    }
+
+    /**
+     * Load includes
+     *
+     * Include files based on whether or not condition is met.
+     *
+     */
+    public function load_includes() {
+        // Get includes
+        $includes = $this->includes;
+
+        // Loop conditions
+        foreach ( $includes as $condition => $files ) {
+            $do_includes = false;
+            // Check condition
+            switch ( $condition ) {
+                // Admin Only
+                case 'admin':
+                    if ( is_admin() ) {
+                        $do_includes = true;
+                    }
+                    break;
+                // Frontend Only
+                case 'frontend':
+                    if ( !is_admin() ) {
+                        $do_includes = true;
+                    }
+                    break;
+                // Admin or Frontend (always)
+                default:
+                    $do_includes = true;
+                    break;
+            }
+
+            // Loop files if condition met
+            if ( $do_includes ) {
+                foreach ( $files as $file ) {
+                    require_once trailingslashit( self::$PLUGIN_PATH ) . $file;
+                }
+            }
+        }
+    }
+
+    public function load_objects() {
+        if ( ! is_object( $this->wpal ) ) {
+            $this->wpal = new CTCI_WPAL();
+        }
+        if ( ! is_object( $this->statusTracker ) ) {
+            $this->statusTracker = new CTCI_StatusTracker( $this->wpal, new CTCI_Logger() );
+        }
+        $this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
+        $this->httpVarManager = new CTCI_HTTPVariablesManager();
+        $this->htmlHelper = new CTCI_HtmlHelper( array( $this, 'get_run_module_key' ) );
+
+        // a list of all operations currently supported
+        // need to add new ones here once implemented
+        $this->operationTypes = array(
+            new CTCI_PeopleSync( $this->wpal, $this->statusTracker )
+        );
+    }
+
+    public function init_objects() {
+        $options = get_option( self::$CONFIG_GROUP );
+        if ( $options['debug_mode'] === 'T' ) {
+            $this->statusTracker->includeExceptions();
+            foreach ( $this->dataProviders as $dataProvider ) {
+                $dataProvider->setDebugMode();
+            }
+        }
+
+        foreach ( $this->dataProviders as $dataProvider ) {
+            $dataProvider->initOnLoad( $this->session, $this->httpVarManager, $this->htmlHelper );
+        }
+    }
+
+    public function load_run_actions() {
+        foreach ( $this->dataProviders as $dataProvider ) {
+            foreach ( $this->operationTypes as $operation ) {
+                if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
+                    $process = new CTCI_ModuleProcess( $this->statusTracker, $this->wpal );
+                    $process->addDataProvider( $dataProvider );
+                    $operationInstance = clone $operation;
+                    $process->addOperation( $operationInstance );
+                    $moduleKey = $this->get_run_module_key( $dataProvider->getTag(), $operation::getTag() );
+                    add_action(
+                        'wp_ajax_' . $moduleKey,
+                        array( $process, 'runAJAX' )
+                    );
+                }
+            }
+        }
+        // add the run action for retrieving the log file
+        add_action( 'wp_ajax_ctci_getlog', array( $this, 'get_log_file_ajax' ) );
+        // add action for polling sync status
+        add_action( 'wp_ajax_ctci_check_status', array( $this, 'get_sync_status' ) );
+    }
+
+    public function get_log_file_ajax() {
+        $str = file_get_contents( self::getLogFileName('html') );
+        if ( $str === false ) {
+            echo 'Error: file could not be opened';
+        } else {
+            echo $str;
+        }
+        die();
+    }
+
+    public function get_sync_status() {
+        require_once dirname( __FILE__ ) . '/admin/class-wpal.php';
+        $wpal = new CTCI_WPAL();
+
+        try{
+            $json = $wpal->getSyncStatusAsJSON();
+            if ( $json !== false ) {
+                echo $json;
+            }
+        } catch ( Exception $e ) {}
+
+        die();
+    }
+
+    /*******************
+     *
+     * Activation
+     *
+     *******************/
+
+    public function activation() {
 		$this->setup_db();
 		$this->add_capabilities();
 		$this->load_default_settings();
@@ -219,7 +504,7 @@ class Church_Theme_Content_Integration {
 
 	protected function load_default_settings() {
 		$this->init_plugin_variables();
-		$this->load_modules();
+		//$this->load_modules();
 		$this->set_includes();
 		$this->load_includes();
 		$this->load_objects();
@@ -269,6 +554,12 @@ class Church_Theme_Content_Integration {
 		);
 	}
 
+    /*******************
+     *
+     * Deactivation
+     *
+     *******************/
+
 	public function deactivation() {
 		$this->remove_cap();
 	}
@@ -283,297 +574,13 @@ class Church_Theme_Content_Integration {
 		}
 	}
 
-	/**
-	 * Set plugin data
-	 *
-	 * This data is used by constants.
-	 *
-	 * @since 0.9
-	 * @access public
-	 */
-	public function set_plugin_data() {
+    /********************
+     *
+     * Enqueue scripts
+     *
+     *******************/
 
-		// Load plugin.php if get_plugins() not available
-		if ( !function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-
-		// Get path to plugin's directory
-		$plugin_dir = plugin_basename( dirname( __FILE__ ) );
-
-		// Get plugin data
-		$plugin_data = current( get_plugins( '/' . $plugin_dir ) );
-
-		// Set plugin data
-		$this->plugin_data = apply_filters( 'ctci_plugin_data', $plugin_data );
-
-	}
-
-	/**
-	 * Define constants
-	 *
-	 * @since 0.9
-	 * @access public
-	 */
-	public function init_plugin_variables() {
-		self::$PLUGIN_NAME = $this->plugin_data[ 'Name' ];
-		self::$PLUGIN_VERSION = $this->plugin_data[ 'Version' ];
-		self::$PLUGIN_PATH = untrailingslashit( plugin_dir_path( __FILE__ ) );
-		self::$PLUGIN_DIR = dirname( plugin_basename( __FILE__ ) );
-		self::$PLUGIN_FILE = __FILE__;
-		self::$ADMIN_DIR = 'admin';
-		self::$ADMIN_PATH = trailingslashit( self::$PLUGIN_PATH ) . self::$ADMIN_DIR;
-		self::$CTC_PLUGIN_NAME = 'church-theme-content';
-		self::$CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
-		self::$LANG_DIR = 'languages';
-	}
-
-	public function load_modules() {
-		// add any sub-folders of admin that don't correspond to a service provider
-		$blacklist = array('.', '..', 'css', 'js');
-		$files = scandir( self::$ADMIN_PATH );
-		foreach ( $files as $file ) {
-			if ( ! in_array( $file, $blacklist ) ) {
-				$fullFilename = trailingslashit( self::$ADMIN_PATH ) . $file;
-				if ( is_dir( $fullFilename ) ) {
-					$providerClassFile = trailingslashit( $fullFilename ) . $file . '.php';
-					if ( file_exists( $providerClassFile ) ) {
-						require_once $providerClassFile;
-						$class = str_replace( '-', '_', $file );
-						$class = "CTCI_$class";
-						if ( class_exists( $class ) && in_array( 'CTCI_DataProviderInterface', class_implements( $class ) ) ) {
-							/** @var CTCI_DataProviderInterface $obj */
-							$obj = new $class;
-							$this->dataProviders[ $file ] = $obj;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Load language file
-	 *
-	 * This will load the MO file for the current locale.
-	 * The translation file must be named church-theme-content-$locale.mo.
-	 *
-	 * First it will check to see if the MO file exists in wp-content/languages/plugins.
-	 * If not, then the 'languages' directory inside the plugin will be used.
-	 * It is ideal to keep translation files outside of the plugin to avoid loss during updates.
-	 *
-    */
-	public function load_textdomain() {
-	    // WordPress core locale filter
-		$locale = apply_filters( 'plugin_locale', get_locale(), self::$TEXT_DOMAIN );
-
-		// WordPress 3.6 and earlier don't auto-load from wp-content/languages, so check and load manually
-		// http://core.trac.wordpress.org/changeset/22346
-		$external_mofile = WP_LANG_DIR . '/plugins/'. self::$TEXT_DOMAIN . '-' . $locale . '.mo';
-		if ( get_bloginfo( 'version' ) <= 3.6 && file_exists( $external_mofile ) ) {
-			// external translation exists
-			load_textdomain( self::$TEXT_DOMAIN, $external_mofile );
-		} else {
-			// Load normally
-			// Either using WordPress 3.7+ or older version with external translation
-			$languages_dir = self::$PLUGIN_DIR . '/' . trailingslashit( self::$LANG_DIR ); // ensure trailing slash
-			load_plugin_textdomain( self::$TEXT_DOMAIN, false, $languages_dir );
-		}
-	}
-
-
-	/**
-	 * Set includes
-	 *
-	 */
-	public function set_includes() {
-		$includes = array(
-
-			// Frontend or admin
-			'always' => array(
-
-			),
-
-			// Admin only
-			'admin' => array(
-
-				self::$ADMIN_DIR . '/interface-ctc-group.php',
-				self::$ADMIN_DIR . '/interface-ctc-person.php',
-				self::$ADMIN_DIR . '/interface-data-provider.php',
-				self::$ADMIN_DIR . '/interface-general-settings.php',
-				self::$ADMIN_DIR . '/interface-html-helper.php',
-				self::$ADMIN_DIR . '/interface-http-variables-manager.php',
-				self::$ADMIN_DIR . '/interface-logger.php',
-				self::$ADMIN_DIR . '/interface-operation.php',
-				self::$ADMIN_DIR . '/interface-people-data-provider.php',
-				self::$ADMIN_DIR . '/interface-people-group.php',
-				self::$ADMIN_DIR . '/interface-person.php',
-				self::$ADMIN_DIR . '/interface-status-tracker.php',
-				self::$ADMIN_DIR . '/interface-wpal.php',
-				self::$ADMIN_DIR . '/class-ctc-group.php',
-				self::$ADMIN_DIR . '/class-ctc-person.php',
-				self::$ADMIN_DIR . '/class-data-provider.php',
-				self::$ADMIN_DIR . '/class-html-helper.php',
-				self::$ADMIN_DIR . '/class-http-variables-manager.php',
-				self::$ADMIN_DIR . '/class-logger.php',
-				self::$ADMIN_DIR . '/class-module-process.php',
-				self::$ADMIN_DIR . '/class-people-group.php',
-				self::$ADMIN_DIR . '/class-people-sync.php',
-				self::$ADMIN_DIR . '/class-person.php',
-				self::$ADMIN_DIR . '/class-session.php',
-				self::$ADMIN_DIR . '/class-status-tracker.php',
-				self::$ADMIN_DIR . '/class-wpal.php',
-
-			),
-			// Frontend only
-
-			'frontend' => array (
-
-			),
-		);
-
-		// add include files from modules
-		foreach ( $this->dataProviders as $folder => $dataProvider ) {
-			$modIncludesAlways = $dataProvider->getIncludes( 'always' );
-			foreach ( $modIncludesAlways as $includeFile ) {
-				$includes['always'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
-			}
-			$modIncludesAdmin = $dataProvider->getIncludes( 'admin' );
-			foreach ( $modIncludesAdmin as $includeFile ) {
-				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
-			}
-			$modIncludesFrontend = $dataProvider->getIncludes( 'frontend' );
-			foreach ( $modIncludesFrontend as $includeFile ) {
-				$includes['admin'][] = trailingslashit( self::$ADMIN_DIR ) . trailingslashit( $folder ) . $includeFile;
-			}
-		}
-
-		$this->includes = apply_filters( 'ctci_includes', $includes );
-	}
-
-	/**
-	 * Load includes
-	 *
-	 * Include files based on whether or not condition is met.
-	 *
-	 * @since 0.9
-	 * @access public
-	 */
-	public function load_includes() {
-		// Get includes
-		$includes = $this->includes;
-
-		// Loop conditions
-		foreach ( $includes as $condition => $files ) {
-			$do_includes = false;
-			// Check condition
-			switch ( $condition ) {
-				// Admin Only
-				case 'admin':
-					if ( is_admin() ) {
-						$do_includes = true;
-					}
-					break;
-				// Frontend Only
-				case 'frontend':
-					if ( !is_admin() ) {
-						$do_includes = true;
-					}
-					break;
-				// Admin or Frontend (always)
-				default:
-					$do_includes = true;
-					break;
-			}
-
-			// Loop files if condition met
-			if ( $do_includes ) {
-				foreach ( $files as $file ) {
-					require_once trailingslashit( self::$PLUGIN_PATH ) . $file;
-				}
-			}
-		}
-	}
-
-	public function load_objects() {
-		if ( ! is_object( $this->wpal ) ) {
-			$this->wpal = new CTCI_WPAL();
-		}
-		if ( ! is_object( $this->statusTracker ) ) {
-			$this->statusTracker = new CTCI_StatusTracker( $this->wpal, new CTCI_Logger() );
-		}
-		$this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
-		$this->httpVarManager = new CTCI_HTTPVariablesManager();
-		$this->htmlHelper = new CTCI_HtmlHelper( array( $this, 'get_run_module_key' ) );
-
-		// a list of all operations currently supported
-		// need to add new ones here once implemented
-		$this->operationTypes = array(
-			new CTCI_PeopleSync( $this->wpal, $this->statusTracker )
-		);
-	}
-
-	public function init_objects() {
-		$options = get_option( self::$CONFIG_GROUP );
-		if ( $options['debug_mode'] === 'T' ) {
-			$this->statusTracker->includeExceptions();
-            foreach ( $this->dataProviders as $dataProvider ) {
-                $dataProvider->setDebugMode();
-            }
-		}
-
-		foreach ( $this->dataProviders as $dataProvider ) {
-			$dataProvider->initOnLoad( $this->session, $this->httpVarManager, $this->htmlHelper );
-		}
-	}
-
-	public function load_run_actions() {
-		foreach ( $this->dataProviders as $dataProvider ) {
-			foreach ( $this->operationTypes as $operation ) {
-				if ( $dataProvider->isDataProviderFor( $operation::getTag() ) ) {
-					$process = new CTCI_ModuleProcess( $this->statusTracker, $this->wpal );
-					$process->addDataProvider( $dataProvider );
-					$operationInstance = clone $operation;
-					$process->addOperation( $operationInstance );
-					$moduleKey = $this->get_run_module_key( $dataProvider->getTag(), $operation::getTag() );
-					add_action(
-						'wp_ajax_' . $moduleKey,
-						array( $process, 'runAJAX' )
-					);
-				}
-			}
-		}
-		// add the run action for retrieving the log file
-		add_action( 'wp_ajax_ctci_getlog', array( $this, 'get_log_file_ajax' ) );
-		// add action for polling sync status
-		add_action( 'wp_ajax_ctci_check_status', array( $this, 'get_sync_status' ) );
-	}
-
-	public function get_log_file_ajax() {
-		$str = file_get_contents( self::getLogFileName('html') );
-		if ( $str === false ) {
-			echo 'Error: file could not be opened';
-		} else {
-			echo $str;
-		}
-		die();
-	}
-
-	public function get_sync_status() {
-		require_once dirname( __FILE__ ) . '/admin/class-wpal.php';
-		$wpal = new CTCI_WPAL();
-
-		try{
-			$json = $wpal->getSyncStatusAsJSON();
-			if ( $json !== false ) {
-				echo $json;
-			}
-		} catch ( Exception $e ) {}
-
-		die();
-	}
-
-	public function enqueue_scripts() {
+    public function enqueue_scripts() {
 		wp_register_style( 'ctci-style', plugins_url( '/admin/css/style.css', __FILE__ ), array(), self::$CSS_VERSION, 'all' );
 		wp_register_script( 'ctci-sprintf-js', plugins_url( '/admin/js/sprintf.js', __FILE__ ), array(), self::$JS_VERSION );
 		wp_register_script( 'ctci-run-status', plugins_url( '/admin/js/CTCIRunStatus.js', __FILE__ ), array(), self::$JS_VERSION );
@@ -606,7 +613,13 @@ class Church_Theme_Content_Integration {
 
 	}
 
-	public function system_checks() {
+    /************************
+     *
+     * Admin notices
+     *
+     ***********************/
+
+    public function system_checks() {
 		if ( ! $this->isCTCActive() ) {
 			printf(
 				'<div class="error"><p>%s</p></div>',
@@ -633,7 +646,13 @@ class Church_Theme_Content_Integration {
 		return extension_loaded( 'curl' );
 	}
 
-	public function build_admin_menu() {
+    /***************************
+     *
+     * Admin pages
+     *
+     ***************************/
+
+    public function build_admin_menu() {
 		add_menu_page(
 			__('CTC Integration Options', self::$TEXT_DOMAIN),
 			__('CTC Integration', self::$TEXT_DOMAIN),
@@ -994,6 +1013,14 @@ class Church_Theme_Content_Integration {
 		wp_safe_redirect( admin_url( 'admin.php?page=ctci-configuration&ctci-import-status=0' ) );
 		exit;
 	}
+
+    public function delete_ctc_person_group( $term_id ) {
+        $this->init_plugin_variables();
+        $this->set_includes();
+        $this->load_includes();
+        $wpal = new CTCI_WPAL();
+        $wpal->deleteCTCGroupAttachRecord( $term_id );
+    }
 }
 
 // Instantiate the main class
