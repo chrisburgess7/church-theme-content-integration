@@ -69,11 +69,13 @@ class CTCI_ModuleProcess {
 			}
 
 			try {
-				if ( ! $dataProvider->authenticateForProcess() ) {
+                // returns boolean true for success, or string if error
+                $result = $dataProvider->authenticateForProcess();
+				if ( $result !== true ) {
 					$this->statusTracker->error(
 						sprintf(
-							__( 'Authentication failed for provider %s.', $textDomain),
-							$dataProvider->getHumanReadableName()
+							__( 'Authentication failed for provider %s. %s', $textDomain),
+							$dataProvider->getHumanReadableName(), $result
 						)
 					);
 					continue;

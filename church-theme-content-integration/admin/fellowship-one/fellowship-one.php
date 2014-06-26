@@ -785,9 +785,13 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			if ( empty( $this->serverURL ) ) {
 				throw new CTCI_AuthenticationException( 'API Server setting does not have a value.' );
 			}
-			$success = $this->authClient->authenticate();
+            try {
+                $success = $this->authClient->authenticate();
+            } catch ( Exception $e ) {
+                return $this->credentialsAuthenticateExceptionMessage( $e );
+            }
 			if ( ! $success) {
-				throw new CTCI_AuthenticationException( 'Could not authenticate.' );
+				throw new CTCI_AuthenticationException( 'Could not retrieve Request Tokens.' );
 				// T/ODO: remove
 				// *** only for debugging!!! ***
 				/*throw new CTCI_AuthenticationException(
@@ -801,6 +805,63 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			return true;
 		}
 	}
+
+    protected function credentialsAuthenticateExceptionMessage( Exception $e ) {
+        try {
+            throw $e;
+        } catch ( CTCI_F1APIRequestException $e ) {
+            if ( ! $this->debugMode ) {
+                return __(
+                    'Incorrect server response attempting to retrieve access tokens for authentication with the service provider. This may indicate an incorrect API URL setting. Set debug mode option for more information.',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                );
+            } else {
+                return sprintf( __(
+                        'Incorrect server response attempting to retrieve access tokens for authentication with the service provider. This may indicate an incorrect API URL setting. HTTP Response Code: %d. Request URL: %s. Response Body: %s.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getHttpCode(), $e->getRequestURL(), $e->getResponseBody()
+                );
+            }
+        } catch ( CTCI_CURLException $e ) {
+            if ( $e->getCode() === 6 ) {
+                if ( ! $this->debugMode ) {
+                    return __(
+                        'Failed to resolve Fellowship One server. This may be caused by your internet connection or the server being down.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    );
+                } else {
+                    return sprintf( __(
+                        'Failed to resolve Fellowship One server. This may be caused by your internet connection or the server being down. cURL Error No: 6. Exception details: %s',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e );
+                }
+            } else {
+                if ( ! $this->debugMode ) {
+                    return sprintf( __(
+                        'The cURL library has reported an error with error code: %d',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getCode() );
+                } else {
+                    return sprintf( __(
+                        'The cURL library has reported an error with error code: %d. Exception details: %s',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getCode(), $e );
+                }
+            }
+        } catch ( Exception $e ) {
+            if ( ! $this->debugMode ) {
+                return sprintf( __(
+                    'An unexpected error occurred during authentication. Message: %s',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                ), $e->getMessage() );
+            } else {
+                return sprintf( __(
+                    'An unexpected error occurred during authentication. Message: %s. Exception details: %s',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                ), $e->getMessage(), $e );
+            }
+        }
+    }
 
 	public function isDataProviderFor( $operation ) {
 		switch ( $operation ) {
