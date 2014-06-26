@@ -577,12 +577,12 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
             } else {
                 if ( ! $this->debugMode ) {
                     return sprintf( __(
-                        'The cURL library has reported an error with error code: %d',
+                        'Authentication has failed. The cURL library has reported an error with error code: %d',
                         Church_Theme_Content_Integration::$TEXT_DOMAIN
                     ), $e->getCode() );
                 } else {
                     return sprintf( __(
-                        'The cURL library has reported an error with error code: %d. Exception details: %s',
+                        'Authentication has failed. The cURL library has reported an error with error code: %d. Exception details: %s',
                         Church_Theme_Content_Integration::$TEXT_DOMAIN
                     ), $e->getCode(), $e );
                 }
@@ -640,20 +640,10 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 			/** @noinspection PhpUnusedLocalVariableInspection */
 			$success = false;
 			$message = '';
-            // todo: improve these error messages
 			try {
 				$success = $this->authClient->retrieveAccessToken($oauth_token, $token_secret);
-			} catch ( CTCI_F1APIRequestException $e ) {
-				$message = sprintf( __(
-						'Error occurred while retrieving access tokens for authentication with the service provider. HTTP Response Code: %d. Request URL: %s. Headers: %s. Response Body: %s.',
-						Church_Theme_Content_Integration::$TEXT_DOMAIN
-					), $e->getHttpCode(), $e->getRequestURL(), $e->getRequestHeaders(), $e->getResponseBody()
-				);
 			} catch ( Exception $e ) {
-				$message = sprintf( __(
-					'An unexpected error occurred. Message: %s',
-					Church_Theme_Content_Integration::$TEXT_DOMAIN
-				), $e->getMessage() );
+				$message = $this->retrieveAccessTokenExceptionMessage( $e );
 			}
 
 			if ( $success ) {
@@ -678,6 +668,63 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 		return true;
 	}
+
+    protected function retrieveAccessTokenExceptionMessage( Exception $e ) {
+        try {
+            throw $e;
+        } catch ( CTCI_F1APIRequestException $e ) {
+            if ( ! $this->debugMode ) {
+                return __(
+                    'Incorrect server response attempting to retrieve access tokens for authentication with the service provider. This may indicate an incorrect API URL setting. Set debug mode option for more information.',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                );
+            } else {
+                return sprintf( __(
+                        'Incorrect server response attempting to retrieve access tokens for authentication with the service provider. This may indicate an incorrect API URL setting. HTTP Response Code: %d. Request URL: %s. Response Body: %s.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getHttpCode(), $e->getRequestURL(), $e->getResponseBody()
+                );
+            }
+        } catch ( CTCI_CURLException $e ) {
+            if ( $e->getCode() === 6 ) {
+                if ( ! $this->debugMode ) {
+                    return __(
+                        'Failed to resolve Fellowship One server. This may be caused by your internet connection or the server being down.',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    );
+                } else {
+                    return sprintf( __(
+                        'Failed to resolve Fellowship One server. This may be caused by your internet connection or the server being down. cURL Error No: 6. Exception details: %s',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e );
+                }
+            } else {
+                if ( ! $this->debugMode ) {
+                    return sprintf( __(
+                        'Failed to retrieve Access Tokens. The cURL library has reported an error with error code: %d',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getCode() );
+                } else {
+                    return sprintf( __(
+                        'Failed to retrieve Access Tokens. The cURL library has reported an error with error code: %d. Exception details: %s',
+                        Church_Theme_Content_Integration::$TEXT_DOMAIN
+                    ), $e->getCode(), $e );
+                }
+            }
+        } catch ( Exception $e ) {
+            if ( ! $this->debugMode ) {
+                return sprintf( __(
+                    'An unexpected error occurred attempting to retrieve Access Tokens. Message: %s',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                ), $e->getMessage() );
+            } else {
+                return sprintf( __(
+                    'An unexpected error occurred attempting to retrieve Access Tokens. Message: %s. Exception details: %s',
+                    Church_Theme_Content_Integration::$TEXT_DOMAIN
+                ), $e->getMessage(), $e );
+            }
+        }
+    }
 
 	public function initDataProviderForProcess( CTCI_StatusTrackerInterface $statusTracker ) {
 		if ( $this->wpal !== null ) {
