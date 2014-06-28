@@ -591,18 +591,18 @@ class Church_Theme_Content_Integration {
 		// note that for testing, these have been replicated in the Spec.html test files, as this code isn't available in test
 		// make sure that these are the same when testing!!!
 		$translations = array(
-			'message_1_error_with_message' => __( '%1$s. Error: %2$s', self::$TEXT_DOMAIN ),
-			'message_x_errors_with_message' => __( '%1$s. Error: %2$s (%3$d errors in total, see log for details)', self::$TEXT_DOMAIN ),
-			'message_1_error_no_message' => __( '%1$s. An error has occurred. See log for details.', self::$TEXT_DOMAIN ),
-			'message_x_errors_no_message' => __( '%1$s. %2$s errors have occurred. See log for details.', self::$TEXT_DOMAIN ),
-			'message_1_warning_with_message' => __( '%1$s. Warning: %2$s', self::$TEXT_DOMAIN ),
-			'message_x_warnings_with_message' => __( '%1$s. Warning: %2$s (%3$d warnings in total, see log for details)', self::$TEXT_DOMAIN ),
-			'message_1_warning_no_message' => __( '%1$s. A warning has occurred. See log for details.', self::$TEXT_DOMAIN ),
-			'message_x_warnings_no_message' => __( '%1$s. %2$s warnings have occurred. See log for details.', self::$TEXT_DOMAIN ),
-			'message_errors_warnings_both_message' => __( '%1$s. %2$s error(s) have occurred. Error: %3$s. %4$s warning(s) have occurred. Warning: %5$s.', self::$TEXT_DOMAIN ),
-			'message_errors_warnings_error_message' => __( '%1$s. %2$s error(s) have occurred. Error: %3$s. %4$s warning(s) have occurred, see log.', self::$TEXT_DOMAIN ),
-			'message_errors_warnings_warning_message' => __( '%1$s. %2$s error(s) have occurred, see log. %3$s warning(s) have occurred. Warning: %4$s.', self::$TEXT_DOMAIN ),
-			'message_errors_warnings_no_message' => __( '%1$s. %2$s error(s) have occurred, see log. %3$s warning(s) have occurred, see log.', self::$TEXT_DOMAIN ),
+			'message_1_error_with_message' => __( 'Error: %2$s', self::$TEXT_DOMAIN ),
+			'message_x_errors_with_message' => __( 'Error: %2$s (%3$d errors in total, see log for details)', self::$TEXT_DOMAIN ),
+			'message_1_error_no_message' => __( 'An error has occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_x_errors_no_message' => __( '%2$s errors have occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_1_warning_with_message' => __( 'Warning: %2$s', self::$TEXT_DOMAIN ),
+			'message_x_warnings_with_message' => __( 'Warning: %2$s (%3$d warnings in total, see log for details)', self::$TEXT_DOMAIN ),
+			'message_1_warning_no_message' => __( 'A warning has occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_x_warnings_no_message' => __( '%2$s warnings have occurred. See log for details.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_both_message' => __( '%2$s error(s) have occurred. Error: %3$s. %4$s warning(s) have occurred. Warning: %5$s.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_error_message' => __( '%2$s error(s) have occurred. Error: %3$s. %4$s warning(s) have occurred, see log.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_warning_message' => __( '%2$s error(s) have occurred, see log. %3$s warning(s) have occurred. Warning: %4$s.', self::$TEXT_DOMAIN ),
+			'message_errors_warnings_no_message' => __( '%2$s error(s) have occurred, see log. %3$s warning(s) have occurred, see log.', self::$TEXT_DOMAIN ),
 			'ajax_response_not_json_upon_completion' => __( 'Sorry, but a problem has occurred retrieving the status from the server. The log might tell you if the sync has succeeded.', self::$TEXT_DOMAIN ),
 		);
 

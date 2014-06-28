@@ -71,7 +71,12 @@ if (!CTCIRunStatus) {
             if ( mObj.warning_messages == null || mObj.warning_messages == 'null' ) {
                 mObj.warning_messages = '';
             }
-
+            
+            var msgPrefix = '';
+            if ( mObj.message != '' ) {
+                msgPrefix = '%1$s. ';
+            }
+            
             if ( mObj.errors == 0 && mObj.warnings == 0 ) {
                 if ( ifOK == 'update' ) {
                     this.update( $el, mObj.message );
@@ -83,18 +88,18 @@ if (!CTCIRunStatus) {
                 if ( mObj.error_messages != '' ) {
                     if ( mObj.errors == 1 ) {
                         this.error(
-                            $el, sprintf( ctci_translations.message_1_error_with_message, mObj.message, mObj.error_messages )
+                            $el, sprintf( msgPrefix + ctci_translations.message_1_error_with_message, mObj.message, mObj.error_messages )
                         );
                     } else {
                         this.error(
-                            $el, sprintf( ctci_translations.message_x_errors_with_message, mObj.message, mObj.error_messages, mObj.errors )
+                            $el, sprintf( msgPrefix + ctci_translations.message_x_errors_with_message, mObj.message, mObj.error_messages, mObj.errors )
                         );
                     }
                 } else {    // error no message
                     if ( mObj.errors == 1 ) {
-                        this.error( $el, sprintf( ctci_translations.message_1_error_no_message, mObj.message ) );
+                        this.error( $el, sprintf( msgPrefix + ctci_translations.message_1_error_no_message, mObj.message ) );
                     } else {
-                        this.error( $el, sprintf( ctci_translations.message_x_errors_no_message, mObj.message, mObj.errors ) );
+                        this.error( $el, sprintf( msgPrefix + ctci_translations.message_x_errors_no_message, mObj.message, mObj.errors ) );
                     }
                 }
             } else if ( mObj.errors == 0 && mObj.warnings > 0 ) {
@@ -102,21 +107,21 @@ if (!CTCIRunStatus) {
                 if ( mObj.warning_messages != '' ) {
                     if ( mObj.warnings == 1 ) {
                         this.update( $el, sprintf(
-                            ctci_translations.message_1_warning_with_message, mObj.message, mObj.warning_messages
+                            msgPrefix + ctci_translations.message_1_warning_with_message, mObj.message, mObj.warning_messages
                         ) );
                     } else {
                         this.update( $el, sprintf(
-                            ctci_translations.message_x_warnings_with_message, mObj.message, mObj.warning_messages, mObj.warnings
+                            msgPrefix + ctci_translations.message_x_warnings_with_message, mObj.message, mObj.warning_messages, mObj.warnings
                         ) );
                     }
                 } else {    // warning(s) with no message
                     if ( mObj.warnings == 1 ) {
                         this.update( $el, sprintf(
-                            ctci_translations.message_1_warning_no_message, mObj.message
+                            msgPrefix + ctci_translations.message_1_warning_no_message, mObj.message
                         ) );
                     } else {
                         this.update( $el, sprintf(
-                            ctci_translations.message_x_warnings_no_message, mObj.message, mObj.warnings
+                            msgPrefix + ctci_translations.message_x_warnings_no_message, mObj.message, mObj.warnings
                         ) );
                     }
                 }
@@ -124,22 +129,22 @@ if (!CTCIRunStatus) {
                 $msg = mObj.message;
                 if ( mObj.error_messages !== '' && mObj.warning_messages !== '' ) {
                     this.error( $el, sprintf(
-                        ctci_translations.message_errors_warnings_both_message, mObj.message, mObj.errors, mObj.error_messages,
+                        msgPrefix + ctci_translations.message_errors_warnings_both_message, mObj.message, mObj.errors, mObj.error_messages,
                         mObj.warnings, mObj.warning_messages
                     ) );
                 } else if ( mObj.error_messages !== '' && mObj.warning_messages === '' ) {
                     this.error( $el, sprintf(
-                        ctci_translations.message_errors_warnings_error_message, mObj.message, mObj.errors, mObj.error_messages,
+                        msgPrefix + ctci_translations.message_errors_warnings_error_message, mObj.message, mObj.errors, mObj.error_messages,
                         mObj.warnings
                     ) );
                 } else if ( mObj.error_messages === '' && mObj.warning_messages !== '' ) {
                     this.error( $el, sprintf(
-                        ctci_translations.message_errors_warnings_warning_message, mObj.message, mObj.errors,
+                        msgPrefix + ctci_translations.message_errors_warnings_warning_message, mObj.message, mObj.errors,
                         mObj.warnings, mObj.warning_messages
                     ) );
                 } else if ( mObj.error_messages === '' && mObj.warning_messages === '' ) {
                     this.error( $el, sprintf(
-                        ctci_translations.message_errors_warnings_no_message, mObj.message, mObj.errors, mObj.warnings
+                        msgPrefix + ctci_translations.message_errors_warnings_no_message, mObj.message, mObj.errors, mObj.warnings
                     ) );
                 }
             }

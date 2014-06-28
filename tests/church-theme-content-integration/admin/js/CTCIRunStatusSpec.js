@@ -36,14 +36,21 @@ describe("Update Run Status Suite", function() {
         expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
     });
 
-    it("1 error with message", function() {
+    it("1 error with error message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Final message', 1, 'An Error message', 0, ''), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.error ).toHaveBeenCalledWith($j, 'Final message. Error: An Error message');
     });
 
-    it("2 errors with message", function() {
+    it("1 error with error message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 1, 'An Error message', 0, ''), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error ).toHaveBeenCalledWith($j, 'Error: An Error message');
+    });
+
+    it("2 errors with error message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Final message', 2, 'An Error message', 0, ''), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
@@ -51,14 +58,29 @@ describe("Update Run Status Suite", function() {
             .toHaveBeenCalledWith($j, 'Final message. Error: An Error message (2 errors in total, see log for details)');
     });
 
-    it("1 error no message", function() {
+    it("2 errors with error message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 2, 'An Error message', 0, ''), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error )
+            .toHaveBeenCalledWith($j, 'Error: An Error message (2 errors in total, see log for details)');
+    });
+
+    it("1 error no error message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Final message', 1, null, 0, ''), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.error ).toHaveBeenCalledWith($j, 'Final message. An error has occurred. See log for details.');
     });
 
-    it("3 errors no message", function() {
+    it("1 error no error message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 1, null, 0, ''), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error ).toHaveBeenCalledWith($j, 'An error has occurred. See log for details.');
+    });
+
+    it("3 errors no error message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Final message', 3, 'null', 0, ''), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
@@ -66,7 +88,15 @@ describe("Update Run Status Suite", function() {
             .toHaveBeenCalledWith($j, 'Final message. 3 errors have occurred. See log for details.');
     });
 
-    it("1 warning with message", function() {
+    it("3 errors no error message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 3, 'null', 0, ''), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error )
+            .toHaveBeenCalledWith($j, '3 errors have occurred. See log for details.');
+    });
+
+    it("1 warning with warning message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 0, null, 1, 'A warning message'), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update )
@@ -74,7 +104,15 @@ describe("Update Run Status Suite", function() {
         expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
     });
 
-    it("3 warnings with message", function() {
+    it("1 warning with warning message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 0, null, 1, 'A warning message'), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update )
+            .toHaveBeenCalledWith($j, 'Warning: A warning message');
+        expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
+    });
+
+    it("3 warnings with warning message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 0, null, 3, 'A warning message'), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update )
@@ -82,7 +120,15 @@ describe("Update Run Status Suite", function() {
         expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
     });
 
-    it("1 warning no message", function() {
+    it("3 warnings with warning message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 0, null, 3, 'A warning message'), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update )
+            .toHaveBeenCalledWith($j, 'Warning: A warning message (3 warnings in total, see log for details)');
+        expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
+    });
+
+    it("1 warning no warning message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 0, null, 1, null), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update )
@@ -90,7 +136,15 @@ describe("Update Run Status Suite", function() {
         expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
     });
 
-    it("2 warnings no message", function() {
+    it("1 warning no warning message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 0, null, 1, null), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update )
+            .toHaveBeenCalledWith($j, 'A warning has occurred. See log for details.');
+        expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
+    });
+
+    it("2 warnings no warning message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 0, null, 2, ''), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update )
@@ -98,7 +152,15 @@ describe("Update Run Status Suite", function() {
         expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
     });
 
-    it("1 error, 1 warning with messages", function() {
+    it("2 warnings no warning message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 0, null, 2, ''), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update )
+            .toHaveBeenCalledWith($j, '2 warnings have occurred. See log for details.');
+        expect( CTCIRunStatus.error.calls.count() ).toEqual(0);
+    });
+
+    it("1 error, 1 warning with error and warning messages", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 1, 'The error message', 1, 'The warning message'), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
@@ -106,7 +168,15 @@ describe("Update Run Status Suite", function() {
             .toHaveBeenCalledWith($j, 'Run message. 1 error(s) have occurred. Error: The error message. 1 warning(s) have occurred. Warning: The warning message.');
     });
 
-    it("1 error, 2 warnings with warning message only", function() {
+    it("1 error, 1 warning with error and warning messages, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 1, 'The error message', 1, 'The warning message'), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error )
+            .toHaveBeenCalledWith($j, '1 error(s) have occurred. Error: The error message. 1 warning(s) have occurred. Warning: The warning message.');
+    });
+
+    it("1 error, 2 warnings with warning message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 1, '', 2, 'The warning message'), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
@@ -114,7 +184,15 @@ describe("Update Run Status Suite", function() {
             .toHaveBeenCalledWith($j, 'Run message. 1 error(s) have occurred, see log. 2 warning(s) have occurred. Warning: The warning message.');
     });
 
-    it("2 errors, 1 warning with error message only", function() {
+    it("1 error, 2 warnings with warning message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 1, '', 2, 'The warning message'), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error )
+            .toHaveBeenCalledWith($j, '1 error(s) have occurred, see log. 2 warning(s) have occurred. Warning: The warning message.');
+    });
+
+    it("2 errors, 1 warning with error message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 2, 'The error message', 1, 'null'), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
@@ -122,11 +200,27 @@ describe("Update Run Status Suite", function() {
             .toHaveBeenCalledWith($j, 'Run message. 2 error(s) have occurred. Error: The error message. 1 warning(s) have occurred, see log.');
     });
 
-    it("1 error, 3 warnings, no messages", function() {
+    it("2 errors, 1 warning with error message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 2, 'The error message', 1, 'null'), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error )
+            .toHaveBeenCalledWith($j, '2 error(s) have occurred. Error: The error message. 1 warning(s) have occurred, see log.');
+    });
+
+    it("1 error, 3 warnings, no warning or error message", function() {
         CTCIRunStatus.setFromObject($j, makeMsgObj('Run message', 1, '', 3, ''), '');
         expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
         expect( CTCIRunStatus.error )
             .toHaveBeenCalledWith($j, 'Run message. 1 error(s) have occurred, see log. 3 warning(s) have occurred, see log.');
+    });
+
+    it("1 error, 3 warnings, no warning or error message, no message", function() {
+        CTCIRunStatus.setFromObject($j, makeMsgObj('', 1, '', 3, ''), '');
+        expect( CTCIRunStatus.success.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.update.calls.count() ).toEqual(0);
+        expect( CTCIRunStatus.error )
+            .toHaveBeenCalledWith($j, '1 error(s) have occurred, see log. 3 warning(s) have occurred, see log.');
     });
 });
