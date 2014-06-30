@@ -137,6 +137,19 @@ class CTCI_F1OAuthClient implements CTCI_F1OAuthClientInterface {
 		return $this;
 	}
 
+
+    public function setServerURL( $url ) {
+        $this->baseUrl = $url;
+    }
+
+    public function setConsumerKey( $key ) {
+        $this->consumerKey = $key;
+    }
+
+    public function setConsumerSecret( $secret ) {
+        $this->consumerSecret = $secret;
+    }
+
 	public function authenticate() {
 		if ( $this->authMode === self::CREDENTIALS ) {
 			// To authenticate the user and get the access token, the consumer posts the credentials to the service provider

@@ -56,6 +56,36 @@ class CTCI_CTCISession extends CTCI_Session {
     public function getF1AccessTokenSecret() {
         return $this->adapter->get('ctci_f1_access_token_secret');
     }
+    public function setF1URL( $value ) {
+        $this->adapter->set( 'ctci_f1_api', $value );
+        return $this;
+    }
+    public function hasF1URL() {
+        return $this->adapter->has('ctci_f1_api');
+    }
+    public function getF1URL() {
+        return $this->adapter->get('ctci_f1_api');
+    }
+    public function setF1ConsumerKey( $value ) {
+        $this->adapter->set( 'ctci_f1_consumer_key', $value );
+        return $this;
+    }
+    public function hasF1ConsumerKey() {
+        return $this->adapter->has('ctci_f1_consumer_key');
+    }
+    public function getF1ConsumerKey() {
+        return $this->adapter->get('ctci_f1_consumer_key');
+    }
+    public function setF1ConsumerSecret( $value ) {
+        $this->adapter->set( 'ctci_f1_consumer_secret', $value );
+        return $this;
+    }
+    public function hasF1ConsumerSecret() {
+        return $this->adapter->has('ctci_f1_consumer_secret');
+    }
+    public function getF1ConsumerSecret() {
+        return $this->adapter->get('ctci_f1_consumer_secret');
+    }
 }
 
 class CTCI_PhpSessionAdapter implements CTCI_SessionAdapter

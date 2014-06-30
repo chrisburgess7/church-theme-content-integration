@@ -178,6 +178,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		} else {
 			$options = get_option( $this->getSettingsGroupName() );
 		}
+        // todo: fix this logic
 		if ( false === $options ) {
 			$this->authMode = $this->getDefaultSetting('auth_mode');
 			$this->consumerKey = $this->getDefaultSetting('api_key');
@@ -650,12 +651,16 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$access_token = $this->authClient->getAccessToken();
 				$token_secret = $this->authClient->getAccessTokenSecret();
 				//print "Access token: ".$access_token.", Token Secret: ".$token_secret.'<br/>';
-				$this->session->setF1AccessToken( $access_token );
-				$this->session->setF1AccessTokenSecret( $token_secret );
-                // todo: add to session the consumer key and secret and url, so that the same settings are used for
-                // running the sync as for authenticating, will need to be read in initForProcess and used to
-                // override the values loaded from options
-				$this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
+				$this->session
+                    ->setF1AccessToken( $access_token )
+				    ->setF1AccessTokenSecret( $token_secret )
+                // save to the session the settings used to authenticate, so we re-use them
+                // while the session remains valid
+                    ->setF1URL( $this->serverURL )
+                    ->setF1ConsumerKey( $this->consumerKey )
+                    ->setF1ConsumerSecret( $this->consumerSecret );
+
+                $this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
 			} else {
 				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );
 				if ( $message !== '' ) {
@@ -739,11 +744,28 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		}
 
 		if ( $this->authMode === CTCI_F1OAuthClient::OAUTH ) {
+            // note that this is called within an ajax request, so this will block other
+            // ajax requests running simultaneously that also access the session
 			$this->session->start();
-			if ( $this->session->has('ctci_f1_access_token') && $this->session->has('ctci_f1_access_token_secret') ) {
+			if ( $this->session->hasF1AccessToken() && $this->session->hasF1AccessTokenSecret() ) {
 				$this->authClient
-					->setAccessToken( $this->session->get('ctci_f1_access_token') )
-					->setAccessTokenSecret( $this->session->get('ctci_f1_access_token_secret') );
+					->setAccessToken( $this->session->getF1AccessToken() )
+					->setAccessTokenSecret( $this->session->getF1AccessTokenSecret() );
+                // conditionally overwrite the connection settings from the session variables if they exist
+                // these variables should be set upon successful authentication, but we may still be able to
+                // use the wordpress setting loaded earlier, as long as it hasn't been changed since authenticating
+                if ( $this->session->hasF1URL() ) {
+                    $this->serverURL = $this->session->getF1URL();
+                    $this->authClient->setServerURL( $this->serverURL );
+                }
+                if ( $this->session->hasF1ConsumerKey() ) {
+                    $this->consumerKey = $this->session->getF1ConsumerKey();
+                    $this->authClient->setConsumerKey( $this->consumerKey );
+                }
+                if ( $this->session->hasF1ConsumerSecret() ) {
+                    $this->consumerSecret = $this->session->getF1ConsumerSecret();
+                    $this->authClient->setConsumerSecret( $this->consumerSecret );
+                }
 			} else {
 				$statusTracker->error( 'Access tokens could not be accessed from session' );
 				return false;

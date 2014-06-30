@@ -13,6 +13,12 @@ interface CTCI_F1OAuthClientInterface {
 
 	public function setPassword( $password );
 
+    public function setServerURL( $url );
+
+    public function setConsumerKey( $key );
+
+    public function setConsumerSecret( $secret );
+
 	public function authenticate();
 
 	public function retrieveAccessToken($oauthToken, $tokenSecret);

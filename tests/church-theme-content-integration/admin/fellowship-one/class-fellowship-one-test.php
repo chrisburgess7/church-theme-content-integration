@@ -59,7 +59,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 		$this->memSession = new CTCI_MemorySessionAdapter();
 		// by default don't replace any method
-		$this->sessionMock = $this->getMock('CTCI_Session', null, array( $this->memSession ));
+		$this->sessionMock = $this->getMock('CTCI_CTCISession', null, array( $this->memSession ));
 
 		$this->httpVarMock = $this->getMock('CTCI_HTTPVariablesManager');
 
@@ -552,7 +552,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 	public function testShowSyncButtonFor_AuthenticateCallback() {
 
-		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+		$this->sessionMock = $this->getMock( 'CTCI_CTCISession', array(), array( $this->memSession ) );
 
 		$this->sutInitOnLoad();
 
@@ -600,22 +600,27 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 			->method( 'getAccessTokenSecret' )
 			->will( $this->returnValue( $access_token_secret ) );
 
-		$accessTokenSet = false;
-		$accessTokenSecretSet = false;
-		$this->sessionMock->expects( $this->exactly(2) )
-			->method( 'set' )
-			->will( $this->returnCallback(
-				function( $arg1, $arg2 ) use ($access_token, &$accessTokenSet, $access_token_secret, &$accessTokenSecretSet ) {
-					if ( $arg1 === 'ctci_f1_access_token' && $arg2 === $access_token ) {
-						$accessTokenSet = true;
-						return null;
-					}
-					if ( $arg1 === 'ctci_f1_access_token_secret' && $arg2 === $access_token_secret ) {
-						$accessTokenSecretSet = true;
-						return null;
-					}
-					return null;
-			}));
+	    $this->sessionMock->expects( $this->once() )
+            ->method( 'setF1AccessToken' )
+            ->with( $this->equalTo( $access_token ) )
+            ->will( $this->returnSelf() );
+
+        $this->sessionMock->expects( $this->once() )
+            ->method( 'setF1AccessTokenSecret' )
+            ->with( $this->equalTo( $access_token_secret ) )
+            ->will( $this->returnSelf() );
+
+        $this->sessionMock->expects( $this->once() )
+            ->method( 'setF1ConsumerKey' )
+            ->will( $this->returnSelf() );
+
+        $this->sessionMock->expects( $this->once() )
+            ->method( 'setF1ConsumerSecret' )
+            ->will( $this->returnSelf() );
+
+        $this->sessionMock->expects( $this->once() )
+            ->method( 'setF1URL' )
+            ->will( $this->returnSelf() );
 
 		$this->htmlHelperMock->expects($this->never())
 			->method('showActionButton');
@@ -632,13 +637,13 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
         $this->assertTrue( $return );
         // die should only be called if authenticate returns true
         $this->assertFalse( $this->sut->wasDieCalled() );
-		$this->assertTrue( $accessTokenSet, "access token not set" );
-		$this->assertTrue( $accessTokenSecretSet, "access token secret not set" );
+		/*$this->assertTrue( $accessTokenSet, "access token not set" );
+		$this->assertTrue( $accessTokenSecretSet, "access token secret not set" );*/
 	}
 
 	public function testShowSyncButtonFor_AuthenticateCallback_AccessTokenError() {
 
-		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+		$this->sessionMock = $this->getMock( 'CTCI_CTCISession', array('set'), array( $this->memSession ) );
 
 		$this->sutInitOnLoad();
 
@@ -704,7 +709,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 	public function testShowSyncButtonFor_AuthenticateCallback_AccessTokenException() {
 
-		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+		$this->sessionMock = $this->getMock( 'CTCI_CTCISession', array('set'), array( $this->memSession ) );
 
 		$this->sutInitOnLoad();
 
@@ -772,7 +777,7 @@ class CTCI_Fellowship_One_Test extends PHPUnit_Framework_TestCase {
 
 	public function testShowSyncButtonFor_Default() {
 
-		$this->sessionMock = $this->getMock( 'CTCI_Session', array('set'), array( $this->memSession ) );
+		$this->sessionMock = $this->getMock( 'CTCI_CTCISession', array('set'), array( $this->memSession ) );
 
 		$this->sutInitOnLoad();
 
