@@ -21,7 +21,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 
 	/** @var CTCI_WPALInterface */
 	protected $wpal;
-	/** @var CTCI_Session */
+	/** @var CTCI_CTCISession */
 	protected $session;
 	/** @var CTCI_HTTPVariablesManager */
 	protected $httpVarManager;
@@ -622,7 +622,7 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
             } else {
                 return __( 'Could not authenticate with the server.', Church_Theme_Content_Integration::$TEXT_DOMAIN );
             }
-        } elseif ( $this->session->has('ctci_f1_access_token') && $this->session->has('ctci_f1_access_token_secret') ) {
+        } elseif ( $this->session->hasF1AccessToken() && $this->session->hasF1AccessTokenSecret() ) {
 			// already authenticated, just show sync button
             // the session is started via a hook to init
 			$this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
@@ -650,9 +650,11 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$access_token = $this->authClient->getAccessToken();
 				$token_secret = $this->authClient->getAccessTokenSecret();
 				//print "Access token: ".$access_token.", Token Secret: ".$token_secret.'<br/>';
-				$this->session->set( 'ctci_f1_access_token', $access_token );
-				$this->session->set( 'ctci_f1_access_token_secret', $token_secret );
-
+				$this->session->setF1AccessToken( $access_token );
+				$this->session->setF1AccessTokenSecret( $token_secret );
+                // todo: add to session the consumer key and secret and url, so that the same settings are used for
+                // running the sync as for authenticating, will need to be read in initForProcess and used to
+                // override the values loaded from options
 				$this->htmlHelper->showAJAXRunButtonFor( $this, $operation, $enabled );
 			} else {
 				$this->htmlHelper->showActionButton( $authActionValue, $authName, $authId, $authButtonTitle, $enabled );

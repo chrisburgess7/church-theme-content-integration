@@ -376,7 +376,7 @@ class Church_Theme_Content_Integration {
         if ( ! is_object( $this->statusTracker ) ) {
             $this->statusTracker = new CTCI_StatusTracker( $this->wpal, new CTCI_Logger() );
         }
-        $this->session = new CTCI_Session( new CTCI_PhpSessionAdapter() );
+        $this->session = new CTCI_CTCISession( new CTCI_PhpSessionAdapter() );
         $this->httpVarManager = new CTCI_HTTPVariablesManager();
         $this->htmlHelper = new CTCI_HtmlHelper( array( $this, 'get_run_module_key' ) );
 
