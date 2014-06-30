@@ -178,8 +178,8 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 		} else {
 			$options = get_option( $this->getSettingsGroupName() );
 		}
-        // todo: fix this logic
-		if ( false === $options ) {
+
+        if ( false === $options ) {
 			$this->authMode = $this->getDefaultSetting('auth_mode');
 			$this->consumerKey = $this->getDefaultSetting('api_key');
 			$this->consumerSecret = $this->getDefaultSetting('api_secret');
@@ -188,19 +188,21 @@ class CTCI_Fellowship_One extends CTCI_DataProvider implements CTCI_F1APISetting
 				$this->username = $this->getDefaultSetting('username');
 				$this->password = $this->getDefaultSetting('password');
 			}
-		}
-		if ( $options['auth_mode'] == CTCI_F1OAuthClient::CREDENTIALS ) {
-			$this->authMode = CTCI_F1OAuthClient::CREDENTIALS;
 		} else {
-			$this->authMode = CTCI_F1OAuthClient::OAUTH;
-		}
-		$this->consumerKey = $options['api_key'];
-		$this->consumerSecret = $options['api_secret'];
-		$this->serverURL = $options['api_url'];
-		if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
-			$this->username = $options['username'];
-			$this->password = $options['password'];
-		}
+            if ( $options['auth_mode'] == CTCI_F1OAuthClient::CREDENTIALS ) {
+                $this->authMode = CTCI_F1OAuthClient::CREDENTIALS;
+            } else {
+                $this->authMode = CTCI_F1OAuthClient::OAUTH;
+            }
+            $this->consumerKey = $options['api_key'];
+            $this->consumerSecret = $options['api_secret'];
+            $this->serverURL = $options['api_url'];
+            if ( $this->authMode === CTCI_F1OAuthClient::CREDENTIALS ) {
+                $this->username = $options['username'];
+                $this->password = $options['password'];
+            }
+        }
+
 		$this->authClient = new CTCI_F1OAuthClient( $this );
 
 		if ( $this->authMode == CTCI_F1OAuthClient::OAUTH ) {
