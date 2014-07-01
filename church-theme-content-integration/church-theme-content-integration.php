@@ -3,7 +3,7 @@
  * Plugin Name: Church Theme Content Integration
  * Plugin URI:
  * Description: Provides integration functionality between the Church Theme Content plugin and other church-related service providers.
- * Version: 0.3
+ * Version: 0.4
  * Author: Chris Burgess
  * Author URI:
  * License: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -15,16 +15,14 @@ if ( !defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// TODO: clearer error handling if settings not filled correctly
-
 /**
  * Main class
  */
 class Church_Theme_Content_Integration {
 
-	public static $DB_VERSION = '0.2';
-	public static $CSS_VERSION = '0.1';
-	public static $JS_VERSION = '0.1';
+	public static $DB_VERSION = '0.4';
+	public static $CSS_VERSION = '0.4';
+	public static $JS_VERSION = '0.4';
 	public static $CTC_PLUGIN_NAME = 'church-theme-content';
 	public static $CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
 
