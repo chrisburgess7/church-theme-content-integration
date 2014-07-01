@@ -6,6 +6,9 @@
  * Time: 11:35 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once 'interface-wpal.php';
 
 class CTCI_WPAL implements CTCI_WPALInterface {

@@ -7,6 +7,9 @@
  * Time: 11:59 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/../interface-people-data-provider.php';
 require_once dirname( __FILE__ ) . '/../class-people-group.php';
 require_once dirname( __FILE__ ) . '/../class-person.php';

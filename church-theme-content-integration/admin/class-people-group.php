@@ -6,6 +6,9 @@
  * Time: 10:07 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once 'interface-people-group.php';
 
 class CTCI_PeopleGroup implements CTCI_PeopleGroupInterface {

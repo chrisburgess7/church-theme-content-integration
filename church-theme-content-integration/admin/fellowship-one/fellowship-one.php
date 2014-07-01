@@ -6,6 +6,9 @@
  * Time: 1:45 PM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/../class-data-provider.php';
 require_once dirname( __FILE__ ) . '/interface-f1-api-settings.php';
 require_once dirname( __FILE__ ) . '/interface-f1-people-sync-settings.php';

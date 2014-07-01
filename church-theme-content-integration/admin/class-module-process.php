@@ -6,6 +6,9 @@
  * Time: 2:27 PM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 class CTCI_ModuleProcess {
 	/** @var CTCI_DataProviderInterface[] $dataProviders */
 	protected $dataProviders = array();

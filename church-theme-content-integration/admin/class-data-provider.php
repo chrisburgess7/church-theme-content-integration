@@ -6,6 +6,9 @@
  * Time: 11:06 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/interface-data-provider.php';
 
 abstract class CTCI_DataProvider implements CTCI_DataProviderInterface {

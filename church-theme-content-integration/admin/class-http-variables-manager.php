@@ -6,6 +6,9 @@
  * Time: 4:15 PM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/interface-http-variables-manager.php';
 
 class CTCI_HTTPVariablesManager implements CTCI_HTTPVariablesManagerInterface {

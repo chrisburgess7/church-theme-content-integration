@@ -1,4 +1,7 @@
 <?php
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 /**
  * Copyright 2009 Fellowship Technologies
  * Licensed under the Apache License, Version 2.0 (the "License");

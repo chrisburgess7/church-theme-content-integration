@@ -6,6 +6,9 @@
  * Time: 10:48 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/interface-html-helper.php';
 
 class CTCI_HtmlHelper implements CTCI_HtmlHelperInterface {

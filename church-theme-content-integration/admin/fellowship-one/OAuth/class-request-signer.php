@@ -1,4 +1,7 @@
 <?php
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once 'class-f1-api-util.php';
 
 /**

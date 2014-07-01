@@ -6,6 +6,9 @@
  * Time: 12:20 PM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 interface CTCI_SessionAdapter {
 	public function start();
 	public function has($var);

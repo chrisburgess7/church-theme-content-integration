@@ -6,6 +6,9 @@
  * Time: 10:08 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once 'interface-person.php';
 
 class CTCI_Person implements CTCI_PersonInterface {

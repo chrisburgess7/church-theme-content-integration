@@ -6,6 +6,9 @@
  * Time: 10:49 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once 'interface-ctc-group.php';
 
 class CTCI_CTCGroup implements CTCI_CTCGroupInterface {

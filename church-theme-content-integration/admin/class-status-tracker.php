@@ -6,6 +6,9 @@
  * Time: 10:46 AM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/interface-status-tracker.php';
 
 class CTCI_StatusTracker implements CTCI_StatusTrackerInterface {

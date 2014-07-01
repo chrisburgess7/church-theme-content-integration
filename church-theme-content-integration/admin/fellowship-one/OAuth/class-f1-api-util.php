@@ -1,5 +1,8 @@
 <?php
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 /**
  *
  * Copyright 2009 Fellowship Technologies

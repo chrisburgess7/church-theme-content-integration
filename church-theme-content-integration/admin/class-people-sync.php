@@ -7,6 +7,9 @@
  * Time: 2:46 PM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/interface-operation.php';
 
 class CTCI_PeopleSync implements CTCI_OperationInterface {

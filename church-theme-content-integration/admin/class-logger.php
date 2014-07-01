@@ -6,6 +6,9 @@
  * Time: 3:32 PM
  */
 
+// No direct access
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 require_once dirname( __FILE__ ) . '/interface-logger.php';
 
 class CTCI_Logger implements CTCI_LoggerInterface {

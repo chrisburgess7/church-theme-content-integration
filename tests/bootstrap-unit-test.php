@@ -8,6 +8,8 @@
 
 // define some global things that our classes may need access to
 
+define( 'ABSPATH', '' );
+
 class Church_Theme_Content_Integration {
 	public static $TEXT_DOMAIN = 'church-theme-content-integration';
 }
