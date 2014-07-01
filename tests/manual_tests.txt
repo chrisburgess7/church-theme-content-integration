@@ -1,10 +1,22 @@
 
-Fellowship One / People Sync
+Plugin
+
+1. Clean install zip file, check ok.
+
+Fellowship One
+
+1. 3rd party auth - test people sync
+
+2. 3rd party auth - change WP F1 API setting after auth but before running sync, test sync still runs
+
+3. 2nd party auth - run a sync
+
+People Sync
 
 1. Fresh install, sync 2 people lists with all fields. Check everything is synced.
 
 2. After initial sync, edit bio text, re-run sync with changes to at least every CTC field once. Check each field change
-and that bio's have been unchanged.
+and that bios have been unchanged.
 
 3. Repeat 2 with selection of fields set to NOT sync
 
