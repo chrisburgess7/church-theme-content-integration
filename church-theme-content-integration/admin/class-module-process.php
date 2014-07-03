@@ -135,7 +135,7 @@ class CTCI_ModuleProcess {
 		$runtime = new DateTime();
 
 		// set 5 minute time limit, hopefully long enough...
-		set_time_limit(300);
+		@set_time_limit(300);
 
 		$this->run();
 
