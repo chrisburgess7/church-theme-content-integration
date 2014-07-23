@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Church Theme Content Integration
- * Plugin URI:
+ * Plugin URI: http://www.acuit.com.au/church-theme-content-integration/
  * Description: Provides integration functionality between the Church Theme Content plugin and other church-related service providers.
- * Version: 0.4
+ * Version: 0.4.1
  * Author: Chris Burgess
- * Author URI:
+ * Author URI: http://www.acuit.com.au
  * License: http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: church-theme-content-integration
  */
