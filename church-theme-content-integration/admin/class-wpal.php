@@ -627,7 +627,7 @@ class CTCI_UpdateCTCGroupException extends Exception {
 class CTCI_CTCGroupAttachException extends Exception {
 	protected $ctcGroup;
 	protected $group;
-	public function __construct( CTCI_CTCGroup $ctcGroup, CTCI_PeopleGroup $group, $message = "", $code = 0, Exception $previous = null ) {
+	public function __construct( CTCI_CTCGroupInterface $ctcGroup, CTCI_PeopleGroupInterface $group, $message = "", $code = 0, Exception $previous = null ) {
 		parent::__construct( $message, $code, $previous );
 		$this->ctcGroup = $ctcGroup;
 		$this->group = $group;
