@@ -12,6 +12,10 @@ Currently supports:
 - Fellowship One / People Sync: This allows you to import people records from a Fellowship One account into CTC as
  custom People posts.
 
+Please also check out the page for this project on my website
+[http://www.acuit.com.au/church-theme-content-integration/](http://www.acuit.com.au/church-theme-content-integration/)
+as the website may contain more information and/or latest news.
+
 **This project is currently in beta only.**
 
 # Requirements
@@ -66,20 +70,20 @@ name these people lists with the group name(s) as you would like them to appear 
 
 2. In WP, under CTC Integration -> Fellowship One, review the settings:
 
-- People Lists to Sync: Type in the names of the people list(s) that you created in Fellowship One, one on each line.
+	- People Lists to Sync: Type in the names of the people list(s) that you created in Fellowship One, one on each line.
 
-- Sync Lists to Groups?: Check this if you would like the people lists to correspond to groups in CTC. Uncheck this if
- you don't want the people records added to groups in CTC, or if you would like to manage groups in CTC manually.
+	- Sync Lists to Groups?: Check this if you would like the people lists to correspond to groups in CTC. Uncheck this if
+	 you don't want the people records added to groups in CTC, or if you would like to manage groups in CTC manually.
 
-- Name Format: Select the name format to be used for the name field in CTC.
+	- Name Format: Select the name format to be used for the name field in CTC.
 
-- Sync Position? / Position Attribute Group: For the position field in CTC, you can optionally sync that as well. To do so,
-in Fellowship One create an Attribute Group (with any name), and define Attributes in that group with the names of
-your positions. Add these position attributes to the appropriate people records. Then in CTC Integration, check the
-Sync Position? checkbox, and enter the name of the Fellowship One Attribute Group into the Position Attribute Group field.
+	- Sync Position? / Position Attribute Group: For the position field in CTC, you can optionally sync that as well. To do so,
+	in Fellowship One create an Attribute Group (with any name), and define Attributes in that group with the names of
+	your positions. Add these position attributes to the appropriate people records. Then in CTC Integration, check the
+	Sync Position? checkbox, and enter the name of the Fellowship One Attribute Group into the Position Attribute Group field.
 
-- Sync ...?: These checkboxes control whether or not each of those fields will be synced. In the case of Phone and Email,
-the entry designated as the preferred contact will be used.
+	- Sync ...?: These checkboxes control whether or not each of those fields will be synced. In the case of Phone and Email,
+	the entry designated as the preferred contact will be used.
 
 3. Save any changes made.
 
