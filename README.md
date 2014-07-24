@@ -13,7 +13,7 @@ Currently supports:
  custom People posts.
 
 Please also check out the page for this project on my website
-[http://www.acuit.com.au/church-theme-content-integration/](http://www.acuit.com.au/church-theme-content-integration/)
+[http://www.acuit.com.au/church-theme-content-integration](http://www.acuit.com.au/church-theme-content-integration)
 as it may contain more information and/or latest news.
 
 **This project is currently in beta only.**
