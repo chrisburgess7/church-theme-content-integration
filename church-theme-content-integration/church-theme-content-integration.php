@@ -131,41 +131,38 @@ class Church_Theme_Content_Integration {
 		register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
 
 		// Set plugin data
-		add_action( 'plugins_loaded', array( &$this, 'set_plugin_data' ), 1 );
+		add_action( 'plugins_loaded', array( $this, 'set_plugin_data' ), 1 );
 
 		// init variables
-		add_action( 'plugins_loaded', array( &$this, 'init_plugin_variables' ), 2 );
-
-		// Load this plugins service provider modules
-		//add_action( 'plugins_loaded', array( &$this, 'load_modules' ), 3 );
+		add_action( 'plugins_loaded', array( $this, 'init_plugin_variables' ), 2 );
 
 		// Load language file
-		add_action( 'plugins_loaded', array( &$this, 'load_textdomain' ), 4 );
+		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ), 4 );
 		
 		// Set includes
-		add_action( 'plugins_loaded', array( &$this, 'set_includes' ), 5 );
+		add_action( 'plugins_loaded', array( $this, 'set_includes' ), 5 );
 
 		// Load includes
-		add_action( 'plugins_loaded', array( &$this, 'load_includes' ), 6 );
+		add_action( 'plugins_loaded', array( $this, 'load_includes' ), 6 );
 
 		// Load objects
-		add_action( 'plugins_loaded', array( &$this, 'load_objects' ), 7 );
+		add_action( 'plugins_loaded', array( $this, 'load_objects' ), 7 );
 
 		// init objects
-		add_action( 'plugins_loaded', array( &$this, 'init_objects' ), 8 );
+		add_action( 'plugins_loaded', array( $this, 'init_objects' ), 8 );
 
 		// Set up run module actions
-		add_action( 'plugins_loaded', array( &$this, 'load_run_actions' ) );
+		add_action( 'plugins_loaded', array( $this, 'load_run_actions' ) );
 
 		if ( is_admin() ) {
-			add_action( 'admin_menu', array( &$this, 'build_admin_menu' ) );
-			add_action( 'admin_init', array( &$this, 'register_settings' ) );
+			add_action( 'admin_menu', array( $this, 'build_admin_menu' ) );
+			add_action( 'admin_init', array( $this, 'register_settings' ) );
 			add_action( 'admin_init', array( $this, 'process_settings_export' ) );
 			add_action( 'admin_init', array( $this, 'process_settings_import' ) );
-			add_action( 'admin_enqueue_scripts', array( &$this, 'enqueue_scripts' ) );
-			add_action( 'admin_notices', array( &$this, 'system_checks' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+			add_action( 'admin_notices', array( $this, 'system_checks' ) );
 			// add action to handle a ctc group being deleted
-			add_action( 'delete_ctc_person_group', array( &$this, 'delete_ctc_person_group' ) );
+			add_action( 'delete_ctc_person_group', array( $this, 'delete_ctc_person_group' ) );
 		}
 	}
 
