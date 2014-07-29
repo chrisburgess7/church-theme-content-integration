@@ -121,8 +121,6 @@ class Church_Theme_Content_Integration {
         self::$PLUGIN_FILE = __FILE__;
         self::$ADMIN_DIR = 'admin';
         self::$ADMIN_PATH = trailingslashit( self::$PLUGIN_PATH ) . self::$ADMIN_DIR;
-        self::$CTC_PLUGIN_NAME = 'church-theme-content';
-        self::$CTC_PLUGIN_FILE = 'church-theme-content/church-theme-content.php';
         self::$LANG_DIR = 'languages';
 
         $this->load_data_providers();
